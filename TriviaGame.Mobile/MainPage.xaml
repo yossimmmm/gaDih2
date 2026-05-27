@@ -1,80 +1,130 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:ios="clr-namespace:Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific;assembly=Microsoft.Maui.Controls"
              x:Class="TriviaGame.Mobile.MainPage"
-             ios:Page.UseSafeArea="True"
-             Title="Trivia Game">
-    <!-- גריד עטיפה ראשי: רקע כהה וריווח מותאם לפי פלטפורמה -->
-    <Grid Padding="{OnPlatform Android='10,12,10,10', iOS='10,18,10,10', WinUI='10'}"
-          BackgroundColor="#111111">
-        <!-- כרטיס מרכזי שמכיל את כל רכיבי המסך -->
-        <Border Stroke="#2A2A2A"
-                Background="#1A1A1A"
-                StrokeThickness="1"
-                StrokeShape="RoundRectangle 18"
-                HorizontalOptions="Center"
-                VerticalOptions="Fill"
-                MaximumWidthRequest="430"
-                WidthRequest="{OnPlatform WinUI=430}"
-                Padding="10">
-            <!-- חלוקה לשורות: כותרת, הגדרות URL, בדיקת Health, אזור WebView -->
-            <Grid RowDefinitions="Auto,Auto,Auto,*"
-                  RowSpacing="10">
-                <!-- כותרת האפליקציה -->
-                <Label Grid.Row="0"
-                       Text="Trivia Game Mobile"
-                       FontSize="20"
-                       TextColor="White"
-                       FontAttributes="Bold" />
+             Title="Trivia Mobile API Client">
+    <ScrollView>
+        <VerticalStackLayout Padding="12" Spacing="10">
+            <Label Text="Trivia Mobile API Client"
+                   FontSize="22"
+                   FontAttributes="Bold" />
 
-                <!-- אזור קלט כתובת Backend + כפתור טעינה -->
-                <VerticalStackLayout Grid.Row="1"
-                                     Spacing="6">
-                    <Label Text="Backend URL"
-                           TextColor="White"
-                           FontAttributes="Bold" />
-                    <HorizontalStackLayout Spacing="8">
-                        <!-- שדה כתובת שרת: המשתמש מכניס URL -->
-                        <Entry x:Name="BackendUrlEntry"
-                               Placeholder="http://10.0.2.2:5038"
-                               HorizontalOptions="FillAndExpand"
-                               Completed="OnLoadClicked" />
-                        <!-- טעינת האתר לתוך WebView -->
-                        <Button Text="Load"
-                                Clicked="OnLoadClicked" />
-                    </HorizontalStackLayout>
-                    <!-- טיפ למשתמשים על כתובת LAN במכשיר אמיתי -->
-                    <Label Text="Use your PC LAN IP on real phones (example: http://192.168.1.23:5038)."
-                           FontSize="12"
-                           TextColor="#A7A7A7" />
+            <Border Stroke="#D0D0D0" Padding="10" StrokeShape="RoundRectangle 8">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="API Environment" FontAttributes="Bold" />
+                    <Picker x:Name="EnvironmentPicker" SelectedIndexChanged="OnEnvironmentChanged">
+                        <Picker.Items>
+                            <x:String>Development</x:String>
+                            <x:String>Staging</x:String>
+                            <x:String>Production</x:String>
+                        </Picker.Items>
+                    </Picker>
+                    <Entry x:Name="DeviceBaseUrlEntry" Placeholder="Device URL (for physical phone)" />
+                    <Entry x:Name="OverrideBaseUrlEntry" Placeholder="Optional override URL" />
+                    <Button Text="Apply API Settings" Clicked="OnApplyApiSettingsClicked" />
+                    <Label x:Name="ResolvedBaseUrlLabel" Text="Base URL: -" FontSize="12" />
                 </VerticalStackLayout>
+            </Border>
 
-                <!-- אזור בדיקת זמינות שרת -->
-                <HorizontalStackLayout Grid.Row="2" Spacing="8">
-                    <!-- כפתור שבודק את endpoint הבריאות של השרת -->
-                    <Button Text="Check Backend Health"
-                            Clicked="OnCheckHealthClicked" />
-                    <!-- תצוגת מצב הבדיקה (תקין/שגיאה) -->
-                    <Label x:Name="HealthLabel"
-                           VerticalOptions="Center"
-                           TextColor="#B0B0B0"
-                           Text="Health: not checked" />
-                </HorizontalStackLayout>
+            <Border Stroke="#D0D0D0" Padding="10" StrokeShape="RoundRectangle 8">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Auth" FontAttributes="Bold" />
+                    <Entry x:Name="EmailEntry" Placeholder="Email" Keyboard="Email" />
+                    <Entry x:Name="PasswordEntry" Placeholder="Password" IsPassword="True" />
+                    <Entry x:Name="UsernameEntry" Placeholder="Username (register/profile)" />
+                    <Entry x:Name="FullNameEntry" Placeholder="Full Name (register/profile)" />
+                    <HorizontalStackLayout Spacing="8">
+                        <Button Text="Login" Clicked="OnLoginClicked" />
+                        <Button Text="Register" Clicked="OnRegisterClicked" />
+                        <Button Text="Logout" Clicked="OnLogoutClicked" />
+                    </HorizontalStackLayout>
+                    <HorizontalStackLayout Spacing="8">
+                        <Button Text="Load Me" Clicked="OnLoadMeClicked" />
+                        <Button Text="Update Profile" Clicked="OnUpdateProfileClicked" />
+                    </HorizontalStackLayout>
+                    <Label x:Name="AuthStateLabel" Text="Auth: not loaded" />
+                </VerticalStackLayout>
+            </Border>
 
-                <!-- אזור תצוגת האפליקציה בווב באמצעות WebView -->
-                <Border Grid.Row="3"
-                        Stroke="#DDDDDD"
-                        StrokeThickness="1"
-                        StrokeShape="RoundRectangle 12"
-                        Padding="0"
-                        VerticalOptions="FillAndExpand"
-                        HorizontalOptions="FillAndExpand">
-                    <!-- WebView שמציג את גרסת ה-Web של המשחק -->
-                    <WebView x:Name="GameWebView"
-                             Navigated="OnGameWebViewNavigated" />
-                </Border>
-            </Grid>
-        </Border>
-    </Grid>
+            <Border Stroke="#D0D0D0" Padding="10" StrokeShape="RoundRectangle 8">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Rooms" FontAttributes="Bold" />
+                    <HorizontalStackLayout Spacing="8">
+                        <Button Text="Load Question Types" Clicked="OnLoadQuestionTypesClicked" />
+                        <Picker x:Name="QuestionTypePicker" WidthRequest="160" />
+                    </HorizontalStackLayout>
+                    <Entry x:Name="RoomNameEntry" Placeholder="Room name" />
+                    <HorizontalStackLayout Spacing="8">
+                        <Label Text="Public" VerticalOptions="Center" />
+                        <Switch x:Name="IsPublicSwitch" />
+                        <Button Text="Create Room" Clicked="OnCreateRoomClicked" />
+                    </HorizontalStackLayout>
+                    <Entry x:Name="RoomCodeEntry" Placeholder="Room code (e.g. ABC123)" />
+                    <Entry x:Name="NicknameEntry" Placeholder="Nickname for room" />
+                    <HorizontalStackLayout Spacing="8">
+                        <Button Text="Load Public Rooms" Clicked="OnLoadPublicRoomsClicked" />
+                        <Button Text="Join Room" Clicked="OnJoinRoomClicked" />
+                        <Button Text="Load Players" Clicked="OnLoadPlayersClicked" />
+                    </HorizontalStackLayout>
+                    <CollectionView x:Name="PublicRoomsView"
+                                    HeightRequest="160"
+                                    SelectionMode="Single"
+                                    SelectionChanged="OnPublicRoomSelected">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="*,Auto" Padding="4">
+                                    <Label Text="{Binding RoomName}" Grid.Column="0" />
+                                    <Label Text="{Binding RoomCode}" Grid.Column="1" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Stroke="#D0D0D0" Padding="10" StrokeShape="RoundRectangle 8">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Game" FontAttributes="Bold" />
+                    <Entry x:Name="QuestionCountEntry" Placeholder="Question count (default 10)" Keyboard="Numeric" />
+                    <HorizontalStackLayout Spacing="8">
+                        <Button Text="Start Game" Clicked="OnStartGameClicked" />
+                        <Button Text="Load Current Question" Clicked="OnLoadCurrentQuestionClicked" />
+                    </HorizontalStackLayout>
+                    <Label x:Name="QuestionTextLabel" Text="Question: -" />
+                    <CollectionView x:Name="OptionsView"
+                                    HeightRequest="160"
+                                    SelectionMode="Single"
+                                    SelectionChanged="OnOptionSelected">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Label Text="{Binding OptionText}" Padding="6" />
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                    <HorizontalStackLayout Spacing="8">
+                        <Button Text="Submit Answer" Clicked="OnSubmitAnswerClicked" />
+                        <Button Text="Load Scoreboard" Clicked="OnLoadScoreboardClicked" />
+                    </HorizontalStackLayout>
+                    <Label x:Name="ScoreboardLabel" Text="Scoreboard: -" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Stroke="#D0D0D0" Padding="10" StrokeShape="RoundRectangle 8">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Stats + Assistant" FontAttributes="Bold" />
+                    <HorizontalStackLayout Spacing="8">
+                        <Button Text="Load My Stats" Clicked="OnLoadStatsClicked" />
+                        <Button Text="Top Players" Clicked="OnLoadTopPlayersClicked" />
+                    </HorizontalStackLayout>
+                    <Label x:Name="StatsLabel" Text="Stats: -" />
+                    <Entry x:Name="AssistantPromptEntry" Placeholder="Ask assistant..." />
+                    <Button Text="Ask Assistant" Clicked="OnAskAssistantClicked" />
+                    <Label x:Name="AssistantResponseLabel" Text="Assistant: -" />
+                </VerticalStackLayout>
+            </Border>
+
+            <ActivityIndicator x:Name="BusyIndicator" IsRunning="False" IsVisible="False" />
+            <Label x:Name="StatusLabel" Text="Status: ready" />
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

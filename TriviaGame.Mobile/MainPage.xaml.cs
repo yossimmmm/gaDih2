@@ -1,136 +1,462 @@
-using Microsoft.Maui.Storage;
-using System.Net.Http;
+using Microsoft.Extensions.DependencyInjection;
+using TriviaGame.Mobile.Models;
+using TriviaGame.Mobile.Services;
 
 namespace TriviaGame.Mobile;
 
 public partial class MainPage : ContentPage
 {
-    // מפתח שמירה לכתובת השרת בהעדפות המכשיר
-    private const string BackendUrlPreferenceKey = "backend_url";
+    // שירות API ראשי שמנתב את כל פעולות המשתמש ל-HTTP.
+    private readonly TriviaApiClient api;
+    // רזולבר בסיס URL לפי environment ו-device.
+    private readonly ApiEndpointResolver endpointResolver;
 
-    // כתובת ברירת מחדל לשרת לפי פלטפורמה (אמולטור אנדרואיד מול מחשב)
-    private static readonly string DefaultBackendUrl = DeviceInfo.Platform == DevicePlatform.Android
-        ? "http://10.0.2.2:5038"
-        : "http://localhost:5038";
+    // מצב משתמש נוכחי בזיכרון המסך.
+    private CurrentUserResponse? currentUser;
+    // מצב חדר/שחקן נוכחי עבור submit answer.
+    private int currentRoomPlayerId;
+    private QuestionRow? currentQuestion;
+    private QuestionOptionRow? selectedOption;
+
+    // אוספים לתצוגת רשימות.
+    private readonly List<QuestionTypeRow> questionTypes = new();
+    private readonly List<RoomRow> publicRooms = new();
+    private readonly List<RoomPlayerRow> currentPlayers = new();
 
     public MainPage()
     {
-        // אתחול רכיבי XAML
         InitializeComponent();
-        // טעינת URL אחרון שנשמר
-        LoadSavedUrl();
+
+        // שליפת תלויות דרך DI גם כשהעמוד נוצר דרך XAML DataTemplate.
+        var services = Application.Current?.Handler?.MauiContext?.Services
+            ?? throw new InvalidOperationException("Service provider is unavailable.");
+        api = services.GetRequiredService<TriviaApiClient>();
+        endpointResolver = services.GetRequiredService<ApiEndpointResolver>();
+
+        PublicRoomsView.ItemsSource = publicRooms;
+        OptionsView.ItemsSource = Array.Empty<QuestionOptionRow>();
+
+        LoadApiSettingsToUi();
+        UpdateResolvedBaseUrlLabel();
     }
 
-    private void LoadSavedUrl()
+    // טעינת הגדרות API מה-Preferences למסך.
+    private void LoadApiSettingsToUi()
     {
-        // קריאת כתובת אחרונה מה-Preferences
-        var url = Preferences.Default.Get(BackendUrlPreferenceKey, DefaultBackendUrl);
-        // עדכון שדה קלט במסך
-        BackendUrlEntry.Text = url;
-        // טעינת האתר ב-WebView
-        LoadWebView(url);
-    }
-
-    private async void OnLoadClicked(object? sender, EventArgs e)
-    {
-        // קריאת ערך מהקלט וניקוי רווחים
-        var input = BackendUrlEntry.Text?.Trim() ?? string.Empty;
-        // בדיקת תקינות כתובת
-        if (!TryNormalizeHttpUrl(input, out var normalizedUrl))
+        var env = endpointResolver.GetCurrentEnvironment();
+        var index = env switch
         {
-            await DisplayAlertAsync("Invalid URL", "Use a full URL like http://192.168.1.23:5038", "OK");
-            return;
-        }
-
-        // שמירת הכתובת התקינה לשימוש עתידי
-        Preferences.Default.Set(BackendUrlPreferenceKey, normalizedUrl);
-        // טעינה ב-WebView
-        LoadWebView(normalizedUrl);
+            "Staging" => 1,
+            "Production" => 2,
+            _ => 0
+        };
+        EnvironmentPicker.SelectedIndex = index;
+        DeviceBaseUrlEntry.Text = endpointResolver.GetDeviceBaseUrl();
+        OverrideBaseUrlEntry.Text = endpointResolver.GetOverrideBaseUrl();
     }
 
-    private void LoadWebView(string url)
-    {
-        // הצבת URL כמקור ה-WebView
-        GameWebView.Source = url;
-    }
+    private void UpdateResolvedBaseUrlLabel() =>
+        ResolvedBaseUrlLabel.Text = $"Base URL: {endpointResolver.GetBaseUrl()}";
 
-    private async void OnCheckHealthClicked(object? sender, EventArgs e)
+    // פעולה עטופה ל-UI: מפעילה busy indicator, מטפלת חריגות, ומציגה הודעת סטטוס ידידותית.
+    private async Task RunUiActionAsync(string actionName, Func<Task> action)
     {
-        // קריאת כתובת וניקוי קלט
-        var input = BackendUrlEntry.Text?.Trim() ?? string.Empty;
-        // בדיקת תקינות כתובת לפני בדיקת health
-        if (!TryNormalizeHttpUrl(input, out var normalizedUrl))
-        {
-            HealthLabel.Text = "Health: invalid backend URL";
-            return;
-        }
-
+        BusyIndicator.IsVisible = true;
+        BusyIndicator.IsRunning = true;
+        StatusLabel.Text = $"Status: {actionName}...";
         try
         {
-            // יצירת HttpClient זמני עם timeout קצר
-            using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(8) };
-            // קריאה ל-endpoint בריאות של השרת
-            var res = await http.GetAsync($"{normalizedUrl}/api/health");
-            // הצגת סטטוס הצלחה/שגיאה למשתמש
-            HealthLabel.Text = res.IsSuccessStatusCode
-                ? "Health: backend is reachable"
-                : $"Health: backend error {(int)res.StatusCode}";
+            await action();
         }
         catch (Exception ex)
         {
-            // הצגת סוג השגיאה במקרה כשל תקשורת
-            HealthLabel.Text = $"Health: failed ({ex.GetType().Name})";
+            StatusLabel.Text = $"Status: {actionName} failed - {ex.Message}";
+        }
+        finally
+        {
+            BusyIndicator.IsRunning = false;
+            BusyIndicator.IsVisible = false;
         }
     }
 
-    private async void OnGameWebViewNavigated(object? sender, WebNavigatedEventArgs e)
+    // -------------------------
+    // API environment controls
+    // -------------------------
+    private void OnEnvironmentChanged(object? sender, EventArgs e)
     {
-        // מריצים סקריפט רק לאחר ניווט מוצלח
-        if (e.Result != WebNavigationResult.Success)
+        var value = EnvironmentPicker.SelectedItem?.ToString() ?? "Development";
+        endpointResolver.SetEnvironment(value);
+        UpdateResolvedBaseUrlLabel();
+    }
+
+    private void OnApplyApiSettingsClicked(object? sender, EventArgs e)
+    {
+        endpointResolver.SetEnvironment(EnvironmentPicker.SelectedItem?.ToString() ?? "Development");
+        endpointResolver.SetDeviceBaseUrl(DeviceBaseUrlEntry.Text ?? "");
+        endpointResolver.SetOverrideBaseUrl(OverrideBaseUrlEntry.Text ?? "");
+        UpdateResolvedBaseUrlLabel();
+        StatusLabel.Text = "Status: API settings applied.";
+    }
+
+    // -------------------------
+    // Auth
+    // -------------------------
+    private async void OnLoginClicked(object? sender, EventArgs e)
+    {
+        await RunUiActionAsync("login", async () =>
+        {
+            var result = await api.LoginAsync(EmailEntry.Text ?? "", PasswordEntry.Text ?? "");
+            if (!result.Success || result.Data is null || !result.Data.Ok)
+            {
+                StatusLabel.Text = $"Status: login failed - {result.Message}";
+                return;
+            }
+
+            StatusLabel.Text = "Status: login succeeded.";
+            await LoadMeInternalAsync();
+        });
+    }
+
+    private async void OnRegisterClicked(object? sender, EventArgs e)
+    {
+        await RunUiActionAsync("register", async () =>
+        {
+            var result = await api.RegisterAsync(
+                UsernameEntry.Text ?? "",
+                FullNameEntry.Text ?? "",
+                EmailEntry.Text ?? "",
+                PasswordEntry.Text ?? "");
+
+            StatusLabel.Text = result.Success
+                ? $"Status: register succeeded - {result.Data?.Message}"
+                : $"Status: register failed - {result.Message}";
+        });
+    }
+
+    private async void OnLogoutClicked(object? sender, EventArgs e)
+    {
+        await RunUiActionAsync("logout", async () =>
+        {
+            var result = await api.LogoutAsync();
+            currentUser = null;
+            currentRoomPlayerId = 0;
+            AuthStateLabel.Text = "Auth: logged out";
+            StatusLabel.Text = result.Success ? "Status: logout succeeded." : $"Status: logout failed - {result.Message}";
+        });
+    }
+
+    private async void OnLoadMeClicked(object? sender, EventArgs e)
+    {
+        await RunUiActionAsync("load me", LoadMeInternalAsync);
+    }
+
+    private async Task LoadMeInternalAsync()
+    {
+        var me = await api.GetMeAsync();
+        if (!me.Success || me.Data is null || !me.Data.Authenticated)
+        {
+            currentUser = null;
+            AuthStateLabel.Text = "Auth: not authenticated";
+            StatusLabel.Text = $"Status: load me failed - {me.Message}";
             return;
-
-        // סקריפט שמוודא meta viewport מתאים לתצוגת מובייל
-        const string mobileViewportScript = """
-(() => {
-  const content = "width=390, initial-scale=1, maximum-scale=1, viewport-fit=cover";
-  let meta = document.querySelector('meta[name="viewport"]');
-  if (!meta) {
-    meta = document.createElement('meta');
-    meta.name = 'viewport';
-    document.head.appendChild(meta);
-  }
-  meta.setAttribute('content', content);
-})();
-"""; 
-
-        try
-        {
-            // הזרקת סקריפט לדף הנטען ב-WebView
-            await GameWebView.EvaluateJavaScriptAsync(mobileViewportScript);
         }
-        catch
-        {
-            // במקרה כשל הזרקה מתעלמים כדי לא לשבור ניווט
-        }
+
+        currentUser = me.Data;
+        AuthStateLabel.Text = $"Auth: userId={me.Data.UserId}, username={me.Data.Username}, role={me.Data.Role}";
+        UsernameEntry.Text = me.Data.Username;
+        FullNameEntry.Text = me.Data.FullName;
+        EmailEntry.Text = me.Data.Email;
+        StatusLabel.Text = "Status: auth state loaded.";
     }
 
-    private static bool TryNormalizeHttpUrl(string input, out string normalizedUrl)
+    private async void OnUpdateProfileClicked(object? sender, EventArgs e)
     {
-        // ברירת מחדל ליציאה
-        normalizedUrl = string.Empty;
-        // קלט ריק אינו תקין
-        if (string.IsNullOrWhiteSpace(input))
-            return false;
-        // ניסיון המרה ל-URI מלא
-        if (!Uri.TryCreate(input, UriKind.Absolute, out var uri))
-            return false;
-        // מתירים רק HTTP/HTTPS
-        if (!string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) &&
-            !string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
-            return false;
+        await RunUiActionAsync("update profile", async () =>
+        {
+            var result = await api.UpdateProfileAsync(
+                UsernameEntry.Text ?? "",
+                FullNameEntry.Text ?? "",
+                EmailEntry.Text ?? "");
+            StatusLabel.Text = result.Success
+                ? $"Status: profile updated - {result.Data?.Message}"
+                : $"Status: profile update failed - {result.Message}";
+        });
+    }
 
-        // נרמול סופי: מחרוזת URL ללא slash בסוף
-        normalizedUrl = uri.ToString().TrimEnd('/');
-        return true;
+    // -------------------------
+    // Rooms
+    // -------------------------
+    private async void OnLoadQuestionTypesClicked(object? sender, EventArgs e)
+    {
+        await RunUiActionAsync("load question types", async () =>
+        {
+            var result = await api.GetQuestionTypesAsync();
+            if (!result.Success || result.Data is null)
+            {
+                StatusLabel.Text = $"Status: failed loading question types - {result.Message}";
+                return;
+            }
+
+            questionTypes.Clear();
+            questionTypes.AddRange(result.Data);
+            QuestionTypePicker.ItemsSource = null;
+            QuestionTypePicker.ItemsSource = questionTypes.Select(x => $"{x.TypeName} ({x.QuestionTypeID})").ToList();
+            QuestionTypePicker.SelectedIndex = questionTypes.Count > 0 ? 0 : -1;
+            StatusLabel.Text = $"Status: loaded {questionTypes.Count} question types.";
+        });
+    }
+
+    private async void OnCreateRoomClicked(object? sender, EventArgs e)
+    {
+        await RunUiActionAsync("create room", async () =>
+        {
+            int? selectedQuestionTypeId = null;
+            if (QuestionTypePicker.SelectedIndex >= 0 && QuestionTypePicker.SelectedIndex < questionTypes.Count)
+                selectedQuestionTypeId = questionTypes[QuestionTypePicker.SelectedIndex].QuestionTypeID;
+
+            var result = await api.CreateRoomAsync(
+                RoomNameEntry.Text ?? "",
+                IsPublicSwitch.IsToggled,
+                selectedQuestionTypeId);
+
+            StatusLabel.Text = result.Success
+                ? $"Status: room created - {result.Data?.Message}"
+                : $"Status: create room failed - {result.Message}";
+        });
+    }
+
+    private async void OnLoadPublicRoomsClicked(object? sender, EventArgs e)
+    {
+        await RunUiActionAsync("load public rooms", async () =>
+        {
+            var result = await api.GetPublicRoomsAsync();
+            if (!result.Success || result.Data is null)
+            {
+                StatusLabel.Text = $"Status: failed loading public rooms - {result.Message}";
+                return;
+            }
+
+            publicRooms.Clear();
+            publicRooms.AddRange(result.Data);
+            PublicRoomsView.ItemsSource = null;
+            PublicRoomsView.ItemsSource = publicRooms;
+            StatusLabel.Text = $"Status: loaded {publicRooms.Count} public rooms.";
+        });
+    }
+
+    private void OnPublicRoomSelected(object? sender, SelectionChangedEventArgs e)
+    {
+        if (e.CurrentSelection.FirstOrDefault() is RoomRow room)
+            RoomCodeEntry.Text = room.RoomCode;
+    }
+
+    private async void OnJoinRoomClicked(object? sender, EventArgs e)
+    {
+        await RunUiActionAsync("join room", async () =>
+        {
+            var roomCode = (RoomCodeEntry.Text ?? "").Trim().ToUpperInvariant();
+            var result = await api.JoinRoomAsync(roomCode, NicknameEntry.Text ?? "");
+            if (!result.Success || result.Data is null || !result.Data.Ok)
+            {
+                StatusLabel.Text = $"Status: join failed - {result.Message}";
+                return;
+            }
+
+            RoomCodeEntry.Text = roomCode;
+            currentRoomPlayerId = result.Data.Player?.RoomPlayerID ?? 0;
+            StatusLabel.Text = $"Status: joined room {roomCode} as playerId={currentRoomPlayerId}.";
+        });
+    }
+
+    private async void OnLoadPlayersClicked(object? sender, EventArgs e)
+    {
+        await RunUiActionAsync("load room players", async () =>
+        {
+            var roomCode = (RoomCodeEntry.Text ?? "").Trim().ToUpperInvariant();
+            var result = await api.GetRoomPlayersAsync(roomCode);
+            if (!result.Success || result.Data is null)
+            {
+                StatusLabel.Text = $"Status: failed loading players - {result.Message}";
+                return;
+            }
+
+            currentPlayers.Clear();
+            currentPlayers.AddRange(result.Data);
+
+            // אם טרם נלכד roomPlayerId, מנסים לאתר אותו לפי userId המחובר.
+            if (currentUser is not null && currentRoomPlayerId == 0)
+            {
+                var meInRoom = currentPlayers.FirstOrDefault(p => p.UserID == currentUser.UserId);
+                if (meInRoom is not null)
+                    currentRoomPlayerId = meInRoom.RoomPlayerID;
+            }
+
+            StatusLabel.Text = $"Status: players loaded ({currentPlayers.Count}). My roomPlayerId={currentRoomPlayerId}.";
+        });
+    }
+
+    // -------------------------
+    // Game
+    // -------------------------
+    private async void OnStartGameClicked(object? sender, EventArgs e)
+    {
+        await RunUiActionAsync("start game", async () =>
+        {
+            var roomCode = (RoomCodeEntry.Text ?? "").Trim().ToUpperInvariant();
+            var questionCount = int.TryParse(QuestionCountEntry.Text, out var parsed) ? parsed : 10;
+            var result = await api.StartGameAsync(roomCode, questionCount);
+            StatusLabel.Text = result.Success
+                ? $"Status: start game request succeeded - {result.Data?.Message}"
+                : $"Status: start game failed - {result.Message}";
+        });
+    }
+
+    private async void OnLoadCurrentQuestionClicked(object? sender, EventArgs e)
+    {
+        await RunUiActionAsync("load current question", async () =>
+        {
+            var roomCode = (RoomCodeEntry.Text ?? "").Trim().ToUpperInvariant();
+            var result = await api.GetCurrentQuestionAsync(roomCode);
+            if (!result.Success || result.Data is null)
+            {
+                StatusLabel.Text = $"Status: failed loading question - {result.Message}";
+                return;
+            }
+
+            if (result.Data.Finished || result.Data.Question is null)
+            {
+                currentQuestion = null;
+                selectedOption = null;
+                OptionsView.ItemsSource = null;
+                QuestionTextLabel.Text = "Question: game finished or no active question.";
+                StatusLabel.Text = "Status: no active question.";
+                return;
+            }
+
+            currentQuestion = result.Data.Question;
+            selectedOption = null;
+            QuestionTextLabel.Text = $"Question: {currentQuestion.QuestionText}";
+            OptionsView.ItemsSource = null;
+            OptionsView.ItemsSource = currentQuestion.Options;
+            StatusLabel.Text = $"Status: question loaded (id={currentQuestion.QuestionID}).";
+        });
+    }
+
+    private void OnOptionSelected(object? sender, SelectionChangedEventArgs e)
+    {
+        selectedOption = e.CurrentSelection.FirstOrDefault() as QuestionOptionRow;
+    }
+
+    private async void OnSubmitAnswerClicked(object? sender, EventArgs e)
+    {
+        await RunUiActionAsync("submit answer", async () =>
+        {
+            if (currentQuestion is null || selectedOption is null)
+            {
+                StatusLabel.Text = "Status: load question and select an option first.";
+                return;
+            }
+
+            if (currentRoomPlayerId <= 0)
+            {
+                StatusLabel.Text = "Status: roomPlayerId missing. Join room and load players first.";
+                return;
+            }
+
+            var roomCode = (RoomCodeEntry.Text ?? "").Trim().ToUpperInvariant();
+            var result = await api.SubmitAnswerAsync(
+                roomCode,
+                currentRoomPlayerId,
+                currentQuestion.QuestionID,
+                selectedOption.OptionID);
+
+            StatusLabel.Text = result.Success
+                ? $"Status: answer submitted - {result.Data?.Message}"
+                : $"Status: submit answer failed - {result.Message}";
+        });
+    }
+
+    private async void OnLoadScoreboardClicked(object? sender, EventArgs e)
+    {
+        await RunUiActionAsync("load scoreboard", async () =>
+        {
+            var roomCode = (RoomCodeEntry.Text ?? "").Trim().ToUpperInvariant();
+            var result = await api.GetScoreboardAsync(roomCode);
+            if (!result.Success || result.Data is null)
+            {
+                StatusLabel.Text = $"Status: failed loading scoreboard - {result.Message}";
+                return;
+            }
+
+            var text = result.Data.Rows.Count == 0
+                ? "no rows"
+                : string.Join(" | ", result.Data.Rows.Select(r => $"{r.Nickname}:{r.CorrectCount}/{r.AnsweredCount}"));
+            ScoreboardLabel.Text = $"Scoreboard: {text}";
+            StatusLabel.Text = "Status: scoreboard loaded.";
+        });
+    }
+
+    // -------------------------
+    // Stats + assistant
+    // -------------------------
+    private async void OnLoadStatsClicked(object? sender, EventArgs e)
+    {
+        await RunUiActionAsync("load stats", async () =>
+        {
+            var result = await api.GetMyStatsAsync();
+            if (!result.Success || result.Data is null)
+            {
+                StatsLabel.Text = "Stats: failed";
+                StatusLabel.Text = $"Status: stats failed - {result.Message}";
+                return;
+            }
+
+            StatsLabel.Text =
+                $"Stats: games={result.Data.GamesPlayed}, wins={result.Data.Wins}, correct={result.Data.Correct}, answered={result.Data.Answered}";
+            StatusLabel.Text = "Status: stats loaded.";
+        });
+    }
+
+    private async void OnLoadTopPlayersClicked(object? sender, EventArgs e)
+    {
+        await RunUiActionAsync("load top players", async () =>
+        {
+            var result = await api.GetTopPlayersAsync(10);
+            if (!result.Success || result.Data is null)
+            {
+                StatusLabel.Text = $"Status: top players failed - {result.Message}";
+                return;
+            }
+
+            var summary = result.Data.Count == 0
+                ? "none"
+                : string.Join(" | ", result.Data.Take(5).Select(r => $"{r.Username} ({r.Wins}W/{r.GamesPlayed}G)"));
+            StatsLabel.Text = $"Top Players: {summary}";
+            StatusLabel.Text = "Status: top players loaded.";
+        });
+    }
+
+    private async void OnAskAssistantClicked(object? sender, EventArgs e)
+    {
+        await RunUiActionAsync("ask assistant", async () =>
+        {
+            var prompt = AssistantPromptEntry.Text ?? "";
+            if (string.IsNullOrWhiteSpace(prompt))
+            {
+                StatusLabel.Text = "Status: enter a prompt first.";
+                return;
+            }
+
+            var result = await api.AskAssistantAsync(prompt);
+            if (!result.Success || result.Data is null)
+            {
+                AssistantResponseLabel.Text = "Assistant: request failed.";
+                StatusLabel.Text = $"Status: assistant failed - {result.Message}";
+                return;
+            }
+
+            AssistantResponseLabel.Text = $"Assistant: {(!string.IsNullOrWhiteSpace(result.Data.Text) ? result.Data.Text : result.Data.Message)}";
+            StatusLabel.Text = "Status: assistant reply received.";
+        });
     }
 }
