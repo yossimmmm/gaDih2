@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="../TriviaDBL/TriviaDBL.csproj" />
+  <Project Path="../TriviaGame/TriviaGame.csproj" />
+  <Project Path="ModelsTrivia.csproj" />
+</Solution>

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:ios="clr-namespace:Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific;assembly=Microsoft.Maui.Controls"
+             x:Class="TriviaGame.Mobile.MainPage"
+             ios:Page.UseSafeArea="True"
+             Title="Trivia Game">
+    <!-- גריד עטיפה ראשי: רקע כהה וריווח מותאם לפי פלטפורמה -->
+    <Grid Padding="{OnPlatform Android='10,12,10,10', iOS='10,18,10,10', WinUI='10'}"
+          BackgroundColor="#111111">
+        <!-- כרטיס מרכזי שמכיל את כל רכיבי המסך -->
+        <Border Stroke="#2A2A2A"
+                Background="#1A1A1A"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 18"
+                HorizontalOptions="Center"
+                VerticalOptions="Fill"
+                MaximumWidthRequest="430"
+                WidthRequest="{OnPlatform WinUI=430}"
+                Padding="10">
+            <!-- חלוקה לשורות: כותרת, הגדרות URL, בדיקת Health, אזור WebView -->
+            <Grid RowDefinitions="Auto,Auto,Auto,*"
+                  RowSpacing="10">
+                <!-- כותרת האפליקציה -->
+                <Label Grid.Row="0"
+                       Text="Trivia Game Mobile"
+                       FontSize="20"
+                       TextColor="White"
+                       FontAttributes="Bold" />
+
+                <!-- אזור קלט כתובת Backend + כפתור טעינה -->
+                <VerticalStackLayout Grid.Row="1"
+                                     Spacing="6">
+                    <Label Text="Backend URL"
+                           TextColor="White"
+                           FontAttributes="Bold" />
+                    <HorizontalStackLayout Spacing="8">
+                        <!-- שדה כתובת שרת: המשתמש מכניס URL -->
+                        <Entry x:Name="BackendUrlEntry"
+                               Placeholder="http://10.0.2.2:5038"
+                               HorizontalOptions="FillAndExpand"
+                               Completed="OnLoadClicked" />
+                        <!-- טעינת האתר לתוך WebView -->
+                        <Button Text="Load"
+                                Clicked="OnLoadClicked" />
+                    </HorizontalStackLayout>
+                    <!-- טיפ למשתמשים על כתובת LAN במכשיר אמיתי -->
+                    <Label Text="Use your PC LAN IP on real phones (example: http://192.168.1.23:5038)."
+                           FontSize="12"
+                           TextColor="#A7A7A7" />
+                </VerticalStackLayout>
+
+                <!-- אזור בדיקת זמינות שרת -->
+                <HorizontalStackLayout Grid.Row="2" Spacing="8">
+                    <!-- כפתור שבודק את endpoint הבריאות של השרת -->
+                    <Button Text="Check Backend Health"
+                            Clicked="OnCheckHealthClicked" />
+                    <!-- תצוגת מצב הבדיקה (תקין/שגיאה) -->
+                    <Label x:Name="HealthLabel"
+                           VerticalOptions="Center"
+                           TextColor="#B0B0B0"
+                           Text="Health: not checked" />
+                </HorizontalStackLayout>
+
+                <!-- אזור תצוגת האפליקציה בווב באמצעות WebView -->
+                <Border Grid.Row="3"
+                        Stroke="#DDDDDD"
+                        StrokeThickness="1"
+                        StrokeShape="RoundRectangle 12"
+                        Padding="0"
+                        VerticalOptions="FillAndExpand"
+                        HorizontalOptions="FillAndExpand">
+                    <!-- WebView שמציג את גרסת ה-Web של המשחק -->
+                    <WebView x:Name="GameWebView"
+                             Navigated="OnGameWebViewNavigated" />
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</ContentPage>

@@ -1,0 +1,409 @@
+﻿@page "/login"
+@using Models
+@using DBL
+@inject NavigationManager Nav
+@inject UserSessionState Session
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+<style>
+    .auth-wrap {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 25%, #fecfef 50%, #fad0c4 75%, #ffd1ff 100%);
+        background-attachment: fixed;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .auth-wrap::before {
+        content: "🔐";
+        position: absolute;
+        font-size: 3em;
+        animation: float 3s ease-in-out infinite;
+        top: 10%;
+        left: 10%;
+        opacity: 0.6;
+    }
+    
+    .auth-wrap::after {
+        content: "👤";
+        position: absolute;
+        font-size: 2.5em;
+        animation: float 4s ease-in-out infinite reverse;
+        top: 20%;
+        right: 15%;
+        opacity: 0.5;
+    }
+    
+    .card {
+        width: 400px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 240, 245, 0.95) 100%);
+        border: 5px solid #ff69b4;
+        border-radius: 30px;
+        padding: 35px;
+        color: #333;
+        box-shadow: 0 15px 40px rgba(255, 20, 147, 0.4), 0 0 60px rgba(255, 182, 193, 0.3);
+        backdrop-filter: blur(10px);
+        position: relative;
+        z-index: 1;
+        animation: pulse-glow 3s ease-in-out infinite;
+        transform-style: preserve-3d;
+    }
+    
+    .card::before {
+        content: "✨";
+        position: absolute;
+        top: -20px;
+        right: -20px;
+        font-size: 3em;
+        animation: bounce 2s infinite;
+        z-index: -1;
+    }
+    
+    .title {
+        font-size: 2.2rem;
+        font-family: 'Fredoka One', cursive;
+        color: #ff1493;
+        text-shadow: 3px 3px 0px #ff69b4, 6px 6px 10px rgba(255, 20, 147, 0.4);
+        margin-bottom: 20px;
+        letter-spacing: 2px;
+        animation: float 2s ease-in-out infinite;
+    }
+    
+    .in {
+        width: 100%;
+        padding: 15px 20px;
+        margin: 12px 0;
+        border-radius: 20px;
+        border: 3px solid #ffb6c1;
+        background: rgba(255, 255, 255, 0.9);
+        color: #333;
+        font-family: 'Comic Neue', cursive;
+        font-weight: 700;
+        font-size: 1.1em;
+        transition: all 0.3s ease;
+        box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .in:focus {
+        outline: none;
+        border-color: #ff1493;
+        box-shadow: 0 0 20px rgba(255, 20, 147, 0.5), inset 0 2px 5px rgba(0, 0, 0, 0.1);
+        transform: scale(1.02);
+        background: #fff;
+    }
+    
+    .in::placeholder {
+        color: rgba(255, 105, 180, 0.6);
+        font-weight: 700;
+    }
+    
+    .in.invalid {
+        border-color: #ff4757 !important;
+        box-shadow: 0 0 20px rgba(255, 71, 87, 0.5) !important;
+        animation: wiggle 0.5s ease;
+    }
+    
+    .in:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+    
+    .btn {
+        width: 100%;
+        padding: 15px;
+        border: 4px solid #ff1493;
+        border-radius: 25px;
+        background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 50%, #ffa8c5 100%);
+        color: #fff;
+        font-family: 'Fredoka One', cursive;
+        font-weight: 700;
+        font-size: 1.2em;
+        margin-top: 10px;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        box-shadow: 0 8px 20px rgba(255, 20, 147, 0.4);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+    
+    .btn:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+    
+    .btn:hover {
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 12px 30px rgba(255, 20, 147, 0.6);
+        animation: bounce 0.6s ease;
+    }
+    
+    .btn:active {
+        transform: translateY(-2px) scale(1.02);
+    }
+    
+    .err { 
+        color: #ff4757; 
+        margin-top: 12px;
+        font-family: 'Comic Neue', cursive;
+        font-weight: 700;
+        font-size: 1.1em;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        animation: wiggle 0.5s ease;
+    }
+    
+    a { 
+        color: #ff1493;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    a:hover {
+        color: #ff69b4;
+        text-shadow: 2px 2px 4px rgba(255, 20, 147, 0.5);
+        transform: scale(1.1);
+    }
+
+    @@media (max-width: 480px) {
+        .auth-wrap {
+            align-items: flex-start;
+            padding: 12px;
+        }
+
+        .auth-wrap::before,
+        .auth-wrap::after,
+        .card::before {
+            display: none;
+        }
+
+        .card {
+            width: 100%;
+            border-radius: 22px;
+            padding: 18px 14px;
+            margin-top: 8px;
+        }
+
+        .title {
+            font-size: 1.75rem;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+            animation: none;
+        }
+
+        .in {
+            margin: 8px 0;
+            padding: 12px 14px;
+            font-size: 1rem;
+        }
+
+        .btn {
+            padding: 12px;
+            font-size: 1rem;
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+    }
+</style>
+
+@* רקע מרכזי של מסך התחברות *@
+<div class="auth-wrap">
+    @* כרטיס התחברות ראשי *@
+    <div class="card">
+        @* כותרת עמוד *@
+        <div class="title">🔐 Sign in</div>
+
+        @* שדה אימייל: קלט דו-כיווני עם Email וסימון invalid במקרה שגיאה *@
+        <input class="in @(EmailInvalid ? "invalid" : "")"
+               @bind="Email"
+               @bind:event="oninput"
+               type="email"
+               placeholder="Email"
+               disabled="@IsLoading" />
+
+        @* שדה סיסמה: קלט דו-כיווני עם Password וסימון invalid במקרה שגיאה *@
+        <input class="in @(PasswordInvalid ? "invalid" : "")"
+               @bind="Password"
+               @bind:event="oninput"
+               type="password"
+               placeholder="Password"
+               disabled="@IsLoading" />
+
+        @* כפתור התחברות: מפעיל SignIn וננעל בזמן בקשה פעילה *@
+        <button class="btn" @onclick="SignIn" disabled="@IsLoading" title="Sends login request to server">
+            @if (IsLoading)
+            {
+                <span>⏳ Signing In...</span>
+            }
+            else
+            {
+                <span>Sign In</span>
+            }
+        </button>
+
+        @* הודעת סטטוס/שגיאה *@
+        <div class="err">@Status</div>
+
+        @* קישור למסך שחזור סיסמה *@
+        <div style="margin-top:10px"><a href="/forgot-password">Forgot password?</a></div>
+        @* קישור למסך הרשמה *@
+        <div style="margin-top:10px">No account? <a href="/register">Register</a></div>
+
+    </div>
+</div>
+
+@code {
+    // הסבר עמוד: התחברות משתמש קיים עם ולידציה מקומית וקריאת API.
+
+    // ערך האימייל מהטופס.
+    private string Email = "";
+    // ערך הסיסמה מהטופס.
+    private string Password = "";
+    // הודעת סטטוס להצגה למשתמש.
+    private string Status = "";
+    // דגל טעינה לנעילת הכפתור/שדות בזמן שליחה.
+    private bool IsLoading = false;
+    // דגל שגיאה חזותי לשדה אימייל.
+    private bool EmailInvalid = false;
+    // דגל שגיאה חזותי לשדה סיסמה.
+    private bool PasswordInvalid = false;
+
+    // ולידציה מקומית לפני יציאה לשרת.
+    private void ValidateInputs()
+    {
+        // איפוס דגלים והודעה מניסיון קודם.
+        EmailInvalid = false;
+        PasswordInvalid = false;
+        Status = "";
+
+        // אימייל חובה.
+        if (string.IsNullOrWhiteSpace(Email))
+        {
+            EmailInvalid = true;
+            Status = "Email is required.";
+            return;
+        }
+
+        // אימייל חייב להיות בפורמט תקין.
+        if (!ValidationHelper.IsValidEmail(Email))
+        {
+            EmailInvalid = true;
+            Status = "Please enter a valid email address.";
+            return;
+        }
+
+        // סיסמה חובה.
+        if (string.IsNullOrWhiteSpace(Password))
+        {
+            PasswordInvalid = true;
+            Status = "Password is required.";
+            return;
+        }
+    }
+
+    // פונקציה מרכזית של התחברות (כפתור Sign In).
+    private async Task SignIn()
+    {
+        // איפוס תצוגה לפני ניסיון חדש.
+        Status = "";
+        EmailInvalid = false;
+        PasswordInvalid = false;
+        IsLoading = true;
+
+        try
+        {
+            // ולידציה מקומית.
+            ValidateInputs();
+            if (!string.IsNullOrEmpty(Status))
+                return;
+
+            // ניקוי קלט לפני שליחה.
+            Email = ValidationHelper.SanitizeInput(Email, 100).ToLowerInvariant().Trim();
+            Password = Password.Trim();
+
+            // קריאה ל-JS שמבצע POST לשרת התחברות.
+            // קריאה ל-JS שמבצע POST לשרת ההתחברות.
+            // השרת יוצר session_token ושומר אותו בעוגיית HttpOnly.
+            var result = await JS.InvokeAsync<LoginResponse>("auth.login", Email, Password);
+            if (result is not null && result.Ok && result.UserId > 0)
+            {
+                // שמירת מזהה משתמש בסשן לקוח.
+                // שכבה 1 של Session: שמירת userId/role בזיכרון Blazor.
+                Session.CurrentUserId = result.UserId;
+                Session.CurrentRole = ParseRole(result.Role);
+                // שכבה 2 של Session כבר נוצרה בשרת כ-cookie (session_token).
+                // מעבר למסך הראשי אחרי התחברות.
+                Nav.NavigateTo("/menu");
+            }
+            else
+            {
+                // שגיאת אימות: מדגישים שני שדות ומציגים הודעה.
+                Status = "Invalid email or password.";
+                EmailInvalid = true;
+                PasswordInvalid = true;
+            }
+        }
+        catch (InvalidOperationException ex)
+        {
+            // שגיאה עסקית מפורטת.
+            Status = ex.Message;
+        }
+        catch
+        {
+            // שגיאת מערכת כללית.
+            Status = "An error occurred. Please try again later.";
+        }
+        finally
+        {
+            // תמיד משחררים מצב טעינה.
+            IsLoading = false;
+        }
+    }
+
+    // DTO מינימלי לתשובת התחברות מה-JS/שרת.
+    private sealed class LoginResponse
+    {
+        // האם ההתחברות הצליחה.
+        public bool Ok { get; set; }
+        // מזהה המשתמש המחובר.
+        public int UserId { get; set; }
+        // הודעת שרת אופציונלית.
+        public string? Message { get; set; }
+        public string Role { get; set; } = "User";
+    }
+
+    private static UserRole ParseRole(string? raw)
+    {
+        // המרת טקסט תפקיד שמגיע מהשרת לערך enum מקומי
+        return raw?.Trim().ToLowerInvariant() switch
+        {
+            "admin" => UserRole.Admin,
+            "manager" => UserRole.Manager,
+            // כל ערך לא מוכר חוזר כברירת מחדל למשתמש רגיל
+            _ => UserRole.User
+        };
+    }
+}

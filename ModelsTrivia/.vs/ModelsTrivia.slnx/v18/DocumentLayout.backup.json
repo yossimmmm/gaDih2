@@ -1,0 +1,589 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\yosic\\source\\repos\\ModelsTrivia\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{7733C4AB-5B8E-D201-EF6B-BAAC49BB184C}|..\\TriviaGame\\TriviaGame.csproj|c:\\users\\yosic\\source\\repos\\triviagame\\components\\layout\\mainlayout.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7733C4AB-5B8E-D201-EF6B-BAAC49BB184C}|..\\TriviaGame\\TriviaGame.csproj|c:\\users\\yosic\\source\\repos\\triviagame\\wwwroot\\app.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7733C4AB-5B8E-D201-EF6B-BAAC49BB184C}|..\\TriviaGame\\TriviaGame.csproj|c:\\users\\yosic\\source\\repos\\triviagame\\components\\pages\\lobby.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7733C4AB-5B8E-D201-EF6B-BAAC49BB184C}|..\\TriviaGame\\TriviaGame.csproj|c:\\users\\yosic\\source\\repos\\triviagame\\components\\pages\\menu.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B7DB44BC-2345-7AAC-8021-E91FA0868D7D}|..\\TriviaDBL\\TriviaDBL.csproj|c:\\users\\yosic\\source\\repos\\triviadbl\\gamedb.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B7DB44BC-2345-7AAC-8021-E91FA0868D7D}|..\\TriviaDBL\\TriviaDBL.csproj|c:\\users\\yosic\\source\\repos\\triviadbl\\db.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B7DB44BC-2345-7AAC-8021-E91FA0868D7D}|..\\TriviaDBL\\TriviaDBL.csproj|c:\\users\\yosic\\source\\repos\\triviadbl\\userdb.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B7DB44BC-2345-7AAC-8021-E91FA0868D7D}|..\\TriviaDBL\\TriviaDBL.csproj|c:\\users\\yosic\\source\\repos\\triviadbl\\roomdb.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B7DB44BC-2345-7AAC-8021-E91FA0868D7D}|..\\TriviaDBL\\TriviaDBL.csproj|c:\\users\\yosic\\source\\repos\\triviadbl\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7733C4AB-5B8E-D201-EF6B-BAAC49BB184C}|..\\TriviaGame\\TriviaGame.csproj|c:\\users\\yosic\\source\\repos\\triviagame\\components\\pages\\createroom.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B47A6661-7BF4-C152-9F04-AC768A460153}|ModelsTrivia.csproj|c:\\users\\yosic\\source\\repos\\modelstrivia\\question.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B47A6661-7BF4-C152-9F04-AC768A460153}|ModelsTrivia.csproj|solutionrelative:question.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B47A6661-7BF4-C152-9F04-AC768A460153}|ModelsTrivia.csproj|c:\\users\\yosic\\source\\repos\\modelstrivia\\questionoption.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B47A6661-7BF4-C152-9F04-AC768A460153}|ModelsTrivia.csproj|solutionrelative:questionoption.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B47A6661-7BF4-C152-9F04-AC768A460153}|ModelsTrivia.csproj|c:\\users\\yosic\\source\\repos\\modelstrivia\\room.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B47A6661-7BF4-C152-9F04-AC768A460153}|ModelsTrivia.csproj|solutionrelative:room.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B47A6661-7BF4-C152-9F04-AC768A460153}|ModelsTrivia.csproj|c:\\users\\yosic\\source\\repos\\modelstrivia\\roomplayer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B47A6661-7BF4-C152-9F04-AC768A460153}|ModelsTrivia.csproj|solutionrelative:roomplayer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B47A6661-7BF4-C152-9F04-AC768A460153}|ModelsTrivia.csproj|c:\\users\\yosic\\source\\repos\\modelstrivia\\scorerow.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B47A6661-7BF4-C152-9F04-AC768A460153}|ModelsTrivia.csproj|solutionrelative:scorerow.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B47A6661-7BF4-C152-9F04-AC768A460153}|ModelsTrivia.csproj|c:\\users\\yosic\\source\\repos\\modelstrivia\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B47A6661-7BF4-C152-9F04-AC768A460153}|ModelsTrivia.csproj|solutionrelative:user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B47A6661-7BF4-C152-9F04-AC768A460153}|ModelsTrivia.csproj|c:\\users\\yosic\\source\\repos\\modelstrivia\\usersession.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B47A6661-7BF4-C152-9F04-AC768A460153}|ModelsTrivia.csproj|solutionrelative:usersession.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B47A6661-7BF4-C152-9F04-AC768A460153}|ModelsTrivia.csproj|c:\\users\\yosic\\source\\repos\\modelstrivia\\passwordhelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B47A6661-7BF4-C152-9F04-AC768A460153}|ModelsTrivia.csproj|solutionrelative:passwordhelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7733C4AB-5B8E-D201-EF6B-BAAC49BB184C}|..\\TriviaGame\\TriviaGame.csproj|c:\\users\\yosic\\source\\repos\\triviagame\\components\\pages\\error.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7733C4AB-5B8E-D201-EF6B-BAAC49BB184C}|..\\TriviaGame\\TriviaGame.csproj|c:\\users\\yosic\\source\\repos\\triviagame\\components\\pages\\rooms.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7733C4AB-5B8E-D201-EF6B-BAAC49BB184C}|..\\TriviaGame\\TriviaGame.csproj|c:\\users\\yosic\\source\\repos\\triviagame\\components\\pages\\results.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7733C4AB-5B8E-D201-EF6B-BAAC49BB184C}|..\\TriviaGame\\TriviaGame.csproj|c:\\users\\yosic\\source\\repos\\triviagame\\components\\pages\\register.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7733C4AB-5B8E-D201-EF6B-BAAC49BB184C}|..\\TriviaGame\\TriviaGame.csproj|c:\\users\\yosic\\source\\repos\\triviagame\\components\\pages\\play.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7733C4AB-5B8E-D201-EF6B-BAAC49BB184C}|..\\TriviaGame\\TriviaGame.csproj|c:\\users\\yosic\\source\\repos\\triviagame\\components\\layout\\reconnectmodal.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7733C4AB-5B8E-D201-EF6B-BAAC49BB184C}|..\\TriviaGame\\TriviaGame.csproj|c:\\users\\yosic\\source\\repos\\triviagame\\components\\layout\\navmenu.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7733C4AB-5B8E-D201-EF6B-BAAC49BB184C}|..\\TriviaGame\\TriviaGame.csproj|c:\\users\\yosic\\source\\repos\\triviagame\\components\\pages\\login.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7733C4AB-5B8E-D201-EF6B-BAAC49BB184C}|..\\TriviaGame\\TriviaGame.csproj|c:\\users\\yosic\\source\\repos\\triviagame\\components\\pages\\notfound.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7733C4AB-5B8E-D201-EF6B-BAAC49BB184C}|..\\TriviaGame\\TriviaGame.csproj|c:\\users\\yosic\\source\\repos\\triviagame\\hubs\\gamehub.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7733C4AB-5B8E-D201-EF6B-BAAC49BB184C}|..\\TriviaGame\\TriviaGame.csproj|c:\\users\\yosic\\source\\repos\\triviagame\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7733C4AB-5B8E-D201-EF6B-BAAC49BB184C}|..\\TriviaGame\\TriviaGame.csproj|c:\\users\\yosic\\source\\repos\\triviagame\\components\\_imports.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7733C4AB-5B8E-D201-EF6B-BAAC49BB184C}|..\\TriviaGame\\TriviaGame.csproj|c:\\users\\yosic\\source\\repos\\triviagame\\wwwroot\\auth.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7733C4AB-5B8E-D201-EF6B-BAAC49BB184C}|..\\TriviaGame\\TriviaGame.csproj|c:\\users\\yosic\\source\\repos\\triviagame\\components\\app.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7733C4AB-5B8E-D201-EF6B-BAAC49BB184C}|..\\TriviaGame\\TriviaGame.csproj|c:\\users\\yosic\\source\\repos\\triviagame\\components\\routes.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B7DB44BC-2345-7AAC-8021-E91FA0868D7D}|..\\TriviaDBL\\TriviaDBL.csproj|c:\\users\\yosic\\source\\repos\\triviadbl\\triviadbl.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B47A6661-7BF4-C152-9F04-AC768A460153}|ModelsTrivia.csproj|c:\\users\\yosic\\source\\repos\\modelstrivia\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B47A6661-7BF4-C152-9F04-AC768A460153}|ModelsTrivia.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 11,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "Question.cs",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\ModelsTrivia\\Question.cs",
+              "RelativeDocumentMoniker": "Question.cs",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\ModelsTrivia\\Question.cs",
+              "RelativeToolTip": "Question.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAA2AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-25T10:16:07.798Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\TriviaDBL\\Program.cs",
+              "RelativeDocumentMoniker": "..\\TriviaDBL\\Program.cs",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\TriviaDBL\\Program.cs",
+              "RelativeToolTip": "..\\TriviaDBL\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-25T09:49:42.903Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "GameDB.cs",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\TriviaDBL\\GameDB.cs",
+              "RelativeDocumentMoniker": "..\\TriviaDBL\\GameDB.cs",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\TriviaDBL\\GameDB.cs",
+              "RelativeToolTip": "..\\TriviaDBL\\GameDB.cs",
+              "ViewState": "AgIAAJYAAAAAAAAAAAAcwJ4AAABDAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-25T10:16:32.316Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "Room.cs",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\ModelsTrivia\\Room.cs",
+              "RelativeDocumentMoniker": "Room.cs",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\ModelsTrivia\\Room.cs",
+              "RelativeToolTip": "Room.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-25T10:10:25.203Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "CreateRoom.razor",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Pages\\CreateRoom.razor",
+              "RelativeDocumentMoniker": "..\\TriviaGame\\Components\\Pages\\CreateRoom.razor",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Pages\\CreateRoom.razor",
+              "RelativeToolTip": "..\\TriviaGame\\Components\\Pages\\CreateRoom.razor",
+              "ViewState": "AgIAAGAAAAAAAAAAAAAswHEAAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-12-25T10:11:22.671Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Lobby.razor",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Pages\\Lobby.razor",
+              "RelativeDocumentMoniker": "..\\TriviaGame\\Components\\Pages\\Lobby.razor",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Pages\\Lobby.razor",
+              "RelativeToolTip": "..\\TriviaGame\\Components\\Pages\\Lobby.razor",
+              "ViewState": "AgIAALIAAAAAAAAAAAAswNMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-12-25T10:14:10.302Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "RoomDB.cs",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\TriviaDBL\\RoomDB.cs",
+              "RelativeDocumentMoniker": "..\\TriviaDBL\\RoomDB.cs",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\TriviaDBL\\RoomDB.cs",
+              "RelativeToolTip": "..\\TriviaDBL\\RoomDB.cs",
+              "ViewState": "AgIAALgAAAAAAAAAAAAiwMUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-25T10:10:44.709Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "UserDB.cs",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\TriviaDBL\\UserDB.cs",
+              "RelativeDocumentMoniker": "..\\TriviaDBL\\UserDB.cs",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\TriviaDBL\\UserDB.cs",
+              "RelativeToolTip": "..\\TriviaDBL\\UserDB.cs",
+              "ViewState": "AgIAAB8AAAAAAAAAAAAwwCwAAAAjAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-25T09:50:42.923Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "DB.cs",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\TriviaDBL\\DB.cs",
+              "RelativeDocumentMoniker": "..\\TriviaDBL\\DB.cs",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\TriviaDBL\\DB.cs",
+              "RelativeToolTip": "..\\TriviaDBL\\DB.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAA8AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-25T09:50:26.489Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Menu.razor",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Pages\\Menu.razor",
+              "RelativeDocumentMoniker": "..\\TriviaGame\\Components\\Pages\\Menu.razor",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Pages\\Menu.razor",
+              "RelativeToolTip": "..\\TriviaGame\\Components\\Pages\\Menu.razor",
+              "ViewState": "AgIAAAEAAAAAAAAAAADwvw0AAABaAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-12-25T09:54:02.52Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "app.css",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\wwwroot\\app.css",
+              "RelativeDocumentMoniker": "..\\TriviaGame\\wwwroot\\app.css",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\wwwroot\\app.css",
+              "RelativeToolTip": "..\\TriviaGame\\wwwroot\\app.css",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
+              "WhenOpened": "2025-12-25T23:10:38.156Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MainLayout.razor",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Layout\\MainLayout.razor",
+              "RelativeDocumentMoniker": "..\\TriviaGame\\Components\\Layout\\MainLayout.razor",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Layout\\MainLayout.razor",
+              "RelativeToolTip": "..\\TriviaGame\\Components\\Layout\\MainLayout.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAGAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-12-25T23:00:59.976Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "QuestionOption.cs",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\ModelsTrivia\\QuestionOption.cs",
+              "RelativeDocumentMoniker": "QuestionOption.cs",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\ModelsTrivia\\QuestionOption.cs",
+              "RelativeToolTip": "QuestionOption.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-25T10:15:54.61Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "RoomPlayer.cs",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\ModelsTrivia\\RoomPlayer.cs",
+              "RelativeDocumentMoniker": "RoomPlayer.cs",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\ModelsTrivia\\RoomPlayer.cs",
+              "RelativeToolTip": "RoomPlayer.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-25T10:15:02.481Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "ScoreRow.cs",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\ModelsTrivia\\ScoreRow.cs",
+              "RelativeDocumentMoniker": "ScoreRow.cs",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\ModelsTrivia\\ScoreRow.cs",
+              "RelativeToolTip": "ScoreRow.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-25T10:16:21.216Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "User.cs",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\ModelsTrivia\\User.cs",
+              "RelativeDocumentMoniker": "User.cs",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\ModelsTrivia\\User.cs",
+              "RelativeToolTip": "User.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-25T09:51:35.95Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "UserSession.cs",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\ModelsTrivia\\UserSession.cs",
+              "RelativeDocumentMoniker": "UserSession.cs",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\ModelsTrivia\\UserSession.cs",
+              "RelativeToolTip": "UserSession.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-25T09:51:50.122Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "PasswordHelper.cs",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\ModelsTrivia\\PasswordHelper.cs",
+              "RelativeDocumentMoniker": "PasswordHelper.cs",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\ModelsTrivia\\PasswordHelper.cs",
+              "RelativeToolTip": "PasswordHelper.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-25T09:52:04.586Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "Error.razor",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Pages\\Error.razor",
+              "RelativeDocumentMoniker": "..\\TriviaGame\\Components\\Pages\\Error.razor",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Pages\\Error.razor",
+              "RelativeToolTip": "..\\TriviaGame\\Components\\Pages\\Error.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-12-25T22:41:52.22Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "Rooms.razor",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Pages\\Rooms.razor",
+              "RelativeDocumentMoniker": "..\\TriviaGame\\Components\\Pages\\Rooms.razor",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Pages\\Rooms.razor",
+              "RelativeToolTip": "..\\TriviaGame\\Components\\Pages\\Rooms.razor",
+              "ViewState": "AgIAAH4AAAAAAAAAAAAmwKMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-12-25T10:14:19.084Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "Results.razor",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Pages\\Results.razor",
+              "RelativeDocumentMoniker": "..\\TriviaGame\\Components\\Pages\\Results.razor",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Pages\\Results.razor",
+              "RelativeToolTip": "..\\TriviaGame\\Components\\Pages\\Results.razor",
+              "ViewState": "AgIAAGEAAAAAAAAAAADwv4UAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-12-25T10:20:21.544Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "Register.razor",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Pages\\Register.razor",
+              "RelativeDocumentMoniker": "..\\TriviaGame\\Components\\Pages\\Register.razor",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Pages\\Register.razor",
+              "RelativeToolTip": "..\\TriviaGame\\Components\\Pages\\Register.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-12-25T09:53:49.683Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "Play.razor",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Pages\\Play.razor",
+              "RelativeDocumentMoniker": "..\\TriviaGame\\Components\\Pages\\Play.razor",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Pages\\Play.razor",
+              "RelativeToolTip": "..\\TriviaGame\\Components\\Pages\\Play.razor",
+              "ViewState": "AgIAAJAAAAAAAAAAAAAAAK0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-12-25T10:20:05.871Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "ReconnectModal.razor",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Layout\\ReconnectModal.razor",
+              "RelativeDocumentMoniker": "..\\TriviaGame\\Components\\Layout\\ReconnectModal.razor",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Layout\\ReconnectModal.razor",
+              "RelativeToolTip": "..\\TriviaGame\\Components\\Layout\\ReconnectModal.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAABDAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-12-25T23:01:02.807Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 25,
+              "Title": "Login.razor",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Pages\\Login.razor",
+              "RelativeDocumentMoniker": "..\\TriviaGame\\Components\\Pages\\Login.razor",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Pages\\Login.razor",
+              "RelativeToolTip": "..\\TriviaGame\\Components\\Pages\\Login.razor",
+              "ViewState": "AgIAADMAAAAAAAAAAADwv1cAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-12-25T09:53:16.139Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "NavMenu.razor",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Layout\\NavMenu.razor",
+              "RelativeDocumentMoniker": "..\\TriviaGame\\Components\\Layout\\NavMenu.razor",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Layout\\NavMenu.razor",
+              "RelativeToolTip": "..\\TriviaGame\\Components\\Layout\\NavMenu.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-12-25T23:01:02.054Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 26,
+              "Title": "NotFound.razor",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Pages\\NotFound.razor",
+              "RelativeDocumentMoniker": "..\\TriviaGame\\Components\\Pages\\NotFound.razor",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Pages\\NotFound.razor",
+              "RelativeToolTip": "..\\TriviaGame\\Components\\Pages\\NotFound.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-12-25T22:41:50.984Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 27,
+              "Title": "GameHub.cs",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Hubs\\GameHub.cs",
+              "RelativeDocumentMoniker": "..\\TriviaGame\\Hubs\\GameHub.cs",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Hubs\\GameHub.cs",
+              "RelativeToolTip": "..\\TriviaGame\\Hubs\\GameHub.cs",
+              "ViewState": "AgIAAB0AAAAAAAAAAADwv0EAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-25T10:18:32.431Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 28,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Program.cs",
+              "RelativeDocumentMoniker": "..\\TriviaGame\\Program.cs",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Program.cs",
+              "RelativeToolTip": "..\\TriviaGame\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAB0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-25T10:18:40.591Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 29,
+              "Title": "_Imports.razor",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\_Imports.razor",
+              "RelativeDocumentMoniker": "..\\TriviaGame\\Components\\_Imports.razor",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\_Imports.razor",
+              "RelativeToolTip": "..\\TriviaGame\\Components\\_Imports.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-12-25T10:05:05.762Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 30,
+              "Title": "auth.js",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\wwwroot\\auth.js",
+              "RelativeDocumentMoniker": "..\\TriviaGame\\wwwroot\\auth.js",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\wwwroot\\auth.js",
+              "RelativeToolTip": "..\\TriviaGame\\wwwroot\\auth.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-12-25T10:04:10.682Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 31,
+              "Title": "App.razor",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\App.razor",
+              "RelativeDocumentMoniker": "..\\TriviaGame\\Components\\App.razor",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\App.razor",
+              "RelativeToolTip": "..\\TriviaGame\\Components\\App.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-12-25T10:05:13.264Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 32,
+              "Title": "Routes.razor",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Routes.razor",
+              "RelativeDocumentMoniker": "..\\TriviaGame\\Components\\Routes.razor",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\TriviaGame\\Components\\Routes.razor",
+              "RelativeToolTip": "..\\TriviaGame\\Components\\Routes.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-12-25T10:05:14.121Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 33,
+              "Title": "TriviaDBL.csproj",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\TriviaDBL\\TriviaDBL.csproj",
+              "RelativeDocumentMoniker": "..\\TriviaDBL\\TriviaDBL.csproj",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\TriviaDBL\\TriviaDBL.csproj",
+              "RelativeToolTip": "..\\TriviaDBL\\TriviaDBL.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2025-12-25T09:50:18.248Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 34,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\yosic\\source\\repos\\ModelsTrivia\\Program.cs",
+              "RelativeDocumentMoniker": "Program.cs",
+              "ToolTip": "C:\\Users\\yosic\\source\\repos\\ModelsTrivia\\Program.cs",
+              "RelativeToolTip": "Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-25T09:48:45.794Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

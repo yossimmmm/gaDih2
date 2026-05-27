@@ -1,0 +1,221 @@
+﻿@page "/register"
+@using Models
+@using DBL
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+<style>
+    .auth-wrap { display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 25%, #fecfef 50%, #fad0c4 75%, #ffd1ff 100%); background-attachment: fixed; position: relative; overflow: hidden; }
+    .auth-wrap::before { content: "🎨"; position: absolute; font-size: 3em; animation: float 3s ease-in-out infinite; top: 10%; left: 10%; opacity: 0.6; }
+    .auth-wrap::after { content: "🌟"; position: absolute; font-size: 2.5em; animation: float 4s ease-in-out infinite reverse; top: 20%; right: 15%; opacity: 0.5; }
+    .card { width: 420px; background: linear-gradient(135deg, rgba(255,255,255,.95) 0%, rgba(255,240,245,.95) 100%); border: 5px solid #ff69b4; border-radius: 30px; padding: 35px; color: #333; box-shadow: 0 15px 40px rgba(255,20,147,.4), 0 0 60px rgba(255,182,193,.3); backdrop-filter: blur(10px); position: relative; z-index: 1; animation: pulse-glow 3s ease-in-out infinite; transform-style: preserve-3d; }
+    .card::before { content: "🎪"; position: absolute; top: -20px; right: -20px; font-size: 3em; animation: bounce 2s infinite; z-index: -1; }
+    .title { font-size: 2.2rem; font-family: 'Fredoka One', cursive; color: #ff1493; text-shadow: 3px 3px 0 #ff69b4, 6px 6px 10px rgba(255,20,147,.4); margin-bottom: 20px; letter-spacing: 2px; animation: float 2s ease-in-out infinite; }
+    .in { width: 100%; padding: 15px 20px; margin: 12px 0; border-radius: 20px; border: 3px solid #ffb6c1; background: rgba(255,255,255,.9); color: #333; font-family: 'Comic Neue', cursive; font-weight: 700; font-size: 1.1em; transition: all .3s ease; box-shadow: inset 0 2px 5px rgba(0,0,0,.1); }
+    .in:focus { outline: none; border-color: #ff1493; box-shadow: 0 0 20px rgba(255,20,147,.5), inset 0 2px 5px rgba(0,0,0,.1); transform: scale(1.02); background: #fff; }
+    .in.invalid { border-color: #ff4757 !important; box-shadow: 0 0 20px rgba(255,71,87,.5) !important; animation: wiggle .5s ease; }
+    .in::placeholder { color: rgba(255,105,180,.6); font-weight: 700; }
+    .btn { width: 100%; padding: 15px; border: 4px solid #ff1493; border-radius: 25px; background: linear-gradient(135deg,#ff6b9d 0%,#ff8fab 50%,#ffa8c5 100%); color: #fff; font-family: 'Fredoka One', cursive; font-weight: 700; font-size: 1.2em; margin-top: 10px; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 8px 20px rgba(255,20,147,.4); transition: all .3s ease; position: relative; overflow: hidden; }
+    .btn:disabled { opacity: .6; cursor: not-allowed; transform: none !important; }
+    .hint { margin-top: 15px; color: #666; font-family: 'Comic Neue', cursive; font-weight: 700; font-size: 1em; }
+    a { color: #ff1493; font-weight: 700; text-decoration: none; transition: all .3s ease; }
+    .err { color: #ff4757; margin-top: 12px; font-family: 'Comic Neue', cursive; font-weight: 700; font-size: 1.1em; text-shadow: 1px 1px 2px rgba(0,0,0,.2); animation: wiggle .5s ease; }
+</style>
+
+@* מסך הרשמה ראשי *@
+<div class="auth-wrap">
+    <div class="card">
+        <div class="title">📝 Create account</div>
+
+        @* שם משתמש *@
+        <input class="in @(UsernameInvalid ? "invalid" : "")" @bind="Username" placeholder="Username" />
+        @* שם מלא *@
+        <input class="in @(FullNameInvalid ? "invalid" : "")" @bind="FullName" placeholder="Full name" />
+        @* אימייל *@
+        <input class="in @(EmailInvalid ? "invalid" : "")" @bind="Email" type="email" placeholder="Email" />
+        @* סיסמה *@
+        <input class="in @(PasswordInvalid ? "invalid" : "")" @bind="Password" type="password" placeholder="Password" />
+
+        @* כפתור יצירת חשבון *@
+        <button class="btn" @onclick="RegisterAsync" disabled="@IsLoading">
+            @(IsLoading ? "Creating..." : "Create Account")
+        </button>
+
+        <div class="err">@Status</div>
+        <div class="hint">Already have an account? <a href="/login">Login</a></div>
+
+    </div>
+</div>
+
+@code {
+    // מסך הרשמה: בודק שדות, מונע כפילויות, יוצר משתמש ומנווט למסך התחברות.
+    // הסבר עמוד: רישום משתמש חדש עם ולידציה, בדיקות כפילויות ושמירה למסד.
+    // ערך שם משתמש מהטופס.
+    private string Username = "";
+    // ערך שם מלא מהטופס.
+    private string FullName = "";
+    // ערך אימייל מהטופס.
+    private string Email = "";
+    // ערך סיסמה מהטופס.
+    private string Password = "";
+    // הודעת סטטוס/שגיאה להצגה למשתמש.
+    private string Status = "";
+    // דגל טעינה בזמן שליחת בקשה.
+    private bool IsLoading = false;
+    // דגל שגיאה לשדה שם משתמש.
+    private bool UsernameInvalid = false;
+    // דגל שגיאה לשדה שם מלא.
+    private bool FullNameInvalid = false;
+    // דגל שגיאה לשדה אימייל.
+    private bool EmailInvalid = false;
+    // דגל שגיאה לשדה סיסמה.
+    private bool PasswordInvalid = false;
+
+    // שכבת גישה לנתוני משתמשים במסד.
+    private readonly UserDB userDB = new();
+
+    // ולידציה מלאה לשדות.
+    // ולידציה מקומית לכל השדות לפני פנייה למסד.
+    // ולידציה של הטופס לפי סדר: Username -> FullName -> Email -> Password.
+    // בכל כשל: מסמנים שדה, מעדכנים Status, ועוצרים את הזרימה עם return.
+    private void ValidateInputs()
+    {
+        UsernameInvalid = false;
+        FullNameInvalid = false;
+        EmailInvalid = false;
+        PasswordInvalid = false;
+        Status = "";
+
+        var (usernameValid, usernameError) = ValidationHelper.ValidateUsername(Username);
+        if (!usernameValid)
+        {
+            UsernameInvalid = true;
+            Status = $"❌ {usernameError}";
+            return;
+        }
+
+        var (fullNameValid, fullNameError) = ValidationHelper.ValidateFullName(FullName);
+        if (!fullNameValid)
+        {
+            FullNameInvalid = true;
+            Status = $"❌ {fullNameError}";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Email))
+        {
+            EmailInvalid = true;
+            Status = "❌ Email is required.";
+            return;
+        }
+
+        if (!ValidationHelper.IsValidEmail(Email))
+        {
+            EmailInvalid = true;
+            Status = "❌ Please enter a valid email address.";
+            return;
+        }
+
+        var (passwordValid, passwordError) = ValidationHelper.ValidatePassword(Password);
+        if (!passwordValid)
+        {
+            PasswordInvalid = true;
+            Status = $"❌ {passwordError}";
+        }
+    }
+
+    // פעולה ראשית של הרשמה.
+    // תהליך הרשמה מלא שמופעל בלחיצה על Create Account.
+    // תהליך הרשמה מלא:
+    // 1) איפוס מצב וטעינה
+    // 2) ולידציה מקומית
+    // 3) נרמול קלט
+    // 4) בדיקת כפילות אימייל/שם משתמש
+    // 5) יצירת משתמש ושמירת hash סיסמה
+    // 6) הצלחה + ניווט ללוגין
+    private async Task RegisterAsync()
+    {
+        // איפוס תצוגה לפני ניסיון הרשמה חדש
+        Status = "";
+        UsernameInvalid = false;
+        FullNameInvalid = false;
+        EmailInvalid = false;
+        PasswordInvalid = false;
+        IsLoading = true;
+
+        try
+        {
+            // ולידציית קלט מקומית
+            ValidateInputs();
+            if (!string.IsNullOrEmpty(Status) && Status.StartsWith("❌"))
+                return;
+
+            // ניקוי ואחידות ערכי קלט לפני עבודה מול מסד
+            Username = ValidationHelper.SanitizeInput(Username, 50);
+            FullName = ValidationHelper.SanitizeInput(FullName, 100);
+            Email = ValidationHelper.SanitizeInput(Email, 100).ToLowerInvariant().Trim();
+            Password = Password.Trim();
+
+            // בדיקת כפילות אימייל
+            var existingEmail = await userDB.GetByEmailAsync(Email);
+            if (existingEmail != null)
+            {
+                EmailInvalid = true;
+                Status = "❌ Email already registered.";
+                return;
+            }
+
+            // בדיקת כפילות שם משתמש
+            var existingUsername = await userDB.GetByUsernameAsync(Username);
+            if (existingUsername != null)
+            {
+                UsernameInvalid = true;
+                Status = "❌ Username already taken.";
+                return;
+            }
+
+            // בניית אובייקט משתמש חדש לשמירה במסד
+            var u = new Models.User
+            {
+                Username = Username,
+                FullName = FullName,
+                Email = Email,
+                PasswordHash = PasswordHelper.Hash(Password)
+            };
+
+            // ניסיון יצירת משתמש חדש
+            var created = await userDB.InsertUserAsync(u);
+            if (created == null)
+            {
+                Status = "❌ Failed to create user. Please try again.";
+                return;
+            }
+
+            // הודעת הצלחה + מעבר למסך התחברות
+            Status = "✅ Registered! Redirecting to login...";
+            await Task.Delay(1200);
+            Nav.NavigateTo("/login");
+        }
+        catch (InvalidOperationException ex)
+        {
+            // טיפול בשגיאה עסקית (למשל ייחודיות)
+            Status = $"❌ {ex.Message}";
+            EmailInvalid = true;
+        }
+        catch (ArgumentException ex)
+        {
+            // טיפול בשגיאת קלט/ארגומנטים
+            Status = $"❌ {ex.Message}";
+        }
+        catch
+        {
+            // טיפול בשגיאת מערכת כללית
+            Status = "❌ An error occurred. Please try again later.";
+        }
+        finally
+        {
+            // יציאה ממצב טעינה בכל מקרה
+            IsLoading = false;
+        }
+    }
+}

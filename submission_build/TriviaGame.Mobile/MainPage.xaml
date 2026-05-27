@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TriviaGame.Mobile.MainPage"
+             Title="Trivia Game">
+    <Grid Padding="10"
+          BackgroundColor="#111111">
+        <Border Stroke="#2A2A2A"
+                Background="#1A1A1A"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 18"
+                HorizontalOptions="Center"
+                VerticalOptions="Fill"
+                MaximumWidthRequest="430"
+                WidthRequest="{OnPlatform WinUI=430}"
+                Padding="10">
+            <Grid RowDefinitions="Auto,Auto,Auto,*"
+                  RowSpacing="10">
+                <Label Grid.Row="0"
+                       Text="Trivia Game Mobile"
+                       FontSize="20"
+                       TextColor="White"
+                       FontAttributes="Bold" />
+
+                <VerticalStackLayout Grid.Row="1"
+                                     Spacing="6">
+                    <Label Text="Backend URL"
+                           TextColor="White"
+                           FontAttributes="Bold" />
+                    <HorizontalStackLayout Spacing="8">
+                        <Entry x:Name="BackendUrlEntry"
+                               Placeholder="http://10.0.2.2:5038"
+                               HorizontalOptions="FillAndExpand"
+                               Completed="OnLoadClicked" />
+                        <Button Text="Load"
+                                Clicked="OnLoadClicked" />
+                    </HorizontalStackLayout>
+                    <Label Text="Use your PC LAN IP on real phones (example: http://192.168.1.23:5038)."
+                           FontSize="12"
+                           TextColor="#A7A7A7" />
+                </VerticalStackLayout>
+
+                <HorizontalStackLayout Grid.Row="2" Spacing="8">
+                    <Button Text="Check Backend Health"
+                            Clicked="OnCheckHealthClicked" />
+                    <Label x:Name="HealthLabel"
+                           VerticalOptions="Center"
+                           TextColor="#B0B0B0"
+                           Text="Health: not checked" />
+                </HorizontalStackLayout>
+
+                <Border Grid.Row="3"
+                        Stroke="#DDDDDD"
+                        StrokeThickness="1"
+                        StrokeShape="RoundRectangle 12"
+                        Padding="0"
+                        HeightRequest="760">
+                    <WebView x:Name="GameWebView"
+                             Navigated="OnGameWebViewNavigated" />
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</ContentPage>
