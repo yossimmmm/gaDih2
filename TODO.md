@@ -58,6 +58,7 @@
 - [ ] [TriviaGame.Mobile/README.md](TriviaGame.Mobile/README.md) - להבין איך מפעילים את הלקוח
 
 ### מסמכי עזר
+- [ ] [docs/API_DEEP_DIVE_HE.md](docs/API_DEEP_DIVE_HE.md) - להבין את שרת ה-API לעומק
 - [ ] [docs/SYSTEM_ANALYSIS.md](docs/SYSTEM_ANALYSIS.md) - להבין את הבעיה והפתרון
 - [ ] [docs/USER_GUIDE.md](docs/USER_GUIDE.md) - להבין את מדריך המשתמש
 - [ ] [docs/ERD.md](docs/ERD.md) - להבין את התרשים בין הטבלאות
