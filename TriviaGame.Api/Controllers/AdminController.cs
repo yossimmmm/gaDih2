@@ -13,11 +13,11 @@ public sealed class AdminController : ControllerBase
 
     public AdminController(UsersDomainService usersDomainService)
     {
-        // ה־controller נשאר דק ומעביר הכול לשירות המשתמשים.
+        // controller נשאר דק ומעביר הכול לשירות המשתמשים.
         this.usersDomainService = usersDomainService;
     }
 
-    // מחזיר את רשימת המשתמשים, עם אפשרות לסינון לפי role.
+    // מחזיר את רשימת המשתמשים עם אפשרות סינון לפי role.
     [HttpGet("users")]
     public async Task<IActionResult> GetUsers([FromQuery] string? role = null)
     {
@@ -36,7 +36,7 @@ public sealed class AdminController : ControllerBase
         }));
     }
 
-    // משנה את ה־role של משתמש.
+    // משנה את תפקיד המשתמש.
     [HttpPost("users/{userId:int}/role")]
     public async Task<IActionResult> UpdateRole(int userId, [FromBody] UpdateRoleRequest request)
     {
@@ -44,7 +44,7 @@ public sealed class AdminController : ControllerBase
         return ok ? Ok(new { ok = true, message }) : BadRequest(new { ok = false, message });
     }
 
-    // מעדכן רשומת משתמש מלאה ממסך האדמין.
+    // מעדכן משתמש מלא מתוך מסך הניהול.
     [HttpPut("users/{userId:int}")]
     public async Task<IActionResult> UpdateUser(int userId, [FromBody] AdminUserUpdateRequest request)
     {
@@ -52,7 +52,7 @@ public sealed class AdminController : ControllerBase
         return ok ? Ok(new { ok = true, message }) : BadRequest(new { ok = false, message });
     }
 
-    // מוחק חשבון משתמש.
+    // מוחק משתמש.
     [HttpDelete("users/{userId:int}")]
     public async Task<IActionResult> DeleteUser(int userId)
     {

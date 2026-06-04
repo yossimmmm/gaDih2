@@ -294,7 +294,7 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
         private static async Task EnsureUsersRoleColumnAsync(MySqlConnection conn, MySqlTransaction tx)
         {
             // בדיקה/הוספה של עמודת role בטבלת users
-            // העמודה נדרשת למנגנון הרשאות Admin/Manager/User
+            // העמודה נדרשת למנגנון הרשאות User/Admin
             const string checkSql = @"
 SELECT COUNT(*)
 FROM information_schema.COLUMNS

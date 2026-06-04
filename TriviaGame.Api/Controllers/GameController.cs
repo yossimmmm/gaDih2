@@ -5,7 +5,7 @@ using TriviaGame.Api.Services;
 namespace TriviaGame.Api.Controllers;
 
 // נקודות קצה של המשחק:
-// התחלת סיבוב, שליפת שאלה נוכחית, שליחת תשובה, שמירת תוצאות, scoreboard ו־leaderboard.
+// התחלת משחק, שאלה נוכחית, תשובה, שמירת תוצאות, scoreboard ו-top players.
 [ApiController]
 [Route("api/game")]
 public sealed class GameController : ControllerBase
@@ -15,12 +15,12 @@ public sealed class GameController : ControllerBase
 
     public GameController(RoomsDomainService roomsDomainService, GameDomainService gameDomainService)
     {
-        // שירות החדר בודק את מצב החדר; שירות המשחק מטפל בלוגיקת הטריוויה.
+        // שירות החדר בודק את מצב החדר; שירות המשחק מטפל בלוגיקה עצמה.
         this.roomsDomainService = roomsDomainService;
         this.gameDomainService = gameDomainService;
     }
 
-    // מתחיל סיבוב משחק חדש על ידי בחירת שאלות לחדר.
+    // מתחיל סיבוב משחק חדש בחדר.
     [HttpPost("{roomCode}/start")]
     public async Task<IActionResult> StartGame(string roomCode, [FromBody] StartGameRequest request)
     {
@@ -31,7 +31,7 @@ public sealed class GameController : ControllerBase
         if (room.HostID != request.UserId)
             return BadRequest(new { ok = false, message = "Only host can start the game." });
 
-        // מגבילים את מספר השאלות לטווח הנתמך.
+        // מגבילים את מספר השאלות כדי למנוע עומס.
         var count = request.QuestionCount <= 0 ? 10 : Math.Min(request.QuestionCount, 50);
         var (ok, message, inserted) = await gameDomainService.StartGameAsync(room.RoomID, count);
         return ok
@@ -39,7 +39,7 @@ public sealed class GameController : ControllerBase
             : BadRequest(new { ok = false, message });
     }
 
-    // מחזיר את השאלה הפעילה של החדר, או מסמן שהחדר הסתיים.
+    // מחזיר את השאלה הנוכחית או מסמן שהמשחק הסתיים.
     [HttpGet("{roomCode}/current-question")]
     public async Task<IActionResult> GetCurrentQuestion(string roomCode)
     {
@@ -54,7 +54,7 @@ public sealed class GameController : ControllerBase
         return Ok(new { ok = true, finished = false, question = q });
     }
 
-    // שומר תשובה אחת ואז מרענן את תוצאות החדר.
+    // שומר תשובה של שחקן ומרענן את תוצאות החדר.
     [HttpPost("{roomCode}/answer")]
     public async Task<IActionResult> SubmitAnswer(string roomCode, [FromBody] SubmitAnswerRequest request)
     {
@@ -70,7 +70,7 @@ public sealed class GameController : ControllerBase
         return Ok(new { ok = true, message });
     }
 
-    // כופה שמירה של סיכום החדר, שימושי אחרי סיום סיבוב.
+    // מאשר שמירה מלאה של תוצאות החדר.
     [HttpPost("{roomCode}/save-results")]
     public async Task<IActionResult> SaveResults(string roomCode)
     {
@@ -82,7 +82,7 @@ public sealed class GameController : ControllerBase
         return Ok(new { ok = true });
     }
 
-    // מחזיר את ה־scoreboard הנוכחי של החדר.
+    // מחזיר את לוח הניקוד של החדר.
     [HttpGet("{roomCode}/scoreboard")]
     public async Task<IActionResult> Scoreboard(string roomCode)
     {
@@ -102,7 +102,7 @@ public sealed class GameController : ControllerBase
         });
     }
 
-    // מחזיר את טבלת השחקנים המובילים למסך הסטטיסטיקות.
+    // מחזיר את טבלת המובילים של המשחק.
     [HttpGet("top-players")]
     public async Task<IActionResult> TopPlayers([FromQuery] int limit = 10)
     {

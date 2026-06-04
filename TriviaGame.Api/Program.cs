@@ -2,74 +2,74 @@ using TriviaGame.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// רושמים את ה־MVC controllers. כל endpoint ב־API הזה נחשף דרך controller.
+// רושמים controllers. כל endpoint ב-API נחשף דרך controller.
 builder.Services.AddControllers();
 
-// מפעילים OpenAPI כדי שיהיה אפשר לראות את החוזה של ה־API בזמן פיתוח.
+// מאפשרים לראות את ה-API בזמן פיתוח דרך OpenAPI.
 builder.Services.AddOpenApi();
 
-// רושמים HttpClient כדי ששירותים יוכלו לקרוא ל־HTTP APIs חיצוניים כמו Gemini.
+// רושמים HttpClient כדי ששירותים יוכלו לגשת ל-HTTP APIs חיצוניים.
 builder.Services.AddHttpClient();
 
-// מאפשרים ללקוח ה־MAUI לדבר עם ה־API ממקור אחר בזמן פיתוח.
+// מאפשרים ללקוח MAUI לדבר עם ה-API ממקור אחר.
 builder.Services.AddCors();
 
-// שירותי הדומיין מחזיקים את כל חוקי העסק. ה־controllers רק מעבירים אליהם את העבודה.
+// רושמים את שכבות השירות העסקיות.
 builder.Services.AddScoped<AuthDomainService>();
 builder.Services.AddScoped<RoomsDomainService>();
 builder.Services.AddScoped<GameDomainService>();
 builder.Services.AddScoped<UsersDomainService>();
 builder.Services.AddScoped<AssistantDomainService>();
 
-// בונים את הגדרות ה־SMTP מתוך הקונפיגורציה ומזריקים אותן ל־EmailService.
+// בונים הגדרות SMTP מתוך הקונפיגורציה ומזריקים אותן לשירות המיילים.
 builder.Services.AddScoped(sp =>
 {
     var cfg = sp.GetRequiredService<IConfiguration>();
     return SmtpSettingsFactory.Build(cfg);
 });
 
-// EmailService שולח מיילי איפוס סיסמה בעזרת הגדרות ה־SMTP.
+// שירות המיילים משתמש בהגדרות SMTP כדי לשלוח מייל איפוס סיסמה.
 builder.Services.AddScoped<EmailService>();
 
 var app = builder.Build();
 
-// OpenAPI ממופה רק בפיתוח כדי שב־production לא לחשוף את זה בלי צורך.
+// OpenAPI מופעל רק בפיתוח כדי שלא ייחשף בפרודקשן בלי צורך.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
 
-// בפרויקט הזה ה־CORS פתוח בכוונה לצורך פיתוח מקומי ובדיקת MAUI.
+// CORS פתוח כדי לאפשר תקשורת מקומית ובדיקות מהלקוח.
 app.UseCors(policy => policy
     .AllowAnyOrigin()
     .AllowAnyHeader()
     .AllowAnyMethod());
 
-// שכבת אבטחה לכל ה־API:
-// כל בקשה ל־/api חייבת לשאת את X-App-Code המתאים, חוץ מ־health check.
+// שכבת אבטחה בסיסית לכל API:
+// כל בקשה ל-/api חייבת לשאת X-App-Code נכון, חוץ מ-health check.
 app.Use(async (context, next) =>
 {
-    // מסלולים שאינם API לא עוברים את בדיקת הקוד.
+    // נתיבים שאינם API לא עוברים את הבדיקה הזו.
     if (!context.Request.Path.StartsWithSegments("/api"))
     {
         await next();
         return;
     }
 
-    // משאירים את /api/health פתוח כדי שבדיקות פריסה והפעלה ימשיכו לעבוד.
+    // health check נשאר פתוח כדי שאפשר יהיה לבדוק שהשרת חי.
     if (context.Request.Path.Equals("/api/health", StringComparison.OrdinalIgnoreCase))
     {
         await next();
         return;
     }
 
-    // הקוד המצופה מגיע מהקונפיגורציה, עם ערך ברירת מחדל לפיתוח מקומי.
+    // הקוד המצופה מגיע מהקונפיגורציה, עם ברירת מחדל לפיתוח מקומי.
     var expectedCode = builder.Configuration["Api:AppCode"] ?? "TRIVIA-DEV-123";
 
-    // לקוח ה־MAUI שולח את ה־header הזה בכל קריאה ל־API.
+    // הלקוח שולח את הקוד הזה בכל קריאה ל-API.
     var providedCode = context.Request.Headers["X-App-Code"].ToString();
 
-    // אם הקוד חסר או שגוי, דוחים את הבקשה לפני שהיא מגיעה ל־controller.
+    // אם הקוד חסר או לא נכון, עוצרים כאן ומחזירים 401.
     if (string.IsNullOrWhiteSpace(providedCode) || !string.Equals(providedCode, expectedCode, StringComparison.Ordinal))
     {
         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -80,7 +80,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
-// מחברים את ה־controllers ל־HTTP pipeline.
+// מחברים את כל ה-controllers לצינור הבקשות של השרת.
 app.MapControllers();
 
 // מפעילים את השרת.

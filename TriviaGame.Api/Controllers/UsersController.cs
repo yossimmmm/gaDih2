@@ -14,12 +14,12 @@ public sealed class UsersController : ControllerBase
 
     public UsersController(UsersDomainService usersDomainService, GameDomainService gameDomainService)
     {
-        // ה־controller הזה רק מעביר לשכבת השירות.
+        // controller זה רק מעביר לשירותים.
         this.usersDomainService = usersDomainService;
         this.gameDomainService = gameDomainService;
     }
 
-    // מחזיר את הפרופיל השמור של המשתמש לפי userId.
+    // מחזיר את הפרופיל של המשתמש לפי userId.
     [HttpGet("me")]
     public async Task<IActionResult> GetMe([FromQuery] int userId)
     {
@@ -38,7 +38,7 @@ public sealed class UsersController : ControllerBase
         });
     }
 
-    // מעדכן username, full name ו־email.
+    // מעדכן username, full name ואימייל.
     [HttpPut("me/profile")]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
     {
@@ -46,7 +46,7 @@ public sealed class UsersController : ControllerBase
         return ok ? Ok(new { ok = true, message }) : BadRequest(new { ok = false, message });
     }
 
-    // משנה סיסמה אחרי אימות הסיסמה הנוכחית.
+    // משנה את הסיסמה של המשתמש אחרי בדיקת הסיסמה הישנה.
     [HttpPut("me/password")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
     {
@@ -54,7 +54,7 @@ public sealed class UsersController : ControllerBase
         return ok ? Ok(new { ok = true, message }) : BadRequest(new { ok = false, message });
     }
 
-    // מחזיר סטטיסטיקה מצטברת למשתמש שנבחר.
+    // מחזיר סטטיסטיקות מצטברות למשתמש.
     [HttpGet("me/stats")]
     public async Task<IActionResult> GetStats([FromQuery] int userId)
     {

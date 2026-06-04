@@ -4,7 +4,7 @@ using TriviaGame.Api.Services;
 
 namespace TriviaGame.Api.Controllers;
 
-// נקודות קצה של ה־assistant שמופעלות על ידי Gemini.
+// נקודות קצה של העוזר החכם שמבוססות על Gemini.
 [ApiController]
 [Route("api/assistant")]
 public sealed class AssistantController : ControllerBase
@@ -16,7 +16,7 @@ public sealed class AssistantController : ControllerBase
         this.assistantDomainService = assistantDomainService;
     }
 
-    // מחזיר רמז קצר לשאלה הטריוויה הפעילה כרגע.
+    // מחזיר רמז קצר לשאלה הפעילה.
     [HttpPost("advice")]
     public async Task<IActionResult> Advice([FromBody] AssistantAdviceRequest request, CancellationToken cancellationToken)
     {
@@ -24,7 +24,7 @@ public sealed class AssistantController : ControllerBase
         return ok ? Ok(new { ok = true, advice = message }) : BadRequest(new { ok = false, message });
     }
 
-    // מחזיר תשובה אישית על היסטוריית הטריוויה והסטטיסטיקות של המשתמש המחובר.
+    // מחזיר תשובה אישית על בסיס הנתונים וההיסטוריה של המשתמש.
     [HttpPost("chat")]
     public async Task<IActionResult> Chat([FromBody] AssistantChatRequest request, CancellationToken cancellationToken)
     {

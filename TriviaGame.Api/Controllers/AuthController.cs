@@ -4,8 +4,8 @@ using TriviaGame.Api.Services;
 
 namespace TriviaGame.Api.Controllers;
 
-// נקודות קצה של אימות:
-// login, register, שליפת המשתמש הנוכחי, forgot password, reset password.
+// נקודות קצה של אימות משתמשים:
+// login, register, me, forgot-password, reset-password.
 [ApiController]
 [Route("api/auth")]
 public sealed class AuthController : ControllerBase
@@ -15,12 +15,12 @@ public sealed class AuthController : ControllerBase
 
     public AuthController(AuthDomainService authService, UsersDomainService usersDomainService)
     {
-        // ה־controllers נשארים דקים; הלוגיקה האמיתית יושבת בשירותים.
+        // controller נשאר דק; הלוגיקה האמיתית יושבת בשירותים.
         this.authService = authService;
         this.usersDomainService = usersDomainService;
     }
 
-    // מאמת אימייל וסיסמה ומחזיר את נתוני המשתמש אם הפרטים נכונים.
+    // התחברות עם אימייל וסיסמה.
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
@@ -28,7 +28,7 @@ public sealed class AuthController : ControllerBase
         return result.Ok ? Ok(result) : Unauthorized(result);
     }
 
-    // יוצר חשבון משתמש חדש אחרי ולידציה ובדיקת כפילויות.
+    // הרשמה של משתמש חדש אחרי בדיקת תקינות.
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
@@ -36,7 +36,7 @@ public sealed class AuthController : ControllerBase
         return ok ? Ok(new { ok = true, message }) : BadRequest(new { ok = false, message });
     }
 
-    // מחזיר את נתוני הפרופיל השמורים של ה־userId שנשלח.
+    // מחזיר את המשתמש המחובר לפי userId.
     [HttpGet("me")]
     public async Task<IActionResult> Me([FromQuery] int userId)
     {
@@ -55,7 +55,7 @@ public sealed class AuthController : ControllerBase
         });
     }
 
-    // מתחיל את תהליך איפוס הסיסמה על ידי יצירת טוקן ושליחה במייל.
+    // מתחיל תהליך איפוס סיסמה ושולח מייל עם קישור.
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
     {
@@ -64,7 +64,7 @@ public sealed class AuthController : ControllerBase
         return ok ? Ok(new { ok = true, message }) : BadRequest(new { ok = false, message });
     }
 
-    // משלים את תהליך האיפוס בעזרת הטוקן שנשלח למשתמש.
+    // משלים את איפוס הסיסמה בעזרת הטוקן שנשלח במייל.
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
     {

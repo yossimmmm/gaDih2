@@ -360,7 +360,6 @@ namespace DBL
             raw?.ToLowerInvariant() switch
             {
                 "admin" => UserRole.Admin,
-                "manager" => UserRole.Manager,
                 _ => UserRole.User
             };
 
@@ -369,7 +368,6 @@ namespace DBL
             role switch
             {
                 UserRole.Admin => "Admin",
-                UserRole.Manager => "Manager",
                 _ => "User"
             };
 
