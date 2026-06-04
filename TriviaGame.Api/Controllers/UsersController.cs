@@ -4,7 +4,7 @@ using TriviaGame.Api.Services;
 
 namespace TriviaGame.Api.Controllers;
 
-// ה-controller הזה מטפל בפרופיל משתמש, שינוי סיסמה, סטטיסטיקות, ונתוני משתמשים לאדמין.
+// נקודות קצה של פרופיל משתמש, סיסמה, סטטיסטיקות והיסטוריית משחקים.
 [ApiController]
 [Route("api/users")]
 public sealed class UsersController : ControllerBase
@@ -14,12 +14,12 @@ public sealed class UsersController : ControllerBase
 
     public UsersController(UsersDomainService usersDomainService, GameDomainService gameDomainService)
     {
-        // ה-controller לא נוגע ישירות במסד; הוא רק מעביר את הקריאות לשירותים הנכונים.
+        // ה־controller הזה רק מעביר לשכבת השירות.
         this.usersDomainService = usersDomainService;
         this.gameDomainService = gameDomainService;
     }
 
-    // מחזיר את פרטי המשתמש לפי userId שכבר נמצא אצל ה-client.
+    // מחזיר את הפרופיל השמור של המשתמש לפי userId.
     [HttpGet("me")]
     public async Task<IActionResult> GetMe([FromQuery] int userId)
     {
@@ -38,7 +38,7 @@ public sealed class UsersController : ControllerBase
         });
     }
 
-    // עדכון פרופיל: שדות הטופס נשלחים ב-JSON, והשרת מעדכן את הרשומה המתאימה.
+    // מעדכן username, full name ו־email.
     [HttpPut("me/profile")]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
     {
@@ -46,7 +46,7 @@ public sealed class UsersController : ControllerBase
         return ok ? Ok(new { ok = true, message }) : BadRequest(new { ok = false, message });
     }
 
-    // שינוי סיסמה דורש גם userId וגם סיסמה נוכחית כדי לוודא שהפעולה שייכת למשתמש הנכון.
+    // משנה סיסמה אחרי אימות הסיסמה הנוכחית.
     [HttpPut("me/password")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
     {
@@ -54,7 +54,7 @@ public sealed class UsersController : ControllerBase
         return ok ? Ok(new { ok = true, message }) : BadRequest(new { ok = false, message });
     }
 
-    // סטטיסטיקות המשחקים של המשתמש נשלפות מה-service של המשחקים, כי שם נשמרים הנתונים האלה.
+    // מחזיר סטטיסטיקה מצטברת למשתמש שנבחר.
     [HttpGet("me/stats")]
     public async Task<IActionResult> GetStats([FromQuery] int userId)
     {
@@ -68,7 +68,7 @@ public sealed class UsersController : ControllerBase
         });
     }
 
-    // היסטוריית תוצאות אחרונות עוזרת להראות למשתמש מה קרה במשחקים האחרונים שלו.
+    // מחזיר את תוצאות המשחק האחרונות של המשתמש.
     [HttpGet("me/recent-results")]
     public async Task<IActionResult> GetRecentResults([FromQuery] int userId, [FromQuery] int limit = 10)
     {

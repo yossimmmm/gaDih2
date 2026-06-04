@@ -2,9 +2,8 @@ using TriviaGame.Mobile.Models;
 
 namespace TriviaGame.Mobile.Services;
 
-// TriviaApiClient הוא ה-wrapper העסקי של ה-UI.
-// כאן לא רואים HttpClient ישירות, אלא פעולות כמו Login, JoinRoom, StartGame וכו'.
-// כל מתודה כאן ממפה action של המשתמש ל-endpoint ספציפי בשרת.
+// TriviaApiClient היא שכבת ה־API של המסכים.
+// במקום לעבוד ישירות עם HttpClient, המסכים קוראים למתודות ברורות כמו Login או JoinRoom.
 public sealed class TriviaApiClient
 {
     private readonly ApiClient apiClient;
@@ -14,49 +13,49 @@ public sealed class TriviaApiClient
         this.apiClient = apiClient;
     }
 
-    // Login שולח email + password לשרת.
-    // השרת מחזיר פרטי משתמש, וה-UI שומר אותם לזיכרון המקומי.
+    // שולחת login עם email + password לשרת.
+    // השרת מחזיר פרטי משתמש, וה־UI שומר אותם לזיכרון המקומי.
     public Task<ApiResult<AuthResponse>> LoginAsync(string email, string password, CancellationToken cancellationToken = default) =>
         apiClient.PostAsync<object, AuthResponse>(
             "/api/auth/login",
             new { email, password },
             cancellationToken);
 
-    // הרשמה שולחת את פרטי המשתמש החדשים.
+    // שולחת register עם פרטי המשתמש החדשים.
     public Task<ApiResult<ApiSimpleResponse>> RegisterAsync(string username, string fullName, string email, string password, CancellationToken cancellationToken = default) =>
         apiClient.PostAsync<object, ApiSimpleResponse>(
             "/api/auth/register",
             new { username, fullName, email, password },
             cancellationToken);
 
-    // פרטי המשתמש הנוכחי נשלפים לפי userId.
-    // אין session, לכן כל בקשה מקבלת את ההקשר ישירות מה-UI.
+    // מחזירה את הפרופיל הנוכחי לפי userId.
+    // אין כאן session, לכן כל קריאה נשענת על המשתמש ששמור באפליקציה.
     public Task<ApiResult<CurrentUserResponse>> GetMeAsync(int userId, CancellationToken cancellationToken = default) =>
         apiClient.GetAsync<CurrentUserResponse>($"/api/auth/me?userId={userId}", cancellationToken);
 
-    // סוגי שאלות זמינים בחדר.
+    // סוגי שאלות זמינים לחדר.
     public Task<ApiResult<List<QuestionTypeRow>>> GetQuestionTypesAsync(CancellationToken cancellationToken = default) =>
         apiClient.GetAsync<List<QuestionTypeRow>>("/api/rooms/question-types", cancellationToken);
 
-    // יצירת חדר חדש.
+    // יוצר חדר חדש.
     public Task<ApiResult<ApiSimpleResponse>> CreateRoomAsync(int userId, string roomName, bool isPublic, int? questionTypeId, CancellationToken cancellationToken = default) =>
         apiClient.PostAsync<object, ApiSimpleResponse>(
             "/api/rooms",
             new { userId, roomName, isPublic, questionTypeId },
             cancellationToken);
 
-    // רשימת חדרים ציבוריים.
+    // מחזירה את רשימת החדרים הציבוריים.
     public Task<ApiResult<List<RoomRow>>> GetPublicRoomsAsync(CancellationToken cancellationToken = default) =>
         apiClient.GetAsync<List<RoomRow>>("/api/rooms/public", cancellationToken);
 
-    // הצטרפות לחדר לפי קוד.
+    // מצרפת משתמש לחדר.
     public Task<ApiResult<JoinRoomResponse>> JoinRoomAsync(int userId, string roomCode, string nickname, CancellationToken cancellationToken = default) =>
         apiClient.PostAsync<object, JoinRoomResponse>(
             "/api/rooms/join",
             new { userId, roomCode, nickname },
             cancellationToken);
 
-    // רשימת שחקנים בחדר מסוים.
+    // מחזירה את רשימת השחקנים בחדר.
     public Task<ApiResult<List<RoomPlayerRow>>> GetRoomPlayersAsync(string roomCode, CancellationToken cancellationToken = default) =>
         apiClient.GetAsync<List<RoomPlayerRow>>($"/api/rooms/{roomCode}/players", cancellationToken);
 
@@ -64,7 +63,7 @@ public sealed class TriviaApiClient
     public Task<ApiResult<ApiSimpleResponse>> LeaveRoomAsync(string roomCode, int userId, CancellationToken cancellationToken = default) =>
         apiClient.PostAsync<object, ApiSimpleResponse>($"/api/rooms/{roomCode}/leave?userId={userId}", new { }, cancellationToken);
 
-    // התחלת משחק.
+    // התחלת המשחק.
     public Task<ApiResult<ApiSimpleResponse>> StartGameAsync(int userId, string roomCode, int questionCount = 10, CancellationToken cancellationToken = default) =>
         apiClient.PostAsync<object, ApiSimpleResponse>($"/api/game/{roomCode}/start", new { userId, questionCount }, cancellationToken);
 
@@ -99,7 +98,7 @@ public sealed class TriviaApiClient
     public Task<ApiResult<ApiSimpleResponse>> ChangePasswordAsync(int userId, string currentPassword, string newPassword, CancellationToken cancellationToken = default) =>
         apiClient.PutAsync<object, ApiSimpleResponse>("/api/users/me/password", new { userId, currentPassword, newPassword }, cancellationToken);
 
-    // בקשה לעוזר האישי.
+    // שאלה לעוזר ה־AI.
     public Task<ApiResult<ApiSimpleResponse>> AskAssistantAsync(int userId, string message, CancellationToken cancellationToken = default) =>
         apiClient.PostAsync<object, ApiSimpleResponse>("/api/assistant/chat", new { userId, message, history = new object[0] }, cancellationToken);
 }

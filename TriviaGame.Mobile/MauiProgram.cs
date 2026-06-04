@@ -4,8 +4,8 @@ using TriviaGame.Mobile.Services;
 
 namespace TriviaGame.Mobile;
 
-// MauiProgram הוא קובץ ההתחלה של MAUI.
-// כאן אנחנו בונים את האפליקציה, טוענים קונפיגורציה, ורושמים services ל-DI.
+// MauiProgram הוא קובץ ההפעלה של אפליקציית ה־MAUI.
+// כאן מגדירים את האפליקציה, הטעינה של הקונפיגורציה, וה־services ל־DI.
 public static class MauiProgram
 {
 	public static MauiApp CreateMauiApp()
@@ -13,9 +13,9 @@ public static class MauiProgram
 		// מתחילים Builder שמרכז את כל ההגדרות של האפליקציה.
 		var builder = MauiApp.CreateBuilder();
 		builder
-			// מחברים את מחלקת App הראשית ל-MAUI runtime.
+			// מחברים את מחלקת App הראשית ל־MAUI runtime.
 			.UseMauiApp<App>()
-			// רושמים fonts כך שה-UI יכול להשתמש בהם דרך שמות לוגיים.
+			// רושמים פונטים כך שה־UI יוכל להשתמש בהם לפי שמות לוגיים.
 			.ConfigureFonts(fonts =>
 			{
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -25,29 +25,29 @@ public static class MauiProgram
 		// טוענים את appsettings.json כדי שהאפליקציה תדע לאן לשלוח בקשות.
 		builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: false);
 
-		// ApiEndpointResolver הוא מקור האמת לבחירת base URL ו-app code.
+		// ApiEndpointResolver הוא מקור האמת ל־base URL ולקוד האפליקציה.
 		builder.Services.AddSingleton<ApiEndpointResolver>();
 
 		// HttpClient אחד לכל האפליקציה.
-		// כל קריאה ל-API תעבור דרכו, וה-ApiClient יוסיף עליו את הלוגיקה הנדרשת.
+		// כל קריאה ל־API עוברת דרכו, ו־ApiClient מוסיף את הלוגיקה המיוחדת של הפרויקט.
 		builder.Services.AddSingleton(_ => new HttpClient());
 
-		// השכבה הנמוכה שמבצעת HTTP בפועל, מוסיפה headers ומטפלת בשגיאות.
+		// עטיפה שמבצעת בקשות HTTP, מוסיפה headers ומטפלת ב־retries ובשגיאות.
 		builder.Services.AddSingleton<ApiClient>();
 
-		// שכבת ה-API העסקית של ה-MAUI:
-		// כאן נמצאות מתודות כמו Login, JoinRoom, SubmitAnswer, וכו'.
+		// שכבת ה־API הטיפוסית של ה־MAUI:
+		// דרכה קוראים ל־Login, JoinRoom, SubmitAnswer ועוד.
 		builder.Services.AddSingleton<TriviaApiClient>();
 
-		// רושמים את המסך הראשי כך שהוא יקבל את השירותים דרך DI.
+		// רושמים את המסך הראשי כדי שיוכל לקבל services דרך DI.
 		builder.Services.AddSingleton<MainPage>();
 
 #if DEBUG
-		// ב-debug מוסיפים לוגים כדי לראות מה קורה בזמן ריצה.
+		// ב־debug מוסיפים לוגים כדי לראות מה קורה בזמן פיתוח.
 		builder.Logging.AddDebug();
 #endif
 
-		// בונים את האפליקציה המלאה.
+		// בונים את האפליקציה הסופית.
 		return builder.Build();
 	}
 }

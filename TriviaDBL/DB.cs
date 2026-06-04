@@ -1,24 +1,19 @@
 using MySql.Data.MySqlClient;
-using System;
-using System.Data.Common;
 
 namespace DBL
 {
-    public abstract class DB
+    // מחלקת בסיס לעזרי הגישה למסד.
+    // מחלקות יורשות משתמשות כאן בטיפוסי החיבור, הפקודה והקורא.
+    public class DB
     {
-        // Change this to your real connection string
-        // (Better: read from appsettings.json / env later)
-        protected static readonly string CONNECTION_STRING =
-            "server=localhost;user=root;password=999GtaS999An;database=trivia_game;";
+        // מחרוזת חיבור משותפת למסד המקומי.
+        // באפליקציה אמיתית עדיף להביא את זה מהקונפיגורציה ולא לקוד מקור.
+        protected const string ConnStr =
+            "server=localhost;user id=root;password=999GtaS999An;persistsecurityinfo=True;database=trivia_game";
 
-        protected MySqlConnection conn;
-        protected MySqlCommand cmd;
-        protected DbDataReader? reader;
-
-        protected DB()
-        {
-            conn = new MySqlConnection(CONNECTION_STRING);
-            cmd = conn.CreateCommand();
-        }
+        // אובייקטים לשימוש מחלקות יורשות.
+        protected MySqlConnection? conn;
+        protected MySqlCommand? cmd;
+        protected MySqlDataReader? reader;
     }
 }

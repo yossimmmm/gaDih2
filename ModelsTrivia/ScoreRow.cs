@@ -1,13 +1,12 @@
 namespace Models
 {
-    // שורת ניקוד עבור חדר מסוים.
-    // זו תוצאה שמוצגת ב-scoreboard.
+    // שורת ניקוד של שחקן אחד בתוך חדר אחד.
     public class ScoreRow : PlayerStatsBase
     {
-        // מזהה השחקן בתוך החדר.
+        // מזהה שורת השחקן בחדר, משמש בחיבורים בין טבלאות.
         public int RoomPlayerID { get; set; }
 
-        // הכינוי של השחקן.
+        // הכינוי שמוצג ב-scoreboard.
         public string Nickname { get; set; } = "";
     }
 }

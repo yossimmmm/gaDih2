@@ -1,18 +1,18 @@
 namespace Models
 {
-    // אפשרות תשובה אחת בתוך שאלה.
+    // אפשרות תשובה אחת לשאלת טריוויה.
     public class QuestionOption
     {
-        // מזהה פנימי של האפשרות.
+        // המפתח הראשי של האפשרות.
         public int OptionID { get; set; }
 
-        // לאיזו שאלה האפשרות שייכת.
+        // המפתח הזר שמקשר את האפשרות לשאלה.
         public int QuestionID { get; set; }
 
-        // הטקסט שהשחקן רואה ולוחץ עליו.
+        // הטקסט שמוצג כשאלה אפשרית.
         public string OptionText { get; set; } = "";
 
-        // האם זו התשובה הנכונה.
+        // האם זו האפשרות הנכונה.
         public bool IsCorrect { get; set; }
     }
 }

@@ -4,14 +4,13 @@ using MimeKit;
 
 namespace TriviaGame.Api.Services;
 
-// השירות הזה שולח מיילים דרך SMTP.
-// כרגע השימוש העיקרי הוא עבור password reset.
+// שולח מיילים תפעוליים, כרגע רק הודעות איפוס סיסמה.
 public sealed class EmailService
 {
-    // הגדרות SMTP שנקראות מהקונפיגורציה.
+    // הגדרות SMTP שנקראות מהקונפיגורציה או מה־environment.
     private readonly SmtpSettings settings;
 
-    // לוגים של שליחה או כשל.
+    // משמש לרישום הצלחה או כשל של שליחת המייל.
     private readonly ILogger<EmailService> logger;
 
     public EmailService(SmtpSettings settings, ILogger<EmailService> logger)
@@ -20,14 +19,13 @@ public sealed class EmailService
         this.logger = logger;
     }
 
-    // שולח מייל איפוס סיסמה.
-    // ה-link כבר נבנה לפני הקריאה, והמתודה רק שולחת אותו לכתובת המבוקשת.
+    // בונה ושולח את מייל איפוס הסיסמה.
     public async Task SendPasswordResetAsync(string toEmail, string resetLink)
     {
         if (string.IsNullOrWhiteSpace(toEmail))
             return;
 
-        // בניית מייל טקסטואלי פשוט.
+        // בונים מייל טקסט רגיל כדי שיעבוד בכל לקוח דוא"ל.
         var message = new MimeMessage();
         message.From.Add(MailboxAddress.Parse(settings.From));
         message.To.Add(MailboxAddress.Parse(toEmail.Trim()));
@@ -37,11 +35,10 @@ public sealed class EmailService
             Text = $"We received a password reset request.\n\nOpen this link:\n{resetLink}\n\nIf this wasn't you, ignore this email."
         };
 
-        // SMTP client זמני שנפתח, שולח, ומתנתק.
         using var client = new SmtpClient();
         client.Timeout = 15000;
 
-        // בוחרים מצב אבטחת חיבור לפי פורט והגדרות.
+        // פורט 465 משתמש ב־SSL מובנה; פורטים אחרים משתמשים בדרך כלל ב־STARTTLS או בלי הצפנה לפי ההגדרות.
         var secureMode = settings.Port == 465
             ? SecureSocketOptions.SslOnConnect
             : (settings.Secure ? SecureSocketOptions.StartTls : SecureSocketOptions.None);

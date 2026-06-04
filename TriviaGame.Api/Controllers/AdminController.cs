@@ -4,23 +4,20 @@ using TriviaGame.Api.Services;
 
 namespace TriviaGame.Api.Controllers;
 
-// ה-controller הזה מרכז את מסלולי האדמין למשתמשים.
-// הוא לא מבצע לוגיקה בעצמו, אלא מעביר הכול ל-UsersDomainService.
+// נקודות קצה לניהול משתמשים ברמת אדמין.
 [ApiController]
 [Route("api/admin")]
 public sealed class AdminController : ControllerBase
 {
-    // השירות שמדבר בפועל עם שכבת הנתונים.
     private readonly UsersDomainService usersDomainService;
 
     public AdminController(UsersDomainService usersDomainService)
     {
-        // הזרקה דרך DI כדי להשאיר את ה-controller דק ופשוט.
+        // ה־controller נשאר דק ומעביר הכול לשירות המשתמשים.
         this.usersDomainService = usersDomainService;
     }
 
-    // מחזיר את כל המשתמשים.
-    // אפשר גם לסנן לפי תפקיד דרך query string.
+    // מחזיר את רשימת המשתמשים, עם אפשרות לסינון לפי role.
     [HttpGet("users")]
     public async Task<IActionResult> GetUsers([FromQuery] string? role = null)
     {
@@ -39,8 +36,7 @@ public sealed class AdminController : ControllerBase
         }));
     }
 
-    // שינוי תפקיד למשתמש קיים.
-    // הנתיב כולל userId, וה-body כולל רק את התפקיד החדש.
+    // משנה את ה־role של משתמש.
     [HttpPost("users/{userId:int}/role")]
     public async Task<IActionResult> UpdateRole(int userId, [FromBody] UpdateRoleRequest request)
     {
@@ -48,7 +44,7 @@ public sealed class AdminController : ControllerBase
         return ok ? Ok(new { ok = true, message }) : BadRequest(new { ok = false, message });
     }
 
-    // עדכון מלא של משתמש מצד אדמין.
+    // מעדכן רשומת משתמש מלאה ממסך האדמין.
     [HttpPut("users/{userId:int}")]
     public async Task<IActionResult> UpdateUser(int userId, [FromBody] AdminUserUpdateRequest request)
     {
@@ -56,7 +52,7 @@ public sealed class AdminController : ControllerBase
         return ok ? Ok(new { ok = true, message }) : BadRequest(new { ok = false, message });
     }
 
-    // מחיקת משתמש.
+    // מוחק חשבון משתמש.
     [HttpDelete("users/{userId:int}")]
     public async Task<IActionResult> DeleteUser(int userId)
     {

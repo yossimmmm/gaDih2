@@ -4,8 +4,8 @@ using TriviaGame.Api.Services;
 
 namespace TriviaGame.Api.Controllers;
 
-// ה-controller הזה מטפל בכל הפעולות שקשורות לחדרים:
-// טעינת סוגי שאלות, יצירת חדר, הצטרפות לחדר, עזיבה, ורשימת שחקנים.
+// נקודות קצה של חדרים:
+// סוגי שאלות, יצירת חדר, דפדוף בחדרים ציבוריים, הצטרפות/יציאה ורשימת שחקנים.
 [ApiController]
 [Route("api/rooms")]
 public sealed class RoomsController : ControllerBase
@@ -14,11 +14,11 @@ public sealed class RoomsController : ControllerBase
 
     public RoomsController(RoomsDomainService roomsDomainService)
     {
-        // ה-controller עצמו לא נוגע במסד; הוא רק מעביר את העבודה לשירות הדומיין.
+        // ה־controller לא מדבר ישירות עם ה־DB; הוא רק מעביר לשכבת השירות.
         this.roomsDomainService = roomsDomainService;
     }
 
-    // ה-UI צריך את סוגי השאלות כדי למלא picker בבחירת חדר.
+    // מחזיר את קטגוריות השאלות שבהן משתמש מסך יצירת החדר.
     [HttpGet("question-types")]
     public async Task<IActionResult> GetQuestionTypes()
     {
@@ -26,7 +26,7 @@ public sealed class RoomsController : ControllerBase
         return Ok(rows);
     }
 
-    // יצירת חדר מקבלת userId, שם חדר, האם החדר ציבורי, ואפשרות לסוג שאלות.
+    // יוצר חדר חדש עבור המשתמש הנוכחי.
     [HttpPost]
     public async Task<IActionResult> CreateRoom([FromBody] CreateRoomRequest request)
     {
@@ -36,7 +36,7 @@ public sealed class RoomsController : ControllerBase
             : BadRequest(new { ok = false, message });
     }
 
-    // רשימת חדרים ציבוריים נשלפת בלי userId, כי זו קריאת read-only כללית.
+    // מחזיר את רשימת הלובי של החדרים הציבוריים.
     [HttpGet("public")]
     public async Task<IActionResult> GetPublicRooms()
     {
@@ -44,7 +44,7 @@ public sealed class RoomsController : ControllerBase
         return Ok(rooms);
     }
 
-    // שליפת חדר בודד לפי קוד, למשל כשעוברים מאוסף חדרים למסך חדר פעיל.
+    // טוען חדר אחד לפי הקוד שלו.
     [HttpGet("{roomCode}")]
     public async Task<IActionResult> GetRoom(string roomCode)
     {
@@ -52,7 +52,7 @@ public sealed class RoomsController : ControllerBase
         return room is null ? NotFound(new { ok = false, message = "Room not found." }) : Ok(room);
     }
 
-    // הצטרפות לחדר משתמשת ב-userId מפורש, כדי שהשרת ייצור row של room player לאותו משתמש.
+    // מוסיף את המשתמש הנוכחי לרשימת השחקנים בחדר.
     [HttpPost("join")]
     public async Task<IActionResult> Join([FromBody] JoinRoomRequest request)
     {
@@ -62,7 +62,7 @@ public sealed class RoomsController : ControllerBase
             : BadRequest(new { ok = false, message });
     }
 
-    // עזיבה מוחקת את שורת השחקן של המשתמש מתוך החדר.
+    // מסיר שחקן מחדר.
     [HttpPost("{roomCode}/leave")]
     public async Task<IActionResult> Leave(string roomCode, [FromQuery] int userId)
     {
@@ -74,7 +74,7 @@ public sealed class RoomsController : ControllerBase
         return ok ? Ok(new { ok = true }) : BadRequest(new { ok = false, message = "Failed to leave room." });
     }
 
-    // רשימת שחקנים משמשת את ה-UI כדי לדעת מי כבר נמצא בחדר.
+    // מחזיר את השחקנים הנוכחיים בתוך החדר.
     [HttpGet("{roomCode}/players")]
     public async Task<IActionResult> Players(string roomCode)
     {

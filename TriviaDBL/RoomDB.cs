@@ -1,28 +1,20 @@
-// TriviaDBL/RoomDB.cs
-// Adds: GetRoomByCodeAsync, JoinRoomAsync, GetPlayersAsync
-// Assumes you already have Models/Room.cs and a RoomPlayer model (included below if you don't)
-
 using Models;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Threading.Tasks;
 
 namespace DBL
 {
     public class RoomDB
     {
-        // מחרוזת חיבור למסד
+        // מחרוזת חיבור משותפת לכל שאילתות החדרים.
         private const string ConnStr =
             "server=localhost;user id=root;password=999GtaS999An;persistsecurityinfo=True;database=trivia_game";
 
-        // ---------------------------
-        // GetRoomByCodeAsync
-        // ---------------------------
         public async Task<Room?> GetRoomByCodeAsync(string roomCode)
         {
-            // ולידציה בסיסית לקוד חדר
+            // קוד חדר ריק או null לא יכול לזהות חדר.
             if (string.IsNullOrWhiteSpace(roomCode))
                 return null;
 
@@ -31,7 +23,7 @@ namespace DBL
                 await using var conn = new MySqlConnection(ConnStr);
                 await conn.OpenAsync();
 
-                // שליפת חדר יחיד לפי קוד
+                // מנרמלים את קוד החדר לאותיות גדולות לפני החיפוש.
                 const string sql = @"
 SELECT room_id, room_code, room_name, host_id, is_active, is_public, question_type_id, created_at
 FROM rooms
@@ -45,23 +37,24 @@ LIMIT 1;";
                 if (!await reader.ReadAsync())
                     return null;
 
-                // המרת שורת מסד לאובייקט Room
+                // כל עמודה שנבחרה מועתקת למודל Room.
                 return new Room
                 {
-                    RoomID = reader.GetInt32("room_id"),
-                    RoomCode = reader.GetString("room_code"),
-                    RoomName = reader.GetString("room_name"),
-                    HostID = reader.GetInt32("host_id"),
-                    IsActive = reader.GetBoolean("is_active"),
-                    IsPublic = reader.GetBoolean("is_public"),
+                    RoomID = Convert.ToInt32(reader["room_id"]),
+                    RoomCode = Convert.ToString(reader["room_code"]) ?? "",
+                    RoomName = Convert.ToString(reader["room_name"]) ?? "",
+                    HostID = Convert.ToInt32(reader["host_id"]),
+                    IsActive = Convert.ToInt32(reader["is_active"]) == 1,
+                    IsPublic = Convert.ToInt32(reader["is_public"]) == 1,
                     QuestionTypeID = reader.IsDBNull(reader.GetOrdinal("question_type_id"))
                         ? (int?)null
-                        : reader.GetInt32("question_type_id"),
-                    CreatedAt = reader.GetDateTime("created_at")
+                        : Convert.ToInt32(reader["question_type_id"]),
+                    CreatedAt = Convert.ToDateTime(reader["created_at"])
                 };
             }
             catch (MySqlException ex)
             {
+                // שגיאות מסד עוברות עטיפה עם הודעה ברורה יותר לשכבת השירות.
                 throw new Exception($"Database error while fetching room: {ex.Message}", ex);
             }
             catch (Exception ex)
@@ -70,24 +63,17 @@ LIMIT 1;";
             }
         }
 
-        // ---------------------------
-        // JoinRoomAsync
-        // Inserts into room_players
-        // Enforces unique(room_id,user_id) via DB constraint:
-        // - If already exists: returns existing row
-        // - If new: returns inserted row
-        // ---------------------------
         public async Task<RoomPlayer?> JoinRoomAsync(int roomId, int userId, string nickname)
         {
-            // ולידציה בסיסית לקלט כניסה לחדר
+            // משתמש צריך גם חדר תקין וגם חשבון תקין לפני הצטרפות.
             if (roomId <= 0 || userId <= 0)
                 return null;
 
             nickname = (nickname ?? "").Trim();
             if (nickname.Length == 0)
                 nickname = $"Player{userId}";
-            
-            // Validate nickname length (max 50 chars)
+
+            // שומרים על nickname קצר כדי שייכנס ל־UI ולעמודת המסד.
             if (nickname.Length > 50)
                 nickname = nickname.Substring(0, 50);
 
@@ -96,7 +82,7 @@ LIMIT 1;";
                 await using var conn = new MySqlConnection(ConnStr);
                 await conn.OpenAsync();
 
-                // ניסיון הוספת שחקן לחדר (אם כבר קיים נמשיך לשליפה)
+                // קודם מנסים להכניס שורת שחקן. אילוץ ייחודיות מטפל בכפילויות.
                 const string insertSql = @"
 INSERT INTO room_players (room_id, user_id, nickname, last_seen)
 VALUES (@room_id, @user_id, @nickname, NOW());";
@@ -109,24 +95,24 @@ VALUES (@room_id, @user_id, @nickname, NOW());";
 
                     try
                     {
-                        // הוספת שורה חדשה עבור המשתמש בחדר
                         var rows = await cmd.ExecuteNonQueryAsync();
                         if (rows != 1)
                             return null;
                     }
                     catch (MySqlException ex)
                     {
-                        // 1062 = משתמש כבר קיים בחדר, לא נכשלים בגלל זה
+                        // שגיאת MySQL 1062 אומרת שהשחקן כבר נמצא בחדר.
                         if (ex.Number != 1062)
                             throw new Exception($"Database error while joining room: {ex.Message}", ex);
                     }
                 }
 
-                // רענון last_seen גם בכניסה חוזרת
+                // בין אם המשתמש חדש או קיים, מרעננים את ה־heartbeat.
                 const string touchSql = @"
 UPDATE room_players
 SET last_seen = NOW()
 WHERE room_id = @room_id AND user_id = @user_id;";
+
                 await using (var touchCmd = new MySqlCommand(touchSql, conn))
                 {
                     touchCmd.Parameters.AddWithValue("@room_id", roomId);
@@ -134,7 +120,7 @@ WHERE room_id = @room_id AND user_id = @user_id;";
                     await touchCmd.ExecuteNonQueryAsync();
                 }
 
-                // החזרת שורת השחקן (חדשה או קיימת)
+                // מחזירים את השורה הקנונית מהמסד אחרי ההצטרפות.
                 const string selectSql = @"
 SELECT room_player_id, room_id, user_id, nickname, joined_at
 FROM room_players
@@ -152,11 +138,11 @@ LIMIT 1;";
 
                     return new RoomPlayer
                     {
-                        RoomPlayerID = reader.GetInt32("room_player_id"),
-                        RoomID = reader.GetInt32("room_id"),
-                        UserID = reader.GetInt32("user_id"),
-                        Nickname = reader.GetString("nickname"),
-                        JoinedAt = reader.GetDateTime("joined_at")
+                        RoomPlayerID = Convert.ToInt32(reader["room_player_id"]),
+                        RoomID = Convert.ToInt32(reader["room_id"]),
+                        UserID = Convert.ToInt32(reader["user_id"]),
+                        Nickname = Convert.ToString(reader["nickname"]) ?? "",
+                        JoinedAt = Convert.ToDateTime(reader["joined_at"])
                     };
                 }
             }
@@ -170,13 +156,9 @@ LIMIT 1;";
             }
         }
 
-        // ---------------------------
-        // GetPlayersAsync
-        // Returns all room_players for a room
-        // ---------------------------
         public async Task<List<RoomPlayer>> GetPlayersAsync(int roomId)
         {
-            // החזרת רשימת שחקנים לפי חדר
+            // אם roomId ריק/לא תקין, מחזירים רשימה ריקה.
             var result = new List<RoomPlayer>();
             if (roomId <= 0)
                 return result;
@@ -186,7 +168,7 @@ LIMIT 1;";
                 await using var conn = new MySqlConnection(ConnStr);
                 await conn.OpenAsync();
 
-                // שליפת כל השחקנים בחדר לפי זמן הצטרפות
+                // מחזירים את השחקנים לפי סדר ההצטרפות כדי שה־UI יראה רשימה יציבה.
                 const string sql = @"
 SELECT room_player_id, room_id, user_id, nickname, joined_at
 FROM room_players
@@ -201,11 +183,11 @@ ORDER BY joined_at ASC;";
                 {
                     result.Add(new RoomPlayer
                     {
-                        RoomPlayerID = reader.GetInt32("room_player_id"),
-                        RoomID = reader.GetInt32("room_id"),
-                        UserID = reader.GetInt32("user_id"),
-                        Nickname = reader.GetString("nickname"),
-                        JoinedAt = reader.GetDateTime("joined_at")
+                        RoomPlayerID = Convert.ToInt32(reader["room_player_id"]),
+                        RoomID = Convert.ToInt32(reader["room_id"]),
+                        UserID = Convert.ToInt32(reader["user_id"]),
+                        Nickname = Convert.ToString(reader["nickname"]) ?? "",
+                        JoinedAt = Convert.ToDateTime(reader["joined_at"])
                     });
                 }
 
@@ -220,14 +202,14 @@ ORDER BY joined_at ASC;";
                 throw new Exception($"Error fetching players: {ex.Message}", ex);
             }
         }
+
         public async Task<Room?> CreateRoomAsync(string roomName, int hostId, bool isPublic, int? questionTypeId)
         {
-            // ולידציה בסיסית לקלט יצירת חדר
+            // מנקים את שם החדר לפני כתיבה למסד.
             roomName = (roomName ?? "").Trim();
-            if (roomName.Length == 0 || hostId <= 0) 
+            if (roomName.Length == 0 || hostId <= 0)
                 return null;
 
-            // Validate room name length (max 100 chars)
             if (roomName.Length > 100)
                 throw new ArgumentException("Room name cannot exceed 100 characters");
 
@@ -236,7 +218,7 @@ ORDER BY joined_at ASC;";
                 await using var conn = new MySqlConnection(ConnStr);
                 await conn.OpenAsync();
 
-                // יצירת קוד חדר קצר ואקראי
+                // מייצרים קוד חדר קצר וקריא ומנסים שוב אם יש התנגשות.
                 string code = "";
                 var rng = new Random();
 
@@ -247,7 +229,6 @@ ORDER BY joined_at ASC;";
                     for (int i = 0; i < 6; i++)
                         code += chars[rng.Next(chars.Length)];
 
-                    // בדיקת ייחודיות הקוד במסד
                     const string checkSql = "SELECT COUNT(*) FROM rooms WHERE room_code=@c";
                     await using var check = new MySqlCommand(checkSql, conn);
                     check.Parameters.AddWithValue("@c", code);
@@ -258,7 +239,7 @@ ORDER BY joined_at ASC;";
                 if (string.IsNullOrEmpty(code))
                     throw new Exception("Failed to generate unique room code");
 
-                // שמירת החדר החדש במסד
+                    // חדרים חדשים מתחילים פעילים ויכולים להיות ציבוריים או פרטיים.
                 const string insertSql = @"
 INSERT INTO rooms (room_code, room_name, host_id, is_active, is_public, question_type_id, last_seen)
 VALUES (@code, @name, @host, 1, @is_public, @question_type_id, NOW());";
@@ -272,11 +253,10 @@ VALUES (@code, @name, @host, 1, @is_public, @question_type_id, NOW());";
                     cmd.Parameters.AddWithValue("@question_type_id", (object?)questionTypeId ?? DBNull.Value);
 
                     var rows = await cmd.ExecuteNonQueryAsync();
-                    if (rows != 1) 
+                    if (rows != 1)
                         throw new Exception("Failed to create room");
                 }
 
-                // החזרת אובייקט החדר שנוצר
                 return await GetRoomByCodeAsync(code);
             }
             catch (MySqlException ex)
@@ -288,9 +268,10 @@ VALUES (@code, @name, @host, 1, @is_public, @question_type_id, NOW());";
                 throw new Exception($"Error creating room: {ex.Message}", ex);
             }
         }
+
         public async Task<int> DeleteExpiredRoomsAsync()
         {
-            // מחיקת חדרים ישנים מאוד לניקוי נתונים
+            // האפליקציה מתייחסת לחדרים ישנים מאוד כמידע מת והורסת אותם.
             await using var conn = new MySqlConnection(ConnStr);
             await conn.OpenAsync();
 
@@ -304,7 +285,7 @@ WHERE created_at < (NOW() - INTERVAL 3 HOUR);";
 
         public async Task<List<Room>> GetPublicRoomsAsync()
         {
-            // שליפת רשימת חדרים ציבוריים פעילים
+            // רק חדרים ציבוריים פעילים עם לפחות שחקן אחד עדכני מוצגים בלובי.
             var result = new List<Room>();
 
             try
@@ -314,10 +295,10 @@ WHERE created_at < (NOW() - INTERVAL 3 HOUR);";
                 await using var conn = new MySqlConnection(ConnStr);
                 await conn.OpenAsync();
 
+                // קודם מוחקים שחקני חדר לא פעילים, ואז מוחקים חדרים שהתרוקנו.
                 await DeleteStaleRoomPlayersAsync(conn);
                 await DeleteEmptyRoomsAsync(conn);
 
-                // החזרת רק חדרים ציבוריים עם שחקנים פעילים
                 const string sql = @"
 SELECT r.room_id, r.room_code, r.room_name, r.host_id, r.is_active, r.is_public, r.question_type_id, r.created_at
 FROM rooms r
@@ -339,16 +320,16 @@ ORDER BY r.created_at DESC;";
                 {
                     result.Add(new Room
                     {
-                        RoomID = reader.GetInt32("room_id"),
-                        RoomCode = reader.GetString("room_code"),
-                        RoomName = reader.GetString("room_name"),
-                        HostID = reader.GetInt32("host_id"),
-                        IsActive = reader.GetBoolean("is_active"),
-                        IsPublic = reader.GetBoolean("is_public"),
+                        RoomID = Convert.ToInt32(reader["room_id"]),
+                        RoomCode = Convert.ToString(reader["room_code"]) ?? "",
+                        RoomName = Convert.ToString(reader["room_name"]) ?? "",
+                        HostID = Convert.ToInt32(reader["host_id"]),
+                        IsActive = Convert.ToInt32(reader["is_active"]) == 1,
+                        IsPublic = Convert.ToInt32(reader["is_public"]) == 1,
                         QuestionTypeID = reader.IsDBNull(reader.GetOrdinal("question_type_id"))
                             ? (int?)null
-                            : reader.GetInt32("question_type_id"),
-                        CreatedAt = reader.GetDateTime("created_at")
+                            : Convert.ToInt32(reader["question_type_id"]),
+                        CreatedAt = Convert.ToDateTime(reader["created_at"])
                     });
                 }
 
@@ -366,7 +347,7 @@ ORDER BY r.created_at DESC;";
 
         public async Task<bool> RemovePlayerAsync(int roomId, int userId)
         {
-            // הסרת שחקן מחדר (יציאה/ניתוק)
+            // זו פעולת יציאה מחדר.
             if (roomId <= 0 || userId <= 0)
                 return false;
 
@@ -398,7 +379,7 @@ WHERE room_id = @room_id AND user_id = @user_id;";
 
         public async Task<bool> DeleteRoomAsync(int roomId)
         {
-            // מחיקת חדר לפי מזהה
+            // מוחקים את החדר עצמו, בדרך כלל כשהמארח סוגר אותו.
             if (roomId <= 0)
                 return false;
 
@@ -429,7 +410,7 @@ WHERE room_id = @room_id;";
 
         public async Task<bool> DeleteRoomIfNoPlayersAsync(int roomId)
         {
-            // מחיקת חדר רק אם אין לו שחקנים
+            // עזר בטיחות: מוחק את החדר רק אם אין בו שחקנים.
             if (roomId <= 0)
                 return false;
 
@@ -463,7 +444,7 @@ HAVING COUNT(rp.room_player_id) = 0;";
 
         private async Task<int> DeleteEmptyRoomsAsync(MySqlConnection conn)
         {
-            // ניקוי חדרים ריקים לחלוטין
+            // מוחק חדרים שאין בהם אף שחקן.
             const string sql = @"
 DELETE r
 FROM rooms r
@@ -476,7 +457,7 @@ WHERE rp.room_id IS NULL;";
 
         private async Task<int> DeleteStaleRoomPlayersAsync(MySqlConnection conn)
         {
-            // מחיקת שחקנים לא פעילים לפי heartbeat
+            // שחקנים שהפסיקו לשלוח heartbeat נחשבים מנותקים.
             const string sql = @"
 DELETE FROM room_players
 WHERE last_seen IS NULL
@@ -488,7 +469,7 @@ WHERE last_seen IS NULL
 
         public async Task<bool> UpdateRoomLastSeenAsync(string roomCode)
         {
-            // heartbeat לחדר פעיל
+            // heartbeat ברמת חדר שומר עליו חי בלובי.
             if (string.IsNullOrWhiteSpace(roomCode))
                 return false;
 
@@ -519,7 +500,7 @@ WHERE room_code = @code;";
 
         public async Task<bool> UpdateRoomPlayerLastSeenAsync(string roomCode, int userId)
         {
-            // heartbeat לשחקן בתוך חדר
+            // heartbeat של שחקן נשמר בנפרד כדי לדעת מי עדיין פעיל בתוך החדר.
             if (string.IsNullOrWhiteSpace(roomCode) || userId <= 0)
                 return false;
 
@@ -550,6 +531,5 @@ WHERE r.room_code = @code AND rp.user_id = @user_id;";
                 throw new Exception($"Error updating player heartbeat: {ex.Message}", ex);
             }
         }
-
     }
 }

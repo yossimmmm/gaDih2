@@ -4,18 +4,18 @@ using TriviaGame.Api.Contracts;
 
 namespace TriviaGame.Api.Services;
 
-// השירות הזה מרכז את כל פעולות האותנטיקציה:
-// login, register, forgot password, reset password.
-// אין כאן session/cookie; ה-client שומר את המשתמש שקיבל מה-API.
+// השירות הזה מחזיק את כל זרימת האימות:
+// login, register, forgot-password, reset-password.
+// הוא לא יוצר sessions או cookies; לקוח ה־MAUI שומר את המידע שה־API מחזיר.
 public sealed class AuthDomainService
 {
-    // שירות שליחת המיילים לאיפוס סיסמה.
+    // משמש לשליחת מיילי איפוס סיסמה.
     private readonly EmailService emailService;
 
-    // גישה לקונפיגורציה של SMTP ושאר ערכים.
+    // הקונפיגורציה משמשת בעיקר להגדרות SMTP ולפרמטרים בצד השרת.
     private readonly IConfiguration configuration;
 
-    // לוגים לכשלים אמיתיים.
+    // לוגר רגיל לדיווח שגיאות.
     private readonly ILogger<AuthDomainService> logger;
 
     public AuthDomainService(
@@ -28,25 +28,23 @@ public sealed class AuthDomainService
         this.logger = logger;
     }
 
-    // Login לא יוצר session ולא token.
-    // הוא רק בודק את הסיסמה ומחזיר ל-client את פרטי המשתמש שיש לשמור בזיכרון.
+    // login בודק פרטי התחברות ומחזיר את נתוני המשתמש שהלקוח צריך.
     public async Task<AuthResultResponse> LoginAsync(LoginRequest req)
     {
         if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
             return new(false, "Email and password are required.", "", 0, "", "User");
 
-        // מחפשים את המשתמש לפי email מנורמל.
+        // מנרמלים את האימייל לפני חיפוש כדי שהבדלי אותיות לא ישברו את הכניסה.
         var userDb = new UserDB();
         var user = await userDb.GetByEmailAsync(req.Email.Trim().ToLowerInvariant());
         if (user is null || !PasswordHelper.Verify(req.Password, user.PasswordHash))
             return new(false, "Invalid email or password.", "", 0, "", "User");
 
-        // אין token ואין session.
-        // האפליקציה שומרת את המשתמש שקיבלה ומעבירה userId לכל בקשה שדורשת הקשר.
+        // התשובה מחזירה ללקוח נתוני זהות בסיסיים ותפקיד.
         return new(true, "Login succeeded.", "", user.UserID, user.Username, user.Role.ToString());
     }
 
-    // יצירת משתמש חדש לפי אותם כללי תקינות של המערכת.
+    // register מאמת קלט, בודק ייחודיות, מבצע hashing לסיסמה ומכניס את החשבון.
     public async Task<(bool Ok, string Message)> RegisterAsync(RegisterRequest req)
     {
         var (usernameValid, usernameError) = ValidationHelper.ValidateUsername(req.Username);
@@ -64,7 +62,7 @@ public sealed class AuthDomainService
         if (!passwordValid)
             return (false, passwordError);
 
-        // מנרמלים את השדות לפני שמכניסים למסד.
+        // מנרמלים את כל הערכים לפני שמירה במסד.
         var username = ValidationHelper.SanitizeInput(req.Username, 50);
         var fullName = ValidationHelper.SanitizeInput(req.FullName, 100);
         var email = ValidationHelper.SanitizeInput(req.Email, 100).ToLowerInvariant().Trim();
@@ -76,7 +74,7 @@ public sealed class AuthDomainService
         if (await userDb.GetByUsernameAsync(username) is not null)
             return (false, "Username already taken.");
 
-        // הסיסמה נשמרת כ-hash בלבד.
+        // שומרים רק hash, לא סיסמה גולמית.
         var created = await userDb.InsertUserAsync(new User
         {
             Username = username,
@@ -91,8 +89,7 @@ public sealed class AuthDomainService
             : (true, "Registered successfully.");
     }
 
-    // שחזור סיסמה דרך email.
-    // זה עדיין משתמש ב-link מבוסס token כדי לשמור על ה-flow הקיים.
+    // forgot-password מייצר טוקן איפוס ושולח קישור במייל.
     public async Task<(bool Ok, string Message)> ForgotPasswordAsync(ForgotPasswordRequest req, string requestBaseUrl)
     {
         if (string.IsNullOrWhiteSpace(req.Email))
@@ -112,7 +109,7 @@ public sealed class AuthDomainService
 
         try
         {
-            // הטוקן נשמר במסד הנתונים, והקישור נבנה על בסיס כתובת השרת הנוכחית.
+            // במסד נשמר ה־hash של הטוקן; הטוקן הגולמי נשלח במייל.
             var token = await userDb.CreatePasswordResetTokenAsync(user.UserID, TimeSpan.FromMinutes(30));
             var link = $"{requestBaseUrl.TrimEnd('/')}/reset-password?token={Uri.EscapeDataString(token)}";
             await emailService.SendPasswordResetAsync(user.Email, link);
@@ -125,7 +122,7 @@ public sealed class AuthDomainService
         }
     }
 
-    // איפוס סיסמה דרך token.
+    // reset-password מאמת את הסיסמה החדשה ומעביר את הטוקן לשכבת ה־DB.
     public async Task<(bool Ok, string Message)> ResetPasswordAsync(ResetPasswordRequest req)
     {
         if (string.IsNullOrWhiteSpace(req.Token) || string.IsNullOrWhiteSpace(req.NewPassword))
@@ -142,8 +139,7 @@ public sealed class AuthDomainService
             : (false, "Invalid or expired reset link.");
     }
 
-    // בודק אם כל פרטי ה-SMTP קיימים.
-    // אם חסר ערך, המערכת לא תוכל לשלוח מייל.
+    // SMTP חייב להיות מוגדר כדי ש־forgot-password יעבוד.
     private bool IsSmtpConfigured()
     {
         var smtpFrom = Environment.GetEnvironmentVariable("SMTP_FROM") ?? configuration["Smtp:From"];

@@ -1,22 +1,22 @@
 namespace Models
 {
-    // ייצוג של שחקן בתוך חדר.
-    // זה לא המשתמש עצמו, אלא ההשתתפות שלו בתוך חדר מסוים.
+    // רשומת הצטרפות של משתמש בתוך חדר.
+    // זה האובייקט שמקשר בין שחקן לחדר מסוים.
     public class RoomPlayer
     {
-        // מזהה רשומת ההשתתפות בחדר.
+        // המפתח הראשי של שורת ההצטרפות.
         public int RoomPlayerID { get; set; }
 
-        // לאיזה חדר השחקן שייך.
+        // המפתח הזר לחדר.
         public int RoomID { get; set; }
 
-        // איזה משתמש זה.
+        // המפתח הזר למשתמש.
         public int UserID { get; set; }
 
-        // הכינוי שבחר השחקן בחדר.
+        // הכינוי של השחקן באותו חדר.
         public string Nickname { get; set; } = "";
 
-        // מתי השחקן הצטרף.
+        // זמן ההצטרפות לחדר.
         public System.DateTime JoinedAt { get; set; }
     }
 }

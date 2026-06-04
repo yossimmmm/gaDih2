@@ -3,11 +3,11 @@ using System.Text;
 
 namespace Models
 {
-    // עזר בסיסי ל-hash ולאימות סיסמאות.
-    // לא שומרים סיסמה רגילה, רק ערך hash להשוואה.
+    // עזר ל-hashing של סיסמאות.
+    // הפרויקט שומר hash ולא סיסמה רגילה.
     public static class PasswordHelper
     {
-        // ממיר טקסט סיסמה ל-hash SHA256.
+        // מחשב hash של סיסמה רגילה באמצעות SHA-256.
         public static string Hash(string plain)
         {
             using var sha = SHA256.Create();
@@ -15,7 +15,7 @@ namespace Models
             return BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
         }
 
-        // משווה את הסיסמה הרגילה ל-hash השמור.
+        // משווה סיסמה רגילה מול hash קיים במסד.
         public static bool Verify(string plain, string hash) => Hash(plain) == (hash ?? "");
     }
 }

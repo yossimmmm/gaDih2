@@ -4,30 +4,30 @@ using TriviaGame.Mobile.Services;
 
 namespace TriviaGame.Mobile;
 
-// זהו המסך הראשי של האפליקציה.
-// כל כפתור כאן מפעיל HTTP call אחר ל-API, והטקסטים על המסך רק מציגים את התוצאה.
+// זה המסך הראשי של האפליקציה.
+// כל כפתור כאן מפעיל קריאת HTTP ל־API, והטקסטים על המסך רק מציגים את המצב והתוצאה.
 public partial class MainPage : ContentPage
 {
-    // ה-wrapper שמדבר עם ה-API.
-    // כל הפעולות עובדות דרכו ולא ישירות מול HttpClient.
+    // עטיפת ה־API שבה משתמש כל המסך.
+    // כל הקריאות עוברות דרכה ולא ישירות דרך HttpClient.
     private readonly TriviaApiClient api;
 
-    // אחראי על בחירת base URL, סביבת עבודה, ו-app code.
+    // אובייקט שאחראי לבחור base URL, סביבה וקוד אפליקציה.
     private readonly ApiEndpointResolver endpointResolver;
 
-    // מצב מקומי של המשתמש המחובר.
+    // מצב המשתמש המחובר כרגע.
     private CurrentUserResponse? currentUser;
 
-    // מזהה השחקן בתוך החדר הנוכחי.
+    // מזהה השחקן של המשתמש בתוך החדר הפעיל.
     private int currentRoomPlayerId;
 
-    // השאלה הפעילה ביותר כרגע.
+    // השאלה הפעילה כרגע.
     private QuestionRow? currentQuestion;
 
-    // תשובה שנבחרה ברגע נתון.
+    // האפשרות שנבחרה כרגע עבור התשובה.
     private QuestionOptionRow? selectedOption;
 
-    // רשימות בזיכרון שמאכלסות CollectionView/Picker.
+    // רשימות בזיכרון שמחוברות ל־UI.
     private readonly List<QuestionTypeRow> questionTypes = new();
     private readonly List<RoomRow> publicRooms = new();
     private readonly List<RoomPlayerRow> currentPlayers = new();
@@ -36,23 +36,23 @@ public partial class MainPage : ContentPage
     {
         InitializeComponent();
 
-        // כאן שולפים services מה-container של MAUI.
-        // זה המקום שבו TriviaApiClient ו-ApiEndpointResolver מוזרקים למסך.
+        // שולפים services מה־container של MAUI.
+        // כאן TriviaApiClient ו־ApiEndpointResolver מוזרקים לעמוד.
         var services = Application.Current?.Handler?.MauiContext?.Services
             ?? throw new InvalidOperationException("Service provider is unavailable.");
         api = services.GetRequiredService<TriviaApiClient>();
         endpointResolver = services.GetRequiredService<ApiEndpointResolver>();
 
-        // מחברים את הרשימות למסכים הוויזואליים.
+        // מחברים את האוספים לפקדי התצוגה.
         PublicRoomsView.ItemsSource = publicRooms;
         OptionsView.ItemsSource = Array.Empty<QuestionOptionRow>();
 
-        // טוענים את ההגדרות שנשמרו מקומית לממשק.
+        // טוענים את ההגדרות שנשמרו מקומית כדי שהמסך יראה את המצב הנוכחי.
         LoadApiSettingsToUi();
         UpdateResolvedBaseUrlLabel();
     }
 
-    // לוקח את ההגדרות שנשמרו ב-Preferences ומציג אותן בשדות.
+    // קורא את ההגדרות המקומיות ומחזיר אותן אל הפקדים.
     private void LoadApiSettingsToUi()
     {
         var env = endpointResolver.GetCurrentEnvironment();
@@ -67,11 +67,11 @@ public partial class MainPage : ContentPage
         OverrideBaseUrlEntry.Text = endpointResolver.GetOverrideBaseUrl();
     }
 
-    // מראה למשתמש לאיזה API base URL האפליקציה תפנה בפועל.
+    // מציג למשתמש את ה־base URL שנבחר בפועל.
     private void UpdateResolvedBaseUrlLabel() =>
         ResolvedBaseUrlLabel.Text = $"Base URL: {endpointResolver.GetBaseUrl()}";
 
-    // helper שמרכז מצב טעינה, status, וטיפול בשגיאות ברמת UI.
+    // helper מרכזי שמנהל מצב טעינה, סטטוס וטיפול בחריגות במקום אחד.
     private async Task RunUiActionAsync(string actionName, Func<Task> action)
     {
         BusyIndicator.IsVisible = true;
@@ -92,14 +92,14 @@ public partial class MainPage : ContentPage
         }
     }
 
-    // שינוי environment ב-UI מעדכן את ההגדרה המקומית בלבד.
+    // שינוי סביבה ב־UI מעדכן מיד את ההגדרה המקומית.
     private void OnEnvironmentChanged(object? sender, EventArgs e)
     {
         endpointResolver.SetEnvironment(EnvironmentPicker.SelectedItem?.ToString() ?? "Development");
         UpdateResolvedBaseUrlLabel();
     }
 
-    // שומר את ההגדרות המקומיות ומחשב מחדש את כתובת ה-API.
+    // שומר את ההגדרות שנבחרו ומחשב מחדש את כתובת ה־API.
     private void OnApplyApiSettingsClicked(object? sender, EventArgs e)
     {
         endpointResolver.SetEnvironment(EnvironmentPicker.SelectedItem?.ToString() ?? "Development");
@@ -109,7 +109,7 @@ public partial class MainPage : ContentPage
         StatusLabel.Text = "Status: API settings applied.";
     }
 
-    // Login: שולח email/password ל-API ומעדכן את מצב המשתמש המקומי.
+    // login: שולח אימייל וסיסמה לשרת ומעדכן את מצב המשתמש המקומי.
     private async void OnLoginClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("login", async () =>
@@ -121,8 +121,8 @@ public partial class MainPage : ContentPage
                 return;
             }
 
-            // ה-API מחזיר userId, username, role.
-            // כאן אנחנו שומרים אותו בזיכרון כדי להשתמש בו בבקשות הבאות.
+            // ה־API מחזיר userId, username ו־role.
+            // שומרים אותם בזיכרון כדי ששאר המסך יוכל להשתמש בהם אחרי ההתחברות.
             currentUser = new CurrentUserResponse
             {
                 Authenticated = true,
@@ -141,7 +141,7 @@ public partial class MainPage : ContentPage
         });
     }
 
-    // Register: שולח פרטי משתמש חדשים לשרת.
+    // register: שולח פרטי משתמש חדשים לשרת.
     private async void OnRegisterClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("register", async () =>
@@ -158,8 +158,8 @@ public partial class MainPage : ContentPage
         });
     }
 
-    // Logout מנקה רק את המצב המקומי.
-    // אין session בצד השרת, אז אין מה לבטל שם.
+    // logout רק מנקה את המצב המקומי.
+    // אין כאן session בצד שרת, לכן לא צריך לבטל משהו בשרת עצמו.
     private async void OnLogoutClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("logout", async () =>
@@ -174,7 +174,7 @@ public partial class MainPage : ContentPage
         });
     }
 
-    // טעינת פרטי המשתמש מה-API לפי userId השמור.
+    // טוען מחדש את המידע של המשתמש המחובר.
     private async void OnLoadMeClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("load me", async () =>
@@ -183,7 +183,7 @@ public partial class MainPage : ContentPage
         });
     }
 
-    // קורא ל-API ומעדכן את שדות הפרופיל בממשק.
+    // קורא את פרופיל המשתמש מה־API ומעדכן את שדות המסך.
     private async Task RefreshUserFromApiAsync()
     {
         if (currentUser is null)
@@ -207,7 +207,7 @@ public partial class MainPage : ContentPage
         StatusLabel.Text = "Status: auth data loaded.";
     }
 
-    // עדכון פרופיל: שולח username/fullName/email יחד עם userId.
+    // עדכון פרופיל: שולח username, full name ו־email יחד עם userId.
     private async void OnUpdateProfileClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("update profile", async () =>
@@ -230,7 +230,7 @@ public partial class MainPage : ContentPage
         });
     }
 
-    // טוען את סוגי השאלות הזמינים ליצירת חדר.
+    // טוען את סוגי השאלות כדי למלא את ה־picker של יצירת החדר.
     private async void OnLoadQuestionTypesClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("load question types", async () =>
@@ -250,7 +250,7 @@ public partial class MainPage : ContentPage
         });
     }
 
-    // יוצר חדר חדש ושולח ל-API את השדות שהמשתמש מילא.
+    // יוצר חדר חדש ושולח את הגדרות השאלות לשרת.
     private async void OnCreateRoomClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("create room", async () =>
@@ -277,7 +277,7 @@ public partial class MainPage : ContentPage
         });
     }
 
-    // טוען חדרים ציבוריים בלבד.
+    // טוען חדרים ציבוריים למסך.
     private async void OnLoadPublicRoomsClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("load public rooms", async () =>
@@ -297,14 +297,14 @@ public partial class MainPage : ContentPage
         });
     }
 
-    // בחירה של חדר ציבורי ממלאת אוטומטית את קוד החדר.
+    // בחירת חדר ציבורי ממלאת את שדה קוד החדר.
     private void OnPublicRoomSelected(object? sender, SelectionChangedEventArgs e)
     {
         if (e.CurrentSelection.FirstOrDefault() is RoomRow room)
             RoomCodeEntry.Text = room.RoomCode;
     }
 
-    // הצטרפות לחדר שולחת userId, roomCode, nickname לשרת.
+    // הצטרפות לחדר: שולח userId, roomCode ו־nickname לשרת.
     private async void OnJoinRoomClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("join room", async () =>
@@ -345,6 +345,7 @@ public partial class MainPage : ContentPage
             currentPlayers.Clear();
             currentPlayers.AddRange(result.Data);
 
+            // אם השחקן של המשתמש עוד לא נשמר, מנסים למצוא אותו ברשימה לפי userId.
             if (currentUser is not null && currentRoomPlayerId == 0)
             {
                 var meInRoom = currentPlayers.FirstOrDefault(p => p.UserID == currentUser.UserId);
@@ -356,7 +357,7 @@ public partial class MainPage : ContentPage
         });
     }
 
-    // התחלת משחק שולחת לשרת את ה-userId של המארח ואת מספר השאלות המבוקש.
+    // מתחיל את המשחק על ידי שליחת userId של המארח ומספר השאלות המבוקש.
     private async void OnStartGameClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("start game", async () =>
@@ -376,7 +377,7 @@ public partial class MainPage : ContentPage
         });
     }
 
-    // טוען את השאלה הנוכחית מהשרת ומעדכן את ה-CollectionView של התשובות.
+    // טוען את השאלה הנוכחית מהשרת ומציב את האפשרויות ב־CollectionView.
     private async void OnLoadCurrentQuestionClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("load current question", async () =>
@@ -408,7 +409,7 @@ public partial class MainPage : ContentPage
         });
     }
 
-    // מסמן איזו תשובה נבחרה כרגע.
+    // שומר איזה option נבחרה.
     private void OnOptionSelected(object? sender, SelectionChangedEventArgs e)
     {
         selectedOption = e.CurrentSelection.FirstOrDefault() as QuestionOptionRow;
@@ -444,7 +445,7 @@ public partial class MainPage : ContentPage
         });
     }
 
-    // טוען scoreboard של החדר.
+    // טוען את טבלת הניקוד של החדר.
     private async void OnLoadScoreboardClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("load scoreboard", async () =>
@@ -490,7 +491,7 @@ public partial class MainPage : ContentPage
         });
     }
 
-    // טוען את top players מה-API ומציג סיכום קצר.
+    // טוען את רשימת השחקנים המובילים מה־API ומציג סיכום קצר.
     private async void OnLoadTopPlayersClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("load top players", async () =>
@@ -510,7 +511,7 @@ public partial class MainPage : ContentPage
         });
     }
 
-    // שולח שאלה לעוזר האישי.
+    // שולח שאלה לעוזר.
     private async void OnAskAssistantClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("ask assistant", async () =>

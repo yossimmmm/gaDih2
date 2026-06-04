@@ -2,75 +2,74 @@ using TriviaGame.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// כאן נבנה ה-API עצמו: זו נקודת ההתחלה שממנה נרשמים כל השירותים והנתיבים.
-// אין כאן UI. הקובץ הזה רק מגדיר איך השרת יפעל ואיך הוא יקבל בקשות.
+// רושמים את ה־MVC controllers. כל endpoint ב־API הזה נחשף דרך controller.
 builder.Services.AddControllers();
 
-// OpenAPI נותן תיעוד אוטומטי של ה-endpoints, כדי להבין מה השרת יודע לקבל ולהחזיר.
+// מפעילים OpenAPI כדי שיהיה אפשר לראות את החוזה של ה־API בזמן פיתוח.
 builder.Services.AddOpenApi();
 
-// רושמים HttpClient כי חלק מהשירותים בצד השרת צריכים לדבר עם שירותים חיצוניים.
+// רושמים HttpClient כדי ששירותים יוכלו לקרוא ל־HTTP APIs חיצוניים כמו Gemini.
 builder.Services.AddHttpClient();
 
-// CORS נשאר פתוח כדי שה-MAUI יוכל לדבר עם ה-API גם כשהם רצים כתהליכים נפרדים.
+// מאפשרים ללקוח ה־MAUI לדבר עם ה־API ממקור אחר בזמן פיתוח.
 builder.Services.AddCors();
 
-// שירותי הדומיין מחזיקים את הלוגיקה העסקית: API רק מפנה אליהם ואוסף את התשובה.
+// שירותי הדומיין מחזיקים את כל חוקי העסק. ה־controllers רק מעבירים אליהם את העבודה.
 builder.Services.AddScoped<AuthDomainService>();
 builder.Services.AddScoped<RoomsDomainService>();
 builder.Services.AddScoped<GameDomainService>();
 builder.Services.AddScoped<UsersDomainService>();
 builder.Services.AddScoped<AssistantDomainService>();
 
-// SMTP צריך להיבנות מה-configuration, כי איפוס סיסמה עדיין שולח מייל דרך שרת חיצוני.
+// בונים את הגדרות ה־SMTP מתוך הקונפיגורציה ומזריקים אותן ל־EmailService.
 builder.Services.AddScoped(sp =>
 {
     var cfg = sp.GetRequiredService<IConfiguration>();
     return SmtpSettingsFactory.Build(cfg);
 });
 
-// השירות ששולח את המייל בפועל מקבל את הגדרות ה-SMTP מה-container.
+// EmailService שולח מיילי איפוס סיסמה בעזרת הגדרות ה־SMTP.
 builder.Services.AddScoped<EmailService>();
 
 var app = builder.Build();
 
-// בסביבת פיתוח נחשוף גם את OpenAPI כדי שיהיה קל לראות ולבדוק את כל המסלולים.
+// OpenAPI ממופה רק בפיתוח כדי שב־production לא לחשוף את זה בלי צורך.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
 
-// CORS פתוח לכל origin/header/method, כי זה פרויקט מקומי ופשוט ולא מערכת מרובת דומיינים.
+// בפרויקט הזה ה־CORS פתוח בכוונה לצורך פיתוח מקומי ובדיקת MAUI.
 app.UseCors(policy => policy
     .AllowAnyOrigin()
     .AllowAnyHeader()
     .AllowAnyMethod());
 
-// זה השער הראשי של האבטחה הפשוטה שלנו:
-// כל בקשה ל-/api חייבת לשאת X-App-Code, אחרת היא נעצרת עוד לפני ה-controller.
+// שכבת אבטחה לכל ה־API:
+// כל בקשה ל־/api חייבת לשאת את X-App-Code המתאים, חוץ מ־health check.
 app.Use(async (context, next) =>
 {
-    // אם הבקשה בכלל לא ל-API, לא צריך לבדוק app code.
+    // מסלולים שאינם API לא עוברים את בדיקת הקוד.
     if (!context.Request.Path.StartsWithSegments("/api"))
     {
         await next();
         return;
     }
 
-    // health נשאר פתוח כדי שיהיה אפשר לבדוק שהשירות חי גם בלי כותרת מיוחדת.
+    // משאירים את /api/health פתוח כדי שבדיקות פריסה והפעלה ימשיכו לעבוד.
     if (context.Request.Path.Equals("/api/health", StringComparison.OrdinalIgnoreCase))
     {
         await next();
         return;
     }
 
-    // הקוד המצופה מגיע מה-configuration, עם ברירת מחדל מקומית אם אין הגדרה אחרת.
+    // הקוד המצופה מגיע מהקונפיגורציה, עם ערך ברירת מחדל לפיתוח מקומי.
     var expectedCode = builder.Configuration["Api:AppCode"] ?? "TRIVIA-DEV-123";
 
-    // זה הערך שה-MAUI שולח בכל בקשה.
+    // לקוח ה־MAUI שולח את ה־header הזה בכל קריאה ל־API.
     var providedCode = context.Request.Headers["X-App-Code"].ToString();
 
-    // אם הקוד חסר או שגוי, מחזירים 401 ולא ממשיכים ל-controller.
+    // אם הקוד חסר או שגוי, דוחים את הבקשה לפני שהיא מגיעה ל־controller.
     if (string.IsNullOrWhiteSpace(providedCode) || !string.Equals(providedCode, expectedCode, StringComparison.Ordinal))
     {
         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -81,8 +80,8 @@ app.Use(async (context, next) =>
     await next();
 });
 
-// אחרי שעברנו את הבדיקה, ה-controllers מחוברים למסלולים שלהם.
+// מחברים את ה־controllers ל־HTTP pipeline.
 app.MapControllers();
 
-// מפעילים את השרת בפועל.
+// מפעילים את השרת.
 app.Run();

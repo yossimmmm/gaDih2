@@ -1,8 +1,5 @@
-// Implements:
-// PickQuestionsForRoomAsync(roomId, count)
-// GetCurrentQuestionAsync(roomId)
-// SubmitAnswerAsync(roomPlayerId, questionId, optionId)
-// GetScoreboardAsync(roomId)
+// GameDB היא שכבת הנתונים של מהלך המשחק עצמו.
+// היא מטפלת בבחירת שאלות, שליחת תשובות, ניקוד ותוצאות שמורות.
 
 using Models;
 using MySql.Data.MySqlClient;
@@ -19,13 +16,8 @@ namespace DBL
         private const string ConnStr =
             "server=localhost;user id=root;password=999GtaS999An;persistsecurityinfo=True;database=trivia_game";
 
-        // ---------------------------
-        // PickQuestionsForRoomAsync
-        // Clears existing room_questions + room answers, then picks random questions
-        // and inserts them with question_order 1..count.
-        // Returns number inserted.
-        // ---------------------------
-        // בחירת שאלות לחדר חדש ואיפוס נתוני שאלות/תשובות ישנים בחדר
+        // בוחרת סט חדש של שאלות לחדר.
+        // הפעולה מנקה שאלות ותשובות ישנות של החדר ואז שומרת רשימה חדשה ומסודרת.
         public async Task<int> PickQuestionsForRoomAsync(int roomId, int count)
         {
             // ולידציה בסיסית לקלט
@@ -40,12 +32,12 @@ namespace DBL
                 await using var conn = new MySqlConnection(ConnStr);
                 await conn.OpenAsync();
 
-                // טרנזקציה כדי שכל שלבי בחירת השאלות יהיו אטומיים
+                // טרנזקציה מחזיקה את הניקוי וההכנסה ביחד.
                 await using var tx = await conn.BeginTransactionAsync();
 
                 try
                 {
-                    // מחיקת תשובות ישנות של החדר
+                    // מוחקים תשובות ששייכות לסיבוב ישן באותו חדר.
                     {
                         const string delAnswers = @"DELETE FROM player_answers WHERE room_id = @room_id;";
                         await using var cmd = new MySqlCommand(delAnswers, conn, (MySqlTransaction)tx);
@@ -53,7 +45,7 @@ namespace DBL
                         await cmd.ExecuteNonQueryAsync();
                     }
 
-                    // מחיקת שאלות ישנות של החדר
+                    // מוחקים את שורות room_questions הישנות לפני הכנסת הסיבוב החדש.
                     {
                         const string delRoomQs = @"DELETE FROM room_questions WHERE room_id = @room_id;";
                         await using var cmd = new MySqlCommand(delRoomQs, conn, (MySqlTransaction)tx);
@@ -61,20 +53,20 @@ namespace DBL
                         await cmd.ExecuteNonQueryAsync();
                     }
 
-                    // שליפת סוג שאלות מועדף לפי הגדרות החדר
+                    // קוראים את סוג השאלות המועדף של החדר, אם המארח הגדיר כזה.
                     int? questionTypeId = null;
                     {
                         const string roomSql = @"SELECT question_type_id FROM rooms WHERE room_id = @room_id LIMIT 1;";
                         await using var cmd = new MySqlCommand(roomSql, conn, (MySqlTransaction)tx);
-                        // שולחים room_id כפרמטר מאובטח
+                        // room_id נשלח כפרמטר ולא משורשר לתוך SQL.
                         cmd.Parameters.AddWithValue("@room_id", roomId);
-                        // מחזירים סוג שאלות מועדף אם הוגדר בחדר
+                        // NULL אומר "כל סוג שאלה".
                         var obj = await cmd.ExecuteScalarAsync();
                         if (obj != null && obj != DBNull.Value)
                             questionTypeId = Convert.ToInt32(obj);
                     }
 
-                    // שליפה אקראית של שאלות למסגרת המשחק
+                    // שולפים שאלות אקראיות שמתאימות לסינון סוג השאלה של החדר.
                     List<int> qids = new();
                     {
                         const string pickSql = @"
@@ -84,13 +76,13 @@ WHERE (@qtype IS NULL OR question_type_id = @qtype)
 ORDER BY RAND()
 LIMIT @cnt;";
                         await using var cmd = new MySqlCommand(pickSql, conn, (MySqlTransaction)tx);
-                        // כמות שאלות להגרלה
+                        // כמה שורות אנחנו רוצים בסיבוב הזה.
                         cmd.Parameters.AddWithValue("@cnt", count);
-                        // אם qtype null -> הסינון הופך ל"כל הקטגוריות"
+                        // אם אין הגבלת סוג, הסינון מאפשר את כל השאלות.
                         cmd.Parameters.AddWithValue("@qtype", (object?)questionTypeId ?? DBNull.Value);
 
                         await using var reader = await cmd.ExecuteReaderAsync();
-                        // צבירת מזהי שאלות לרשימה זמנית
+                        // שומרים קודם את מזהי השאלות בזיכרון.
                         while (await reader.ReadAsync())
                             qids.Add(reader.GetInt32("question_id"));
                     }
@@ -101,7 +93,7 @@ LIMIT @cnt;";
                         return 0;
                     }
 
-                    // שמירת סדר השאלות בחדר
+                    // מכניסים את השאלות שנבחרו ל־room_questions עם סדר קבוע.
                     int inserted = 0;
                     for (int i = 0; i < qids.Count; i++)
                     {
@@ -110,7 +102,7 @@ INSERT INTO room_questions (room_id, question_id, question_order, time_limit_sec
 VALUES (@room_id, @qid, @ord, 15);";
 
                         await using var cmd = new MySqlCommand(insSql, conn, (MySqlTransaction)tx);
-                        // קישור שאלה לחדר + סדר שאלה
+                        // שומרים את הקישור בין החדר לשאלה ואת מיקום ההצגה שלה.
                         cmd.Parameters.AddWithValue("@room_id", roomId);
                         cmd.Parameters.AddWithValue("@qid", qids[i]);
                         cmd.Parameters.AddWithValue("@ord", i + 1);
@@ -137,12 +129,8 @@ VALUES (@room_id, @qid, @ord, 15);";
             }
         }
 
-        // ---------------------------
-        // GetCurrentQuestionAsync
-        // Current question is the earliest one not fully answered and not expired.
-        // When a question is first served, started_at is set.
-        // ---------------------------
-        // שליפת השאלה הנוכחית לחדר כולל התחלת טיימר אם זו שאלה חדשה
+        // מחזירה את השאלה החיה הנוכחית של החדר.
+        // השאלה הראשונה שעדיין לא נענתה מופעלת לפי הצורך ומקבלת זמן התחלה.
         public async Task<Question?> GetCurrentQuestionAsync(int roomId)
         {
             // ולידציה בסיסית למזהה חדר
@@ -154,14 +142,14 @@ VALUES (@room_id, @qid, @ord, 15);";
                 await using var conn = new MySqlConnection(ConnStr);
                 await conn.OpenAsync();
 
-                // שליפת מספר שחקנים פעילים לצורך קביעת התקדמות שאלה
+                // סופרים שחקנים פעילים כדי לדעת מתי שאלה נענתה במלואה.
                 var playersCount = await GetRoomPlayersCountAsync(conn, roomId);
-                // שליפת השאלה הפעילה הנוכחית
+                // מחפשים את השאלה הפעילה של החדר, אם יש כזו.
                 var current = await TryGetCurrentRoomQuestionAsync(conn, roomId, playersCount);
                 if (current is null)
                     return null;
 
-                // טעינת גוף שאלה + אופציות
+                // טוענים את הטקסט ואת אפשרויות התשובה אחרי שיודעים איזו שורה פעילה.
                 var q = await LoadQuestionAsync(conn, current.Value.QuestionId, current.Value.TimeLimitSec, current.Value.StartedAt);
                 if (q is null)
                     return null;
@@ -180,14 +168,8 @@ VALUES (@room_id, @qid, @ord, 15);";
             }
         }
 
-        // ---------------------------
-        // SubmitAnswerAsync
-        // Ensures only one answer per (room_player_id, question_id) by:
-        // - deleting any previous row(s)
-        // - inserting new answer with is_correct derived from option
-        // Returns true if inserted.
-        // ---------------------------
-        // שמירת תשובת שחקן לשאלה (עם מניעת כפילויות לאותו שחקן ושאלה)
+        // שומרת תשובה של שחקן אחד לשאלה אחת.
+        // המתודה מחליפה כל תשובה קודמת של אותו שחקן לאותה שאלה.
         public async Task<bool> SubmitAnswerAsync(int roomPlayerId, int questionId, int optionId)
         {
             // ולידציה בסיסית לקלט תשובה
@@ -198,13 +180,13 @@ VALUES (@room_id, @qid, @ord, 15);";
             {
                 await using var conn = new MySqlConnection(ConnStr);
                 await conn.OpenAsync();
-                // טרנזקציה כדי לשמור עקביות בין מחיקה/הוספה
+                // מחיקת השורה הישנה והכנסת החדשה חייבות לקרות יחד.
                 await using var tx = await conn.BeginTransactionAsync();
 
                 try
                 {
                     int roomId;
-                    // שליפת room_id של השחקן וגם אימות שהשחקן קיים
+                    // קוראים את room_id של שורת השחקן ונכשלים אם השחקן לא קיים.
                     {
                         const string rpSql = @"
 SELECT room_id
@@ -231,7 +213,7 @@ FROM question_options
 WHERE option_id = @oid AND question_id = @qid
 LIMIT 1;";
                         await using var cmd = new MySqlCommand(chkSql, conn, (MySqlTransaction)tx);
-                        // אימות option_id תואם לשאלה
+                        // מוודאים שהאפשרות שנבחרה באמת שייכת לשאלה הזאת.
                         cmd.Parameters.AddWithValue("@oid", optionId);
                         cmd.Parameters.AddWithValue("@qid", questionId);
 
@@ -245,25 +227,25 @@ LIMIT 1;";
                         isCorrect = Convert.ToInt32(obj) == 1;
                     }
 
-                    // מחיקת תשובה קודמת של אותו שחקן לאותה שאלה
+                    // מוחקים כל תשובה קודמת כדי שלשחקן תהיה רק תשובה אחת נוכחית.
                     {
                         const string delSql = @"
 DELETE FROM player_answers
 WHERE room_player_id = @rpid AND question_id = @qid;";
                         await using var cmd = new MySqlCommand(delSql, conn, (MySqlTransaction)tx);
-                        // מבטיחים answer יחיד לשחקן בכל שאלה
+                        // אוכפים תשובה אחת שמורה לכל שחקן לכל שאלה.
                         cmd.Parameters.AddWithValue("@rpid", roomPlayerId);
                         cmd.Parameters.AddWithValue("@qid", questionId);
                         await cmd.ExecuteNonQueryAsync();
                     }
 
-                    // הכנסת התשובה החדשה למסד
+                    // מכניסים את התשובה החדשה ומפיקים את נכונותה משורת האפשרות.
                     {
                         const string insSql = @"
 INSERT INTO player_answers (room_id, room_player_id, question_id, selected_option_id, is_correct, answered_at)
 VALUES (@room_id, @rpid, @qid, @oid, @isc, NOW());";
                         await using var cmd = new MySqlCommand(insSql, conn, (MySqlTransaction)tx);
-                        // שמירת room_id הכרחית לצבירת סטטיסטיקה ברמת חדר
+                        // room_id נשמר כדי ששאילתות ניקוד עתידיות יוכלו לקבץ לפי חדר.
                         cmd.Parameters.AddWithValue("@room_id", roomId);
                         cmd.Parameters.AddWithValue("@rpid", roomPlayerId);
                         cmd.Parameters.AddWithValue("@qid", questionId);
@@ -291,11 +273,8 @@ VALUES (@room_id, @rpid, @qid, @oid, @isc, NOW());";
             }
         }
 
-        // ---------------------------
-        // GetScoreboardAsync
-        // For each room_player: counts correct + total answered
-        // ---------------------------
-        // שליפת טבלת ניקוד מלאה של החדר
+        // בונה את ה־scoreboard הנוכחי של החדר.
+        // השאילתה סופרת תשובות נכונות וסך תשובות לכל שחקן.
         public async Task<List<ScoreRow>> GetScoreboardAsync(int roomId)
         {
             // יצירת אוסף תוצאות להחזרה
@@ -308,7 +287,7 @@ VALUES (@room_id, @rpid, @qid, @oid, @isc, NOW());";
                 await using var conn = new MySqlConnection(ConnStr);
                 await conn.OpenAsync();
 
-                // חישוב ניקוד לכל שחקן בחדר
+                // מאגדים את סך התשובות של כל שחקן בשאילתת SQL אחת.
                 const string sql = @"
 SELECT
   rp.room_player_id,
@@ -331,7 +310,7 @@ ORDER BY correct_count DESC, answered_count DESC, rp.nickname ASC;";
                 await using var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
-                    // המרת תוצאת SQL לשורת ניקוד במודל
+                    // ממירים כל שורת SQL למודל scoreboard שה־API משתמש בו.
                     result.Add(new ScoreRow
                     {
                         RoomPlayerID = reader.GetInt32("room_player_id"),
@@ -354,7 +333,7 @@ ORDER BY correct_count DESC, answered_count DESC, rp.nickname ASC;";
             }
         }
         
-        // בדיקה האם שחקן מסוים כבר ענה על השאלה הנוכחית
+        // בודקת אם שחקן מסוים כבר ענה על שאלה מסוימת בחדר הזה.
         public async Task<bool> HasPlayerAnsweredAsync(int roomId, int roomPlayerId, int questionId)
         {
             if (roomId <= 0 || roomPlayerId <= 0 || questionId <= 0)
@@ -365,7 +344,7 @@ ORDER BY correct_count DESC, answered_count DESC, rp.nickname ASC;";
                 await using var conn = new MySqlConnection(ConnStr);
                 await conn.OpenAsync();
 
-            const string sql = @"
+                const string sql = @"
 SELECT 1
 FROM player_answers
 WHERE room_id = @room_id
@@ -373,13 +352,13 @@ WHERE room_id = @room_id
   AND question_id = @qid
 LIMIT 1;";
 
-            await using var cmd = new MySqlCommand(sql, conn);
-            cmd.Parameters.AddWithValue("@room_id", roomId);
-            cmd.Parameters.AddWithValue("@rpid", roomPlayerId);
-            cmd.Parameters.AddWithValue("@qid", questionId);
+                await using var cmd = new MySqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@room_id", roomId);
+                cmd.Parameters.AddWithValue("@rpid", roomPlayerId);
+                cmd.Parameters.AddWithValue("@qid", questionId);
 
-            var obj = await cmd.ExecuteScalarAsync();
-            return obj != null;
+                var obj = await cmd.ExecuteScalarAsync();
+                return obj != null;
             }
             catch (MySqlException ex)
             {
@@ -391,7 +370,7 @@ LIMIT 1;";
             }
         }
 
-        // ספירת כמות השאלות המשויכות לחדר
+        // סופרת כמה שאלות משויכות לחדר.
         public async Task<int> GetRoomQuestionCountAsync(int roomId)
         {
             if (roomId <= 0)
@@ -423,7 +402,7 @@ WHERE room_id = @room_id;";
             }
         }
 
-        // ספירת כמות התשובות ששחקן נתן בחדר
+        // סופרת כמה תשובות שחקן אחד הגיש בחדר.
         public async Task<int> GetPlayerAnswerCountAsync(int roomId, int roomPlayerId)
         {
             if (roomId <= 0 || roomPlayerId <= 0)
@@ -457,7 +436,7 @@ WHERE room_id = @room_id
             }
         }
 
-        // שמירת תוצאות סופיות של חדר לניתוח ביצועי משתמשים בהמשך
+        // שומרת את סיכום התוצאה הסופי של כל שחקן בחדר.
         public async Task SaveRoomResultsAsync(int roomId)
         {
             // אם מזהה חדר לא תקין אין מה לשמור
@@ -470,7 +449,7 @@ WHERE room_id = @room_id
                 if (rows.Count == 0)
                     return;
 
-                // שליפת מידע עזר לקביעת מנצחים
+                // קוראים את הנתונים שצריך כדי להחליט מי מסומן כמנצח.
                 var totalQuestions = await GetRoomQuestionCountAsync(roomId);
                 var isSinglePlayer = rows.Count == 1;
                 var maxCorrect = GetMaxCorrect(rows);
@@ -478,7 +457,7 @@ WHERE room_id = @room_id
                 await using var conn = new MySqlConnection(ConnStr);
                 await conn.OpenAsync();
 
-                // שמירת תוצאות לכל משתמש בחדר (insert/update)
+                // מבצעים upsert לשורת סיכום אחת לכל שחקן כדי ששמירות חוזרות לא יכפילו היסטוריה.
                 const string sql = @"
 INSERT INTO game_results (room_id, user_id, correct_count, answered_count, is_winner)
 VALUES (@room_id, @user_id, @correct_count, @answered_count, @is_winner)
@@ -489,11 +468,11 @@ ON DUPLICATE KEY UPDATE
 
                 foreach (var row in rows)
                 {
-                    // קביעת האם המשתמש נחשב מנצח לפי חוקי המשחק
+                    // לוגיקת מנצח תלויה אם זה משחק יחיד או משחק מרובה משתתפים.
                     var isWinner = IsWinnerRow(row, isSinglePlayer, totalQuestions, maxCorrect);
 
                     await using var cmd = new MySqlCommand(sql, conn);
-                    // עדכון תוצאה לכל משתמש בחדר הנוכחי
+                    // שומרים את הציון המצטבר של המשתתף.
                     cmd.Parameters.AddWithValue("@room_id", roomId);
                     cmd.Parameters.AddWithValue("@user_id", row.UserID);
                     cmd.Parameters.AddWithValue("@correct_count", row.CorrectCount);
@@ -512,7 +491,7 @@ ON DUPLICATE KEY UPDATE
             }
         }
 
-        // שליפת סטטיסטיקת משתמש מצטברת (משחקים, ניצחונות, תשובות נכונות וכו')
+        // שולפת סטטיסטיקה מצטברת של משתמש אחד מכל תוצאות המשחקים השמורות.
         public async Task<(int GamesPlayed, int Wins, int Correct, int Answered)> GetUserStatsAsync(int userId)
         {
             if (userId <= 0)
@@ -556,7 +535,7 @@ WHERE user_id = @user_id;";
             }
         }
 
-        // שליפת טבלת שחקנים מובילים לפי דירוג ביצועים
+        // בונה leaderboad על פי דיוק, ואז ניצחונות, ואז נפח משחקים.
         public async Task<List<TopPlayerRow>> GetTopPlayersAsync(int limit)
         {
             var result = new List<TopPlayerRow>();
@@ -589,7 +568,7 @@ ORDER BY
 LIMIT @limit;";
 
                 await using var cmd = new MySqlCommand(sql, conn);
-                // פרמטר limit מגן מפני שליפת יתר
+                // limit עובר כפרמטר כדי שהקורא ישלוט בכמה שורות יחזרו.
                 cmd.Parameters.AddWithValue("@limit", limit);
 
                 await using var reader = await cmd.ExecuteReaderAsync();
@@ -620,7 +599,7 @@ LIMIT @limit;";
 
         public async Task<List<(DateTime CreatedAt, string RoomName, int CorrectCount, int AnsweredCount, bool IsWinner)>> GetRecentUserResultsAsync(int userId, int limit)
         {
-            // רשימת תוצאות אחרונות לפי משתמש לצורך הצגת היסטוריה אישית
+        // מחזירה את תצוגת ההיסטוריה האחרונה שמופיעה במסך הפרופיל.
             var result = new List<(DateTime CreatedAt, string RoomName, int CorrectCount, int AnsweredCount, bool IsWinner)>();
             if (userId <= 0 || limit <= 0)
                 return result;
@@ -630,7 +609,7 @@ LIMIT @limit;";
                 await using var conn = new MySqlConnection(ConnStr);
                 await conn.OpenAsync();
 
-                // שליפת משחקים אחרונים מטבלת game_results + שם חדר אם קיים
+                // מחברים את טבלת התוצאות לחדרים כדי שה־UI יוכל להציג גם את שם החדר.
                 const string sql = @"
 SELECT
   gr.created_at,
@@ -648,7 +627,7 @@ LIMIT @limit;";
                 cmd.Parameters.AddWithValue("@user_id", userId);
                 cmd.Parameters.AddWithValue("@limit", limit);
 
-                // המרה לשכבת המודל של האפליקציה (tuple פשוט)
+                // ממירים שורות SQL לטאפלים קלים עבור שכבת ה־API.
                 await using var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
@@ -673,7 +652,7 @@ LIMIT @limit;";
             }
         }
 
-        // חישוב מקסימום תשובות נכונות מכל שורות הניקוד
+        // מחשבת את מספר התשובות הנכונות הגבוה ביותר בחדר הנוכחי.
         private static int GetMaxCorrect(List<ScoreRow> rows)
         {
             var maxCorrect = 0;
@@ -686,7 +665,7 @@ LIMIT @limit;";
             return maxCorrect;
         }
 
-        // קביעת מנצח לפי כללי חדר יחיד/מרובה משתתפים
+        // כללי המנצח שונים בין משחק יחיד למשחק מרובה משתתפים.
         private static bool IsWinnerRow(ScoreRow row, bool isSinglePlayer, int totalQuestions, int maxCorrect)
         {
             if (isSinglePlayer)
@@ -699,7 +678,7 @@ LIMIT @limit;";
             return row.CorrectCount == maxCorrect;
         }
 
-        // שליפת כמות שחקנים בחדר
+        // עזר: סופר כמה שחקנים מחוברים כרגע לחדר.
         private static async Task<int> GetRoomPlayersCountAsync(MySqlConnection conn, int roomId)
         {
             const string playersSql = @"SELECT COUNT(*) FROM room_players WHERE room_id = @room_id;";
@@ -709,10 +688,10 @@ LIMIT @limit;";
             return Convert.ToInt32(obj);
         }
 
-        // מציאת שאלה פעילה/חדשה ראשונה בחדר והתחלת טיימר כשצריך
+        // עזר: סורק שאלות לפי סדר ומפעיל את השאלה הראשונה שצריכה להיות חיה עכשיו.
         private static async Task<(int QuestionId, int TimeLimitSec, DateTime? StartedAt)?> TryGetCurrentRoomQuestionAsync(MySqlConnection conn, int roomId, int playersCount)
         {
-            // רשימת שאלות החדר כולל ספירת תשובות לכל שאלה
+            // השאילתה מחזירה כל שאלה בחדר וגם את מספר השחקנים הייחודיים שענו עליה.
             const string listSql = @"
 SELECT rq.question_id, rq.time_limit_sec, rq.started_at,
        COALESCE(a.answers_count, 0) AS answers_count
@@ -740,7 +719,7 @@ ORDER BY rq.question_order ASC;";
 
                 if (candidateStartedAt.HasValue)
                 {
-                    // דילוג על שאלה שפג לה הזמן או שכבר נענתה ע"י כולם
+                    // מדלגים על שאלות שפג להן הזמן או שכבר נענו במלואן.
                     var expiresAt = candidateStartedAt.Value.AddSeconds(candidateTimeLimit);
                     if (DateTime.Now > expiresAt)
                         continue;
@@ -750,7 +729,7 @@ ORDER BY rq.question_order ASC;";
                     return (candidateQid, candidateTimeLimit, candidateStartedAt);
                 }
 
-                // שאלה חדשה: מתחילים לה timer בצד שרת ואז מחזירים אותה
+                // בפעם הראשונה שרואים שאלה, מסמנים started_at ומחזירים אותה כשאלה פעילה.
                 await reader.CloseAsync();
                 await MarkQuestionStartedAsync(conn, roomId, candidateQid);
                 return (candidateQid, candidateTimeLimit, DateTime.Now);
@@ -759,7 +738,7 @@ ORDER BY rq.question_order ASC;";
             return null;
         }
 
-        // סימון שאלה כהתחילה רק אם עדיין לא סומנה
+        // מסמנים שאלה כהתחילה רק פעם אחת.
         private static async Task MarkQuestionStartedAsync(MySqlConnection conn, int roomId, int questionId)
         {
             const string startSql = @"
@@ -772,10 +751,10 @@ WHERE room_id = @room_id AND question_id = @qid AND started_at IS NULL;";
             await startCmd.ExecuteNonQueryAsync();
         }
 
-        // טעינת נתוני שאלה בודדת
+        // טוענים את גוף השאלה בלי אפשרויות התשובה.
         private static async Task<Question?> LoadQuestionAsync(MySqlConnection conn, int questionId, int timeLimitSec, DateTime? startedAt)
         {
-            // שליפת נתוני שאלה בסיסיים מהמסד
+            // קוראים את שדות השאלה המרכזיים מטבלת questions.
             const string qSql = @"
 SELECT question_id, question_text, question_type_id, difficulty, created_by
 FROM questions
@@ -802,10 +781,10 @@ LIMIT 1;";
             };
         }
 
-        // טעינת אופציות לשאלה
+        // טוענים את כל אפשרויות התשובה של שאלה.
         private static async Task<List<QuestionOption>> LoadQuestionOptionsAsync(MySqlConnection conn, int questionId)
         {
-            // שליפת אופציות תשובה לשאלה בסדר אקראי
+            // סדר התשובות מעורבל כדי שהתשובה הנכונה לא תופיע תמיד באותו מקום.
             const string optSql = @"
 SELECT option_id, question_id, option_text, is_correct
 FROM question_options

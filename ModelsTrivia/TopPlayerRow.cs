@@ -1,16 +1,15 @@
 namespace Models
 {
-    // שורת דירוג לשחקנים המובילים במערכת.
-    // ה-API משתמש בזה כשמציגים top players.
+    // שורת שחקן מצטיין לרשימת הדירוג הגלובלית.
     public class TopPlayerRow : PlayerStatsBase
     {
-        // שם המשתמש.
+        // שם המשתמש שמופיע בטבלת הדירוג.
         public string Username { get; set; } = "";
 
-        // כמה משחקים המשתמש שיחק.
+        // מספר המשחקים הכולל ששחקן שיחק.
         public int GamesPlayed { get; set; }
 
-        // כמה משחקים המשתמש ניצח.
+        // מספר המשחקים ששחקן ניצח.
         public int Wins { get; set; }
     }
 }

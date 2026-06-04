@@ -4,13 +4,13 @@
              xmlns:local="clr-namespace:TriviaGame.Mobile"
              x:Class="TriviaGame.Mobile.App">
     <Application.Resources>
-        <!-- קובץ זה טוען את כל המשאבים המשותפים של האפליקציה:
-             צבעים, styles, ואלמנטים גרפיים שנמצאים בכל המסכים. -->
+        <!-- כאן רושמים את כל המשאבים המשותפים של האפליקציה:
+             צבעים, styles, ופונטים שזמינים בכל המסכים. -->
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <!-- צבעי המערכת של האפליקציה. -->
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
-                <!-- הגדרות הסגנון הכלליות: פינות, כפתורים, טקסט, רקעים. -->
+                <!-- הגדרות הסגנון הכלליות: פינות, כפתורים, טקסט, וריווחים. -->
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

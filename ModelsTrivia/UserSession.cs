@@ -1,10 +1,10 @@
 namespace Models
 {
-    // מצב משתמש גלובלי ישן מהגרסה הוותיקה של הפרויקט.
-    // היום ה-API וה-MAUI עובדים בלי session אמיתי, אבל המחלקה עדיין קיימת לצורך תאימות.
+    // Lightweight global holder for the current user ID.
+    // This is a convenience helper, not a full authentication system.
     public static class UserSession
     {
-        // מזהה המשתמש הנוכחי, אם נשמר.
+        // The currently logged-in user ID, if one is set.
         public static int? CurrentUserID { get; set; }
     }
 }

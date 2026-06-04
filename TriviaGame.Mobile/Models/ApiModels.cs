@@ -1,7 +1,7 @@
 namespace TriviaGame.Mobile.Models;
 
-// תוצאה כללית של קריאה ל-API.
-// כל endpoint מחזיר את המבנה הזה או משהו דומה, כדי שה-UI יטפל בהצלחה וכשל באותו אופן.
+// תוצאת קריאה כללית ל־API.
+// כל endpoint מחזיר את המעטפת הזאת או משהו דומה, כדי שה־UI יטפל בהצלחה או בכישלון באותו אופן.
 public sealed class ApiResult<T>
 {
     public bool Success { get; init; }
@@ -13,13 +13,13 @@ public sealed class ApiResult<T>
     public static ApiResult<T> Ok(T? data, int statusCode = 200, string message = "") =>
         new() { Success = true, StatusCode = statusCode, Message = message, Data = data };
 
-    // בונה תשובה שנכשלה עם הודעת שגיאה ידידותית.
+    // בונה תשובה שנכשלה עם הודעת שגיאה.
     public static ApiResult<T> Fail(string message, int statusCode = 0) =>
         new() { Success = false, StatusCode = statusCode, Message = message, Data = default };
 }
 
 // תשובת login.
-// ה-API מחזיר את השדות האלו אחרי אימות, וה-MAUI שומר את userId והשם בזיכרון.
+// ה־API מחזיר את שדות הזהות הבסיסיים, וה־MAUI שומר אותם בזיכרון המקומי.
 public sealed class AuthResponse
 {
     public bool Ok { get; set; }
@@ -29,7 +29,7 @@ public sealed class AuthResponse
     public string Role { get; set; } = "User";
 }
 
-// פרטי המשתמש הנוכחי.
+// פרטי המשתמש המחובר.
 // זה מה שממלא את אזור Auth + Profile במסך הראשי.
 public sealed class CurrentUserResponse
 {
@@ -49,7 +49,7 @@ public sealed class QuestionTypeRow
     public override string ToString() => $"{TypeName} ({QuestionTypeID})";
 }
 
-// שורת חדר ברשימה של חדרים ציבוריים.
+// שורת חדר ברשימת חדרים ציבוריים.
 public sealed class RoomRow
 {
     public int RoomID { get; set; }
@@ -70,7 +70,7 @@ public sealed class RoomPlayerRow
     public string Nickname { get; set; } = "";
 }
 
-// שורת אפשרות לתצוגה ב-CollectionView של התשובות.
+// שורת אפשרות תשובה להצגה ב־CollectionView.
 public sealed class QuestionOptionRow
 {
     public int OptionID { get; set; }
@@ -78,7 +78,7 @@ public sealed class QuestionOptionRow
     public string OptionText { get; set; } = "";
 }
 
-// שורת שאלה מלאה עם options.
+// שורת שאלה מלאה עם אפשרויות.
 public sealed class QuestionRow
 {
     public int QuestionID { get; set; }
@@ -88,7 +88,7 @@ public sealed class QuestionRow
     public List<QuestionOptionRow> Options { get; set; } = new();
 }
 
-// תשובת השרת כשהוא מחזיר את השאלה הנוכחית.
+// תשובת השרת כאשר שואלים על השאלה הפעילה.
 public sealed class CurrentQuestionResponse
 {
     public bool Ok { get; set; }
@@ -96,7 +96,7 @@ public sealed class CurrentQuestionResponse
     public QuestionRow? Question { get; set; }
 }
 
-// שורת ניקוד ב-scoreboard.
+// שורת ניקוד ב־scoreboard.
 public sealed class ScoreRow
 {
     public int UserID { get; set; }
@@ -125,7 +125,7 @@ public sealed class TopPlayerRow
     public int AnsweredCount { get; set; }
 }
 
-// סטטיסטיקות אישיות של המשתמש.
+// סטטיסטיקות אישיות של משתמש.
 public sealed class UserStatsResponse
 {
     public int GamesPlayed { get; set; }
@@ -134,7 +134,7 @@ public sealed class UserStatsResponse
     public int Answered { get; set; }
 }
 
-// תשובה פשוטה למבצעי create/update/delete.
+// תשובה פשוטה לפעולות create/update/delete.
 public sealed class ApiSimpleResponse
 {
     public bool Ok { get; set; }
@@ -142,7 +142,7 @@ public sealed class ApiSimpleResponse
     public string Text { get; set; } = "";
 }
 
-// תשובה של join room, שבה מחזירים גם את החדר וגם את השחקן החדש.
+// תשובת join room, כולל החדר והשחקן שנוצרו/נמצאו.
 public sealed class JoinRoomResponse
 {
     public bool Ok { get; set; }

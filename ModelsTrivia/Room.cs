@@ -1,16 +1,15 @@
 namespace Models
 {
-    // מודל של חדר משחק.
-    // השרת מחזיר אותו כשמייצרים חדר, מצטרפים לחדר, או טוענים חדרים ציבוריים.
+    // חדר טריוויה אחד - הלובי שבו שחקנים מצטרפים ומשחקים יחד.
     public class Room
     {
-        // מזהה פנימי של החדר.
+        // המפתח הראשי של החדר בטבלת rooms.
         public int RoomID { get; set; }
 
-        // קוד קצר לשיתוף עם שחקנים אחרים.
+        // קוד קצר להצטרפות לחדר.
         public string RoomCode { get; set; } = "";
 
-        // שם ידידותי של החדר.
+        // שם קריא שמופיע למשתמשים.
         public string RoomName { get; set; } = "";
 
         // מזהה המשתמש שיצר את החדר.
@@ -19,13 +18,13 @@ namespace Models
         // האם החדר עדיין פעיל.
         public bool IsActive { get; set; } = true;
 
-        // האם החדר מוצג ברשימת החדרים הציבוריים.
+        // האם החדר גלוי ברשימת החדרים הציבוריים.
         public bool IsPublic { get; set; } = false;
 
-        // סוג השאלות שנבחר לחדר.
+        // סינון אופציונלי לסוג שאלות מסוים.
         public int? QuestionTypeID { get; set; }
 
-        // מתי החדר נוצר.
+        // זמן היצירה של החדר.
         public DateTime CreatedAt { get; set; }
     }
 }

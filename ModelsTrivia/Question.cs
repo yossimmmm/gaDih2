@@ -3,32 +3,32 @@ using System.Collections.Generic;
 
 namespace Models
 {
-    // מודל של שאלה בטריוויה.
-    // החדר מקבל רשימת שאלות, וה-API מעביר אותה ל-MAUI כמבנה JSON.
+    // מודל של שאלה אחת במשחק.
+    // ה־API מחזיר את האובייקט הזה יחד עם אפשרויות התשובה שלו.
     public class Question
     {
-        // מזהה השאלה במסד הנתונים.
+        // המפתח הראשי של השאלה.
         public int QuestionID { get; set; }
 
-        // הטקסט של השאלה עצמה.
+        // הטקסט שהשחקן רואה במסך.
         public string QuestionText { get; set; } = "";
 
-        // מזהה סוג השאלה.
+        // מזהה הקטגוריה של השאלה.
         public int QuestionTypeID { get; set; }
 
-        // רמת קושי כמו easy / medium / hard.
+        // רמת הקושי של השאלה, למשל easy / medium / hard.
         public string Difficulty { get; set; } = "easy";
 
-        // מי יצר את השאלה.
+        // מזהה המשתמש שיצר את השאלה.
         public int CreatedBy { get; set; }
 
-        // כמה שניות מותר לענות על השאלה.
+        // כמה זמן מותר לענות על השאלה, בשניות.
         public int TimeLimitSec { get; set; } = 15;
 
-        // מתי השאלה התחילה לרוץ.
+        // זמן ההתחלה של השאלה, אם היא כבר הופעלה.
         public DateTime? StartedAt { get; set; }
 
-        // אפשרויות התשובה לשאלה.
+        // רשימת אפשרויות התשובה שמוצגות ב־UI.
         public List<QuestionOption> Options { get; set; } = new();
     }
 }

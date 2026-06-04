@@ -1,16 +1,16 @@
 namespace Models
 {
     // בסיס משותף לשורות סטטיסטיקה.
-    // גם scoreboard של חדר וגם top players משתמשים באותם שדות בסיסיים.
+    // גם scoreboard וגם top players משתמשים בשדות האלה.
     public abstract class PlayerStatsBase
     {
-        // לאיזה משתמש הסטטיסטיקה שייכת.
+        // המשתמש שאליו שורת הסטטיסטיקה שייכת.
         public int UserID { get; set; }
 
-        // כמה תשובות נכונות היו לו.
+        // מספר התשובות הנכונות.
         public int CorrectCount { get; set; }
 
-        // כמה תשובות הוא נתן בסך הכול.
+        // מספר התשובות הכולל שנשלחו.
         public int AnsweredCount { get; set; }
     }
 }
