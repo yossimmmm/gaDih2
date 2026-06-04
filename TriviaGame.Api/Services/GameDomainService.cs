@@ -4,11 +4,14 @@ using TriviaGame.Api.Contracts;
 
 namespace TriviaGame.Api.Services;
 
+// שכבת הדומיין של המשחק עצמו.
+// כל חישוב, שליפה או שמירה של מצב משחק קורים כאן, לא ב-controller.
 public sealed class GameDomainService
 {
-    // התחלת משחק ע"י בחירת סט שאלות לחדר.
+    // מתחיל משחק ע"י בחירת סט שאלות לחדר.
     public async Task<(bool Ok, string Message, int Inserted)> StartGameAsync(int roomId, int questionCount)
     {
+        // השרת בוחר את השאלות ושומר אותן לחדר; הלקוח רק מבקש להתחיל.
         if (questionCount <= 0)
             return (false, "Question count must be positive.", 0);
 
@@ -19,16 +22,18 @@ public sealed class GameDomainService
             : (true, "Game started.", inserted);
     }
 
-    // שליפת שאלה נוכחית.
+    // מחזיר את השאלה הפעילה כרגע לחדר.
     public async Task<Question?> GetCurrentQuestionAsync(int roomId)
     {
+        // כל מי שמבקש את אותו חדר מקבל את אותה שאלה פעילה מהשרת.
         var gameDb = new GameDB();
         return await gameDb.GetCurrentQuestionAsync(roomId);
     }
 
-    // שליחת תשובה לשאלה.
+    // שומר תשובה אחת של שחקן.
     public async Task<(bool Ok, string Message)> SubmitAnswerAsync(SubmitAnswerRequest req)
     {
+        // ה-UI שולח מזהים בלבד; החישוב והאימות נשמרים בשרת.
         if (req.RoomPlayerId <= 0 || req.QuestionId <= 0 || req.OptionId <= 0)
             return (false, "Invalid answer payload.");
 
@@ -37,42 +42,45 @@ public sealed class GameDomainService
         return ok ? (true, "Answer submitted.") : (false, "Failed to submit answer.");
     }
 
-    // שמירת תוצאות סופיות לחדר.
+    // שומר את תוצאות החדר אחרי משחק או אחרי תשובה.
     public async Task SaveRoomResultsAsync(int roomId)
     {
+        // אחרי המשחק, השרת ממיר את המצב הנוכחי לתוצאות קבועות.
         var gameDb = new GameDB();
         await gameDb.SaveRoomResultsAsync(roomId);
     }
 
-    // טבלת ניקוד לחדר.
+    // מחזיר טבלת ניקוד מוכנה להצגה.
     public async Task<List<ScoreRow>> GetScoreboardAsync(int roomId)
     {
+        // ה-UI מקבל טבלה מוכנה להצגה, בלי לחשב ניקוד מקומית.
         var gameDb = new GameDB();
         return await gameDb.GetScoreboardAsync(roomId);
     }
 
-    // מספר השאלות שהוגרלו לחדר.
+    // מחזיר את מספר השאלות שהוקצו לחדר.
     public async Task<int> GetRoomQuestionCountAsync(int roomId)
     {
         var gameDb = new GameDB();
         return await gameDb.GetRoomQuestionCountAsync(roomId);
     }
 
-    // סטטיסטיקות משתמש.
+    // מחזיר סטטיסטיקות אישיות של משתמש.
     public async Task<(int GamesPlayed, int Wins, int Correct, int Answered)> GetUserStatsAsync(int userId)
     {
+        // משתמשים ב-userId מפורש במקום session כדי שהזרימה תישאר פשוטה.
         var gameDb = new GameDB();
         return await gameDb.GetUserStatsAsync(userId);
     }
 
-    // דירוג שחקנים מובילים.
+    // מחזיר את רשימת המובילים.
     public async Task<List<TopPlayerRow>> GetTopPlayersAsync(int limit)
     {
         var gameDb = new GameDB();
         return await gameDb.GetTopPlayersAsync(limit);
     }
 
-    // היסטוריית משחקים אחרונים.
+    // מחזיר היסטוריית משחקים אחרונים למשתמש.
     public async Task<List<(DateTime CreatedAt, string RoomName, int CorrectCount, int AnsweredCount, bool IsWinner)>> GetRecentResultsAsync(int userId, int limit)
     {
         var gameDb = new GameDB();

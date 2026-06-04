@@ -2,30 +2,33 @@ using Models;
 
 namespace TriviaGame.Api.Contracts;
 
-// בקשות auth בסיסיות
+// DTOs הם אובייקטים קטנים שמעבירים נתונים בין ה-MAUI לבין ה-API.
+// הם לא מכילים לוגיקה, רק שדות.
+
+// בקשות auth בסיסיות.
 public sealed record LoginRequest(string Email, string Password);
 public sealed record RegisterRequest(string Username, string FullName, string Email, string Password);
 public sealed record ForgotPasswordRequest(string Email);
 public sealed record ResetPasswordRequest(string Token, string NewPassword);
 
-// בקשות משתמש/אדמין
-public sealed record UpdateProfileRequest(string Username, string FullName, string Email);
-public sealed record ChangePasswordRequest(string CurrentPassword, string NewPassword);
+// בקשות משתמש/אדמין.
+public sealed record UpdateProfileRequest(int UserId, string Username, string FullName, string Email);
+public sealed record ChangePasswordRequest(int UserId, string CurrentPassword, string NewPassword);
 public sealed record UpdateRoleRequest(string Role);
 public sealed record AdminUserUpdateRequest(string Username, string FullName, string Email, string Role);
 
-// בקשות חדר/משחק
-public sealed record CreateRoomRequest(string RoomName, bool IsPublic, int? QuestionTypeId);
-public sealed record JoinRoomRequest(string RoomCode, string Nickname);
-public sealed record StartGameRequest(int QuestionCount = 10);
+// בקשות חדר/משחק.
+public sealed record CreateRoomRequest(int UserId, string RoomName, bool IsPublic, int? QuestionTypeId);
+public sealed record JoinRoomRequest(int UserId, string RoomCode, string Nickname);
+public sealed record StartGameRequest(int UserId, int QuestionCount = 10);
 public sealed record SubmitAnswerRequest(int RoomPlayerId, int QuestionId, int OptionId);
 
-// בקשות יכולות ייחודיות
+// בקשות יכולות ייחודיות.
 public sealed record AssistantAdviceRequest(Question Question);
 public sealed record AssistantChatMessage(string Role, string Text);
-public sealed record AssistantChatRequest(string Message, List<AssistantChatMessage>? History);
+public sealed record AssistantChatRequest(int UserId, string Message, List<AssistantChatMessage>? History);
 
-// תגובת auth אחידה למובייל
+// תשובת auth אחידה למובייל.
 public sealed record AuthResultResponse(
     bool Ok,
     string Message,
@@ -34,7 +37,7 @@ public sealed record AuthResultResponse(
     string Username,
     string Role);
 
-// תגובת me/profile למובייל
+// תשובת me/profile למובייל.
 public sealed record CurrentUserResponse(
     bool Authenticated,
     int UserId,

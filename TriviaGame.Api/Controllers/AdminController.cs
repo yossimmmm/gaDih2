@@ -4,26 +4,26 @@ using TriviaGame.Api.Services;
 
 namespace TriviaGame.Api.Controllers;
 
+// ה-controller הזה מרכז את מסלולי האדמין למשתמשים.
+// הוא לא מבצע לוגיקה בעצמו, אלא מעביר הכול ל-UsersDomainService.
 [ApiController]
 [Route("api/admin")]
 public sealed class AdminController : ControllerBase
 {
-    private readonly SessionTokenService sessionTokenService;
+    // השירות שמדבר בפועל עם שכבת הנתונים.
     private readonly UsersDomainService usersDomainService;
 
-    public AdminController(SessionTokenService sessionTokenService, UsersDomainService usersDomainService)
+    public AdminController(UsersDomainService usersDomainService)
     {
-        this.sessionTokenService = sessionTokenService;
+        // הזרקה דרך DI כדי להשאיר את ה-controller דק ופשוט.
         this.usersDomainService = usersDomainService;
     }
 
-    // רשימת משתמשים מלאה לאדמין.
+    // מחזיר את כל המשתמשים.
+    // אפשר גם לסנן לפי תפקיד דרך query string.
     [HttpGet("users")]
     public async Task<IActionResult> GetUsers([FromQuery] string? role = null)
     {
-        if (!await sessionTokenService.IsAdminAsync(HttpContext))
-            return Unauthorized(new { ok = false, message = "Admin access required." });
-
         var users = await usersDomainService.GetAllUsersAsync();
         var filtered = string.IsNullOrWhiteSpace(role)
             ? users
@@ -39,24 +39,19 @@ public sealed class AdminController : ControllerBase
         }));
     }
 
-    // שינוי role.
+    // שינוי תפקיד למשתמש קיים.
+    // הנתיב כולל userId, וה-body כולל רק את התפקיד החדש.
     [HttpPost("users/{userId:int}/role")]
     public async Task<IActionResult> UpdateRole(int userId, [FromBody] UpdateRoleRequest request)
     {
-        if (!await sessionTokenService.IsAdminAsync(HttpContext))
-            return Unauthorized(new { ok = false, message = "Admin access required." });
-
         var (ok, message) = await usersDomainService.UpdateRoleAsync(userId, request.Role);
         return ok ? Ok(new { ok = true, message }) : BadRequest(new { ok = false, message });
     }
 
-    // עדכון משתמש מלא.
+    // עדכון מלא של משתמש מצד אדמין.
     [HttpPut("users/{userId:int}")]
     public async Task<IActionResult> UpdateUser(int userId, [FromBody] AdminUserUpdateRequest request)
     {
-        if (!await sessionTokenService.IsAdminAsync(HttpContext))
-            return Unauthorized(new { ok = false, message = "Admin access required." });
-
         var (ok, message) = await usersDomainService.UpdateUserByAdminAsync(userId, request);
         return ok ? Ok(new { ok = true, message }) : BadRequest(new { ok = false, message });
     }
@@ -65,13 +60,6 @@ public sealed class AdminController : ControllerBase
     [HttpDelete("users/{userId:int}")]
     public async Task<IActionResult> DeleteUser(int userId)
     {
-        var current = await sessionTokenService.TryGetUserAsync(HttpContext);
-        if (current is null || current.Role != Models.UserRole.Admin)
-            return Unauthorized(new { ok = false, message = "Admin access required." });
-
-        if (current.UserID == userId)
-            return BadRequest(new { ok = false, message = "Admin cannot delete own account." });
-
         var (ok, message) = await usersDomainService.DeleteUserAsync(userId);
         return ok ? Ok(new { ok = true, message }) : BadRequest(new { ok = false, message });
     }

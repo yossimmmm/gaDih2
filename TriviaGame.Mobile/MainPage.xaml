@@ -4,14 +4,20 @@
              x:Class="TriviaGame.Mobile.MainPage"
              Title="Trivia Mobile API Client">
     <ScrollView>
+        <!-- כל המסך עטוף ב-ScrollView כדי שכל החלקים יהיו נגישים גם במסך צר. -->
         <VerticalStackLayout Padding="12" Spacing="10">
+            <!-- כותרת עליונה שמסבירה שזה לקוח API ולא משחק מלא בפני עצמו. -->
             <Label Text="Trivia Mobile API Client"
                    FontSize="22"
                    FontAttributes="Bold" />
 
+            <!-- אזור הגדרות ה-API:
+                 כאן המשתמש בוחר סביבה, כתובת device, או override ידני. -->
             <Border Stroke="#D0D0D0" Padding="10" StrokeShape="RoundRectangle 8">
                 <VerticalStackLayout Spacing="8">
                     <Label Text="API Environment" FontAttributes="Bold" />
+
+                    <!-- בחירת environment שנשמרת ל-Preferences ומחליטה לאן ילכו הבקשות. -->
                     <Picker x:Name="EnvironmentPicker" SelectedIndexChanged="OnEnvironmentChanged">
                         <Picker.Items>
                             <x:String>Development</x:String>
@@ -19,13 +25,23 @@
                             <x:String>Production</x:String>
                         </Picker.Items>
                     </Picker>
+
+                    <!-- כתובת מכשיר פיזי. שימושי כשמריצים את ה-API על המחשב והאפליקציה על טלפון אמיתי. -->
                     <Entry x:Name="DeviceBaseUrlEntry" Placeholder="Device URL (for physical phone)" />
+
+                    <!-- כתובת override ידנית אם רוצים לכוון את הלקוח לשרת אחר בלי לשנות את הסביבה. -->
                     <Entry x:Name="OverrideBaseUrlEntry" Placeholder="Optional override URL" />
+
+                    <!-- כפתור ששומר את ההגדרות המקומיות ומחשב מחדש את ה-base URL. -->
                     <Button Text="Apply API Settings" Clicked="OnApplyApiSettingsClicked" />
+
+                    <!-- תצוגה בלבד: מראה למשתמש לאיזה URL הלקוח הולך בפועל. -->
                     <Label x:Name="ResolvedBaseUrlLabel" Text="Base URL: -" FontSize="12" />
                 </VerticalStackLayout>
             </Border>
 
+            <!-- אזור auth:
+                 כאן מזינים email/password ל-login, או נתונים להרשמה/עדכון פרופיל. -->
             <Border Stroke="#D0D0D0" Padding="10" StrokeShape="RoundRectangle 8">
                 <VerticalStackLayout Spacing="8">
                     <Label Text="Auth" FontAttributes="Bold" />
@@ -33,39 +49,59 @@
                     <Entry x:Name="PasswordEntry" Placeholder="Password" IsPassword="True" />
                     <Entry x:Name="UsernameEntry" Placeholder="Username (register/profile)" />
                     <Entry x:Name="FullNameEntry" Placeholder="Full Name (register/profile)" />
+
+                    <!-- פעולות login/register/logout. ה-UI שולח את הנתונים ל-API ומקבל תשובה. -->
                     <HorizontalStackLayout Spacing="8">
                         <Button Text="Login" Clicked="OnLoginClicked" />
                         <Button Text="Register" Clicked="OnRegisterClicked" />
                         <Button Text="Logout" Clicked="OnLogoutClicked" />
                     </HorizontalStackLayout>
+
+                    <!-- טעינת פרופיל מה-API ועדכון פרטי המשתמש במסך. -->
                     <HorizontalStackLayout Spacing="8">
                         <Button Text="Load Me" Clicked="OnLoadMeClicked" />
                         <Button Text="Update Profile" Clicked="OnUpdateProfileClicked" />
                     </HorizontalStackLayout>
+
+                    <!-- תצוגת מצב auth: אם יש userId, מי המשתמש, ומה התפקיד שלו. -->
                     <Label x:Name="AuthStateLabel" Text="Auth: not loaded" />
                 </VerticalStackLayout>
             </Border>
 
+            <!-- אזור חדרים:
+                 יצירה, הצטרפות, צפייה בחדרים ציבוריים, ורשימת שחקנים. -->
             <Border Stroke="#D0D0D0" Padding="10" StrokeShape="RoundRectangle 8">
                 <VerticalStackLayout Spacing="8">
                     <Label Text="Rooms" FontAttributes="Bold" />
+
+                    <!-- טוען סוגי שאלות מהשרת כדי לאפשר לבחור סוג חדר. -->
                     <HorizontalStackLayout Spacing="8">
                         <Button Text="Load Question Types" Clicked="OnLoadQuestionTypesClicked" />
                         <Picker x:Name="QuestionTypePicker" WidthRequest="160" />
                     </HorizontalStackLayout>
+
+                    <!-- שם החדר שנשלח ל-API בעת יצירה. -->
                     <Entry x:Name="RoomNameEntry" Placeholder="Room name" />
+
+                    <!-- מצב ציבורי/פרטי של החדר. -->
                     <HorizontalStackLayout Spacing="8">
                         <Label Text="Public" VerticalOptions="Center" />
                         <Switch x:Name="IsPublicSwitch" />
                         <Button Text="Create Room" Clicked="OnCreateRoomClicked" />
                     </HorizontalStackLayout>
+
+                    <!-- קוד חדר וכינוי שחקן עבור join ופעולות המשך. -->
                     <Entry x:Name="RoomCodeEntry" Placeholder="Room code (e.g. ABC123)" />
                     <Entry x:Name="NicknameEntry" Placeholder="Nickname for room" />
+
+                    <!-- קבלת רשימת חדרים ציבוריים, הצטרפות, וטעינת שחקנים בחדר. -->
                     <HorizontalStackLayout Spacing="8">
                         <Button Text="Load Public Rooms" Clicked="OnLoadPublicRoomsClicked" />
                         <Button Text="Join Room" Clicked="OnJoinRoomClicked" />
                         <Button Text="Load Players" Clicked="OnLoadPlayersClicked" />
                     </HorizontalStackLayout>
+
+                    <!-- רשימת החדרים הציבוריים שהגיעה מהשרת. -->
                     <CollectionView x:Name="PublicRoomsView"
                                     HeightRequest="160"
                                     SelectionMode="Single"
@@ -82,15 +118,23 @@
                 </VerticalStackLayout>
             </Border>
 
+            <!-- אזור המשחק:
+                 התחלת משחק, טעינת שאלה נוכחית, בחירת תשובה, וטבלת ניקוד. -->
             <Border Stroke="#D0D0D0" Padding="10" StrokeShape="RoundRectangle 8">
                 <VerticalStackLayout Spacing="8">
                     <Label Text="Game" FontAttributes="Bold" />
                     <Entry x:Name="QuestionCountEntry" Placeholder="Question count (default 10)" Keyboard="Numeric" />
+
+                    <!-- התחלת משחק וטעינת השאלה הנוכחית מה-API. -->
                     <HorizontalStackLayout Spacing="8">
                         <Button Text="Start Game" Clicked="OnStartGameClicked" />
                         <Button Text="Load Current Question" Clicked="OnLoadCurrentQuestionClicked" />
                     </HorizontalStackLayout>
+
+                    <!-- טקסט השאלה שמגיעה מהשרת. -->
                     <Label x:Name="QuestionTextLabel" Text="Question: -" />
+
+                    <!-- רשימת התשובות האפשריות לשאלה. -->
                     <CollectionView x:Name="OptionsView"
                                     HeightRequest="160"
                                     SelectionMode="Single"
@@ -101,28 +145,45 @@
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                     </CollectionView>
+
+                    <!-- שליחת תשובה ל-API וטעינת scoreboard. -->
                     <HorizontalStackLayout Spacing="8">
                         <Button Text="Submit Answer" Clicked="OnSubmitAnswerClicked" />
                         <Button Text="Load Scoreboard" Clicked="OnLoadScoreboardClicked" />
                     </HorizontalStackLayout>
+
+                    <!-- תצוגת scoreboard פשוטה על המסך. -->
                     <Label x:Name="ScoreboardLabel" Text="Scoreboard: -" />
                 </VerticalStackLayout>
             </Border>
 
+            <!-- אזור סטטיסטיקות ועוזר:
+                 כאן הלקוח מושך stats אישיים, top players, ומסך assistant. -->
             <Border Stroke="#D0D0D0" Padding="10" StrokeShape="RoundRectangle 8">
                 <VerticalStackLayout Spacing="8">
                     <Label Text="Stats + Assistant" FontAttributes="Bold" />
+
+                    <!-- כפתורים לטעינת סטטיסטיקות אישיות ולשחקנים מובילים. -->
                     <HorizontalStackLayout Spacing="8">
                         <Button Text="Load My Stats" Clicked="OnLoadStatsClicked" />
                         <Button Text="Top Players" Clicked="OnLoadTopPlayersClicked" />
                     </HorizontalStackLayout>
+
+                    <!-- כאן מוצגים הסטטיסטיקות האישיות או סיכום top players. -->
                     <Label x:Name="StatsLabel" Text="Stats: -" />
+
+                    <!-- שדה טקסט שממנו נשלחת בקשה ל-assistant endpoint. -->
                     <Entry x:Name="AssistantPromptEntry" Placeholder="Ask assistant..." />
+
+                    <!-- שולח את הטקסט לשרת, והשרת מחזיר reply. -->
                     <Button Text="Ask Assistant" Clicked="OnAskAssistantClicked" />
+
+                    <!-- תשובת assistant מוצגת כאן. -->
                     <Label x:Name="AssistantResponseLabel" Text="Assistant: -" />
                 </VerticalStackLayout>
             </Border>
 
+            <!-- אינדיקטור טעינה והודעות מצב כלליות. -->
             <ActivityIndicator x:Name="BusyIndicator" IsRunning="False" IsVisible="False" />
             <Label x:Name="StatusLabel" Text="Status: ready" />
         </VerticalStackLayout>

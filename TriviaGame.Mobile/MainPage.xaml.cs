@@ -4,21 +4,30 @@ using TriviaGame.Mobile.Services;
 
 namespace TriviaGame.Mobile;
 
+// זהו המסך הראשי של האפליקציה.
+// כל כפתור כאן מפעיל HTTP call אחר ל-API, והטקסטים על המסך רק מציגים את התוצאה.
 public partial class MainPage : ContentPage
 {
-    // שירות API ראשי שמנתב את כל פעולות המשתמש ל-HTTP.
+    // ה-wrapper שמדבר עם ה-API.
+    // כל הפעולות עובדות דרכו ולא ישירות מול HttpClient.
     private readonly TriviaApiClient api;
-    // רזולבר בסיס URL לפי environment ו-device.
+
+    // אחראי על בחירת base URL, סביבת עבודה, ו-app code.
     private readonly ApiEndpointResolver endpointResolver;
 
-    // מצב משתמש נוכחי בזיכרון המסך.
+    // מצב מקומי של המשתמש המחובר.
     private CurrentUserResponse? currentUser;
-    // מצב חדר/שחקן נוכחי עבור submit answer.
+
+    // מזהה השחקן בתוך החדר הנוכחי.
     private int currentRoomPlayerId;
+
+    // השאלה הפעילה ביותר כרגע.
     private QuestionRow? currentQuestion;
+
+    // תשובה שנבחרה ברגע נתון.
     private QuestionOptionRow? selectedOption;
 
-    // אוספים לתצוגת רשימות.
+    // רשימות בזיכרון שמאכלסות CollectionView/Picker.
     private readonly List<QuestionTypeRow> questionTypes = new();
     private readonly List<RoomRow> publicRooms = new();
     private readonly List<RoomPlayerRow> currentPlayers = new();
@@ -27,38 +36,42 @@ public partial class MainPage : ContentPage
     {
         InitializeComponent();
 
-        // שליפת תלויות דרך DI גם כשהעמוד נוצר דרך XAML DataTemplate.
+        // כאן שולפים services מה-container של MAUI.
+        // זה המקום שבו TriviaApiClient ו-ApiEndpointResolver מוזרקים למסך.
         var services = Application.Current?.Handler?.MauiContext?.Services
             ?? throw new InvalidOperationException("Service provider is unavailable.");
         api = services.GetRequiredService<TriviaApiClient>();
         endpointResolver = services.GetRequiredService<ApiEndpointResolver>();
 
+        // מחברים את הרשימות למסכים הוויזואליים.
         PublicRoomsView.ItemsSource = publicRooms;
         OptionsView.ItemsSource = Array.Empty<QuestionOptionRow>();
 
+        // טוענים את ההגדרות שנשמרו מקומית לממשק.
         LoadApiSettingsToUi();
         UpdateResolvedBaseUrlLabel();
     }
 
-    // טעינת הגדרות API מה-Preferences למסך.
+    // לוקח את ההגדרות שנשמרו ב-Preferences ומציג אותן בשדות.
     private void LoadApiSettingsToUi()
     {
         var env = endpointResolver.GetCurrentEnvironment();
-        var index = env switch
+        EnvironmentPicker.SelectedIndex = env switch
         {
             "Staging" => 1,
             "Production" => 2,
             _ => 0
         };
-        EnvironmentPicker.SelectedIndex = index;
+
         DeviceBaseUrlEntry.Text = endpointResolver.GetDeviceBaseUrl();
         OverrideBaseUrlEntry.Text = endpointResolver.GetOverrideBaseUrl();
     }
 
+    // מראה למשתמש לאיזה API base URL האפליקציה תפנה בפועל.
     private void UpdateResolvedBaseUrlLabel() =>
         ResolvedBaseUrlLabel.Text = $"Base URL: {endpointResolver.GetBaseUrl()}";
 
-    // פעולה עטופה ל-UI: מפעילה busy indicator, מטפלת חריגות, ומציגה הודעת סטטוס ידידותית.
+    // helper שמרכז מצב טעינה, status, וטיפול בשגיאות ברמת UI.
     private async Task RunUiActionAsync(string actionName, Func<Task> action)
     {
         BusyIndicator.IsVisible = true;
@@ -79,16 +92,14 @@ public partial class MainPage : ContentPage
         }
     }
 
-    // -------------------------
-    // API environment controls
-    // -------------------------
+    // שינוי environment ב-UI מעדכן את ההגדרה המקומית בלבד.
     private void OnEnvironmentChanged(object? sender, EventArgs e)
     {
-        var value = EnvironmentPicker.SelectedItem?.ToString() ?? "Development";
-        endpointResolver.SetEnvironment(value);
+        endpointResolver.SetEnvironment(EnvironmentPicker.SelectedItem?.ToString() ?? "Development");
         UpdateResolvedBaseUrlLabel();
     }
 
+    // שומר את ההגדרות המקומיות ומחשב מחדש את כתובת ה-API.
     private void OnApplyApiSettingsClicked(object? sender, EventArgs e)
     {
         endpointResolver.SetEnvironment(EnvironmentPicker.SelectedItem?.ToString() ?? "Development");
@@ -98,9 +109,7 @@ public partial class MainPage : ContentPage
         StatusLabel.Text = "Status: API settings applied.";
     }
 
-    // -------------------------
-    // Auth
-    // -------------------------
+    // Login: שולח email/password ל-API ומעדכן את מצב המשתמש המקומי.
     private async void OnLoginClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("login", async () =>
@@ -112,11 +121,27 @@ public partial class MainPage : ContentPage
                 return;
             }
 
+            // ה-API מחזיר userId, username, role.
+            // כאן אנחנו שומרים אותו בזיכרון כדי להשתמש בו בבקשות הבאות.
+            currentUser = new CurrentUserResponse
+            {
+                Authenticated = true,
+                UserId = result.Data.UserId,
+                Username = result.Data.Username,
+                FullName = "",
+                Email = EmailEntry.Text ?? "",
+                Role = result.Data.Role
+            };
+
+            AuthStateLabel.Text = $"Auth: userId={currentUser.UserId}, username={currentUser.Username}, role={currentUser.Role}";
+            UsernameEntry.Text = currentUser.Username;
+            EmailEntry.Text = currentUser.Email;
             StatusLabel.Text = "Status: login succeeded.";
-            await LoadMeInternalAsync();
+            await RefreshUserFromApiAsync();
         });
     }
 
+    // Register: שולח פרטי משתמש חדשים לשרת.
     private async void OnRegisterClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("register", async () =>
@@ -133,59 +158,79 @@ public partial class MainPage : ContentPage
         });
     }
 
+    // Logout מנקה רק את המצב המקומי.
+    // אין session בצד השרת, אז אין מה לבטל שם.
     private async void OnLogoutClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("logout", async () =>
         {
-            var result = await api.LogoutAsync();
             currentUser = null;
             currentRoomPlayerId = 0;
+            currentQuestion = null;
+            selectedOption = null;
             AuthStateLabel.Text = "Auth: logged out";
-            StatusLabel.Text = result.Success ? "Status: logout succeeded." : $"Status: logout failed - {result.Message}";
+            StatusLabel.Text = "Status: logged out.";
+            await Task.CompletedTask;
         });
     }
 
+    // טעינת פרטי המשתמש מה-API לפי userId השמור.
     private async void OnLoadMeClicked(object? sender, EventArgs e)
     {
-        await RunUiActionAsync("load me", LoadMeInternalAsync);
+        await RunUiActionAsync("load me", async () =>
+        {
+            await RefreshUserFromApiAsync();
+        });
     }
 
-    private async Task LoadMeInternalAsync()
+    // קורא ל-API ומעדכן את שדות הפרופיל בממשק.
+    private async Task RefreshUserFromApiAsync()
     {
-        var me = await api.GetMeAsync();
+        if (currentUser is null)
+        {
+            StatusLabel.Text = "Status: login first.";
+            return;
+        }
+
+        var me = await api.GetMeAsync(currentUser.UserId);
         if (!me.Success || me.Data is null || !me.Data.Authenticated)
         {
-            currentUser = null;
-            AuthStateLabel.Text = "Auth: not authenticated";
             StatusLabel.Text = $"Status: load me failed - {me.Message}";
             return;
         }
 
         currentUser = me.Data;
-        AuthStateLabel.Text = $"Auth: userId={me.Data.UserId}, username={me.Data.Username}, role={me.Data.Role}";
         UsernameEntry.Text = me.Data.Username;
         FullNameEntry.Text = me.Data.FullName;
         EmailEntry.Text = me.Data.Email;
-        StatusLabel.Text = "Status: auth state loaded.";
+        AuthStateLabel.Text = $"Auth: userId={me.Data.UserId}, username={me.Data.Username}, role={me.Data.Role}";
+        StatusLabel.Text = "Status: auth data loaded.";
     }
 
+    // עדכון פרופיל: שולח username/fullName/email יחד עם userId.
     private async void OnUpdateProfileClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("update profile", async () =>
         {
+            if (currentUser is null)
+            {
+                StatusLabel.Text = "Status: login first.";
+                return;
+            }
+
             var result = await api.UpdateProfileAsync(
+                currentUser.UserId,
                 UsernameEntry.Text ?? "",
                 FullNameEntry.Text ?? "",
                 EmailEntry.Text ?? "");
+
             StatusLabel.Text = result.Success
                 ? $"Status: profile updated - {result.Data?.Message}"
                 : $"Status: profile update failed - {result.Message}";
         });
     }
 
-    // -------------------------
-    // Rooms
-    // -------------------------
+    // טוען את סוגי השאלות הזמינים ליצירת חדר.
     private async void OnLoadQuestionTypesClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("load question types", async () =>
@@ -199,22 +244,29 @@ public partial class MainPage : ContentPage
 
             questionTypes.Clear();
             questionTypes.AddRange(result.Data);
-            QuestionTypePicker.ItemsSource = null;
             QuestionTypePicker.ItemsSource = questionTypes.Select(x => $"{x.TypeName} ({x.QuestionTypeID})").ToList();
             QuestionTypePicker.SelectedIndex = questionTypes.Count > 0 ? 0 : -1;
             StatusLabel.Text = $"Status: loaded {questionTypes.Count} question types.";
         });
     }
 
+    // יוצר חדר חדש ושולח ל-API את השדות שהמשתמש מילא.
     private async void OnCreateRoomClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("create room", async () =>
         {
+            if (currentUser is null)
+            {
+                StatusLabel.Text = "Status: login first.";
+                return;
+            }
+
             int? selectedQuestionTypeId = null;
             if (QuestionTypePicker.SelectedIndex >= 0 && QuestionTypePicker.SelectedIndex < questionTypes.Count)
                 selectedQuestionTypeId = questionTypes[QuestionTypePicker.SelectedIndex].QuestionTypeID;
 
             var result = await api.CreateRoomAsync(
+                currentUser.UserId,
                 RoomNameEntry.Text ?? "",
                 IsPublicSwitch.IsToggled,
                 selectedQuestionTypeId);
@@ -225,6 +277,7 @@ public partial class MainPage : ContentPage
         });
     }
 
+    // טוען חדרים ציבוריים בלבד.
     private async void OnLoadPublicRoomsClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("load public rooms", async () =>
@@ -244,18 +297,26 @@ public partial class MainPage : ContentPage
         });
     }
 
+    // בחירה של חדר ציבורי ממלאת אוטומטית את קוד החדר.
     private void OnPublicRoomSelected(object? sender, SelectionChangedEventArgs e)
     {
         if (e.CurrentSelection.FirstOrDefault() is RoomRow room)
             RoomCodeEntry.Text = room.RoomCode;
     }
 
+    // הצטרפות לחדר שולחת userId, roomCode, nickname לשרת.
     private async void OnJoinRoomClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("join room", async () =>
         {
+            if (currentUser is null)
+            {
+                StatusLabel.Text = "Status: login first.";
+                return;
+            }
+
             var roomCode = (RoomCodeEntry.Text ?? "").Trim().ToUpperInvariant();
-            var result = await api.JoinRoomAsync(roomCode, NicknameEntry.Text ?? "");
+            var result = await api.JoinRoomAsync(currentUser.UserId, roomCode, NicknameEntry.Text ?? "");
             if (!result.Success || result.Data is null || !result.Data.Ok)
             {
                 StatusLabel.Text = $"Status: join failed - {result.Message}";
@@ -268,6 +329,7 @@ public partial class MainPage : ContentPage
         });
     }
 
+    // טוען את רשימת השחקנים בחדר הנוכחי.
     private async void OnLoadPlayersClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("load room players", async () =>
@@ -283,7 +345,6 @@ public partial class MainPage : ContentPage
             currentPlayers.Clear();
             currentPlayers.AddRange(result.Data);
 
-            // אם טרם נלכד roomPlayerId, מנסים לאתר אותו לפי userId המחובר.
             if (currentUser is not null && currentRoomPlayerId == 0)
             {
                 var meInRoom = currentPlayers.FirstOrDefault(p => p.UserID == currentUser.UserId);
@@ -295,22 +356,27 @@ public partial class MainPage : ContentPage
         });
     }
 
-    // -------------------------
-    // Game
-    // -------------------------
+    // התחלת משחק שולחת לשרת את ה-userId של המארח ואת מספר השאלות המבוקש.
     private async void OnStartGameClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("start game", async () =>
         {
+            if (currentUser is null)
+            {
+                StatusLabel.Text = "Status: login first.";
+                return;
+            }
+
             var roomCode = (RoomCodeEntry.Text ?? "").Trim().ToUpperInvariant();
             var questionCount = int.TryParse(QuestionCountEntry.Text, out var parsed) ? parsed : 10;
-            var result = await api.StartGameAsync(roomCode, questionCount);
+            var result = await api.StartGameAsync(currentUser.UserId, roomCode, questionCount);
             StatusLabel.Text = result.Success
                 ? $"Status: start game request succeeded - {result.Data?.Message}"
                 : $"Status: start game failed - {result.Message}";
         });
     }
 
+    // טוען את השאלה הנוכחית מהשרת ומעדכן את ה-CollectionView של התשובות.
     private async void OnLoadCurrentQuestionClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("load current question", async () =>
@@ -342,11 +408,13 @@ public partial class MainPage : ContentPage
         });
     }
 
+    // מסמן איזו תשובה נבחרה כרגע.
     private void OnOptionSelected(object? sender, SelectionChangedEventArgs e)
     {
         selectedOption = e.CurrentSelection.FirstOrDefault() as QuestionOptionRow;
     }
 
+    // שולח את התשובה שנבחרה לשרת.
     private async void OnSubmitAnswerClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("submit answer", async () =>
@@ -376,6 +444,7 @@ public partial class MainPage : ContentPage
         });
     }
 
+    // טוען scoreboard של החדר.
     private async void OnLoadScoreboardClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("load scoreboard", async () =>
@@ -396,14 +465,18 @@ public partial class MainPage : ContentPage
         });
     }
 
-    // -------------------------
-    // Stats + assistant
-    // -------------------------
+    // טוען את הסטטיסטיקות האישיות של המשתמש המחובר.
     private async void OnLoadStatsClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("load stats", async () =>
         {
-            var result = await api.GetMyStatsAsync();
+            if (currentUser is null)
+            {
+                StatusLabel.Text = "Status: login first.";
+                return;
+            }
+
+            var result = await api.GetMyStatsAsync(currentUser.UserId);
             if (!result.Success || result.Data is null)
             {
                 StatsLabel.Text = "Stats: failed";
@@ -417,6 +490,7 @@ public partial class MainPage : ContentPage
         });
     }
 
+    // טוען את top players מה-API ומציג סיכום קצר.
     private async void OnLoadTopPlayersClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("load top players", async () =>
@@ -436,10 +510,17 @@ public partial class MainPage : ContentPage
         });
     }
 
+    // שולח שאלה לעוזר האישי.
     private async void OnAskAssistantClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("ask assistant", async () =>
         {
+            if (currentUser is null)
+            {
+                StatusLabel.Text = "Status: login first.";
+                return;
+            }
+
             var prompt = AssistantPromptEntry.Text ?? "";
             if (string.IsNullOrWhiteSpace(prompt))
             {
@@ -447,7 +528,7 @@ public partial class MainPage : ContentPage
                 return;
             }
 
-            var result = await api.AskAssistantAsync(prompt);
+            var result = await api.AskAssistantAsync(currentUser.UserId, prompt);
             if (!result.Success || result.Data is null)
             {
                 AssistantResponseLabel.Text = "Assistant: request failed.";

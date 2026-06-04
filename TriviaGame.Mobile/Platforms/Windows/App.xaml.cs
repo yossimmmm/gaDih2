@@ -1,24 +1,19 @@
 using Microsoft.UI.Xaml;
 
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
-
 namespace TriviaGame.Mobile.WinUI;
 
-/// <summary>
-/// Provides application-specific behavior to supplement the default Application class.
-/// </summary>
+// הקובץ הזה הוא נקודת הכניסה של גרסת Windows.
+// הוא מחבר את חלון WinUI אל ה-MAUI app builder שבנינו ב-MauiProgram.
 public partial class App : MauiWinUIApplication
 {
-	/// <summary>
-	/// Initializes the singleton application object.  This is the first line of authored code
-	/// executed, and as such is the logical equivalent of main() or WinMain().
-	/// </summary>
+	// כאן נוצר מופע האפליקציה הראשון ב-Windows.
+	// זה המקבילה של main()/WinMain() בעולם של MAUI על Windows.
 	public App()
 	{
 		this.InitializeComponent();
 	}
 
+	// מחזיר את MAUI app המלא שנבנה בקוד המשותף.
+	// כל הפלטפורמות משתמשות באותו builder כדי לשמור על התנהגות זהה.
 	protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
 }
-

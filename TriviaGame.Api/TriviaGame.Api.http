@@ -1,0 +1,10 @@
+@TriviaGame.Api_HostAddress = http://localhost:5040
+@AppCode = TRIVIA-DEV-123
+
+### בדיקת health
+# הבקשה הזו שולחת את אותו X-App-Code שה-MAUI שולח.
+GET {{TriviaGame.Api_HostAddress}}/api/health
+X-App-Code: {{AppCode}}
+Accept: application/json
+
+###

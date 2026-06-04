@@ -4,20 +4,21 @@ using TriviaGame.Api.Services;
 
 namespace TriviaGame.Api.Controllers;
 
+// ה-controller הזה מטפל בכל הפעולות שקשורות לחדרים:
+// טעינת סוגי שאלות, יצירת חדר, הצטרפות לחדר, עזיבה, ורשימת שחקנים.
 [ApiController]
 [Route("api/rooms")]
 public sealed class RoomsController : ControllerBase
 {
-    private readonly SessionTokenService sessionTokenService;
     private readonly RoomsDomainService roomsDomainService;
 
-    public RoomsController(SessionTokenService sessionTokenService, RoomsDomainService roomsDomainService)
+    public RoomsController(RoomsDomainService roomsDomainService)
     {
-        this.sessionTokenService = sessionTokenService;
+        // ה-controller עצמו לא נוגע במסד; הוא רק מעביר את העבודה לשירות הדומיין.
         this.roomsDomainService = roomsDomainService;
     }
 
-    // רשימת סוגי שאלות.
+    // ה-UI צריך את סוגי השאלות כדי למלא picker בבחירת חדר.
     [HttpGet("question-types")]
     public async Task<IActionResult> GetQuestionTypes()
     {
@@ -25,21 +26,17 @@ public sealed class RoomsController : ControllerBase
         return Ok(rows);
     }
 
-    // יצירת חדר חדש.
+    // יצירת חדר מקבלת userId, שם חדר, האם החדר ציבורי, ואפשרות לסוג שאלות.
     [HttpPost]
     public async Task<IActionResult> CreateRoom([FromBody] CreateRoomRequest request)
     {
-        var user = await sessionTokenService.TryGetUserAsync(HttpContext);
-        if (user is null)
-            return Unauthorized(new { ok = false, message = "Unauthorized." });
-
-        var (ok, message, room) = await roomsDomainService.CreateRoomAsync(user.UserID, request);
+        var (ok, message, room) = await roomsDomainService.CreateRoomAsync(request.UserId, request);
         return ok
             ? Ok(new { ok = true, message, room })
             : BadRequest(new { ok = false, message });
     }
 
-    // רשימת חדרים ציבוריים.
+    // רשימת חדרים ציבוריים נשלפת בלי userId, כי זו קריאת read-only כללית.
     [HttpGet("public")]
     public async Task<IActionResult> GetPublicRooms()
     {
@@ -47,7 +44,7 @@ public sealed class RoomsController : ControllerBase
         return Ok(rooms);
     }
 
-    // שליפת חדר ספציפי.
+    // שליפת חדר בודד לפי קוד, למשל כשעוברים מאוסף חדרים למסך חדר פעיל.
     [HttpGet("{roomCode}")]
     public async Task<IActionResult> GetRoom(string roomCode)
     {
@@ -55,37 +52,29 @@ public sealed class RoomsController : ControllerBase
         return room is null ? NotFound(new { ok = false, message = "Room not found." }) : Ok(room);
     }
 
-    // הצטרפות לחדר.
+    // הצטרפות לחדר משתמשת ב-userId מפורש, כדי שהשרת ייצור row של room player לאותו משתמש.
     [HttpPost("join")]
     public async Task<IActionResult> Join([FromBody] JoinRoomRequest request)
     {
-        var user = await sessionTokenService.TryGetUserAsync(HttpContext);
-        if (user is null)
-            return Unauthorized(new { ok = false, message = "Unauthorized." });
-
-        var (ok, message, player, room) = await roomsDomainService.JoinRoomAsync(user.UserID, request);
+        var (ok, message, player, room) = await roomsDomainService.JoinRoomAsync(request.UserId, request);
         return ok
             ? Ok(new { ok = true, message, room, player })
             : BadRequest(new { ok = false, message });
     }
 
-    // יציאה מחדר.
+    // עזיבה מוחקת את שורת השחקן של המשתמש מתוך החדר.
     [HttpPost("{roomCode}/leave")]
-    public async Task<IActionResult> Leave(string roomCode)
+    public async Task<IActionResult> Leave(string roomCode, [FromQuery] int userId)
     {
-        var user = await sessionTokenService.TryGetUserAsync(HttpContext);
-        if (user is null)
-            return Unauthorized(new { ok = false, message = "Unauthorized." });
-
         var room = await roomsDomainService.GetRoomByCodeAsync(roomCode);
         if (room is null)
             return NotFound(new { ok = false, message = "Room not found." });
 
-        var ok = await roomsDomainService.LeaveRoomAsync(room.RoomID, user.UserID);
+        var ok = await roomsDomainService.LeaveRoomAsync(room.RoomID, userId);
         return ok ? Ok(new { ok = true }) : BadRequest(new { ok = false, message = "Failed to leave room." });
     }
 
-    // רשימת שחקנים בחדר.
+    // רשימת שחקנים משמשת את ה-UI כדי לדעת מי כבר נמצא בחדר.
     [HttpGet("{roomCode}/players")]
     public async Task<IActionResult> Players(string roomCode)
     {

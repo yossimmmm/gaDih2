@@ -1,24 +1,31 @@
 namespace TriviaGame.Api.Services;
 
+// מחלקת הגדרות SMTP פשוטה.
+// השדות האלה מוזנים מ-appsettings או ממשתני סביבה.
 public sealed class SmtpSettings
 {
-    // כתובת שרת SMTP.
+    // כתובת שרת ה-SMTP.
     public string Host { get; set; } = "";
-    // פורט SMTP.
+
+    // הפורט שבו מתחברים לשרת.
     public int Port { get; set; } = 465;
+
     // האם להשתמש ב-TLS/SSL.
     public bool Secure { get; set; } = true;
-    // שם משתמש לחשבון SMTP.
+
+    // שם משתמש לשרת SMTP.
     public string User { get; set; } = "";
-    // סיסמת חשבון SMTP.
+
+    // סיסמה לשרת SMTP.
     public string Pass { get; set; } = "";
-    // כתובת שולח.
+
+    // כתובת שולח המייל.
     public string From { get; set; } = "";
 }
 
 public static class SmtpSettingsFactory
 {
-    // בניית אובייקט SMTP אחיד מה-Configuration/Environment.
+    // בונה אובייקט הגדרות אחד מתוך environment + configuration.
     public static SmtpSettings Build(IConfiguration cfg)
     {
         var smtpPortRaw = Environment.GetEnvironmentVariable("SMTP_PORT")

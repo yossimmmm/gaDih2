@@ -1,13 +1,16 @@
 namespace Models
 {
-    // Inherits common player stats from PlayerStatsBase for leaderboard output.
+    // שורת דירוג לשחקנים המובילים במערכת.
+    // ה-API משתמש בזה כשמציגים top players.
     public class TopPlayerRow : PlayerStatsBase
     {
-        // Public username displayed in top players table.
+        // שם המשתמש.
         public string Username { get; set; } = "";
-        // Number of games this user participated in.
+
+        // כמה משחקים המשתמש שיחק.
         public int GamesPlayed { get; set; }
-        // Number of games this user won.
+
+        // כמה משחקים המשתמש ניצח.
         public int Wins { get; set; }
     }
 }

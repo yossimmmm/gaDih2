@@ -1,13 +1,16 @@
 namespace Models
 {
-    // Shared stats for player-based score models.
+    // בסיס משותף לשורות סטטיסטיקה.
+    // גם scoreboard של חדר וגם top players משתמשים באותם שדות בסיסיים.
     public abstract class PlayerStatsBase
     {
-        // The user this stats row belongs to.
+        // לאיזה משתמש הסטטיסטיקה שייכת.
         public int UserID { get; set; }
-        // Number of correct answers.
+
+        // כמה תשובות נכונות היו לו.
         public int CorrectCount { get; set; }
-        // Total number of answers submitted.
+
+        // כמה תשובות הוא נתן בסך הכול.
         public int AnsweredCount { get; set; }
     }
 }

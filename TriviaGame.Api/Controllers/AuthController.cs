@@ -4,45 +4,31 @@ using TriviaGame.Api.Services;
 
 namespace TriviaGame.Api.Controllers;
 
+// ה-controller הזה מטפל בכל מה שקשור לזהות המשתמש:
+// login, register, טעינת המשתמש הנוכחי, ואיפוס סיסמה.
 [ApiController]
 [Route("api/auth")]
 public sealed class AuthController : ControllerBase
 {
     private readonly AuthDomainService authService;
-    private readonly SessionTokenService sessionTokenService;
     private readonly UsersDomainService usersDomainService;
 
-    public AuthController(
-        AuthDomainService authService,
-        SessionTokenService sessionTokenService,
-        UsersDomainService usersDomainService)
+    public AuthController(AuthDomainService authService, UsersDomainService usersDomainService)
     {
+        // הזרקת השירותים מאפשרת ל-controller להישאר דק: הוא לא עושה את הלוגיקה בעצמו.
         this.authService = authService;
-        this.sessionTokenService = sessionTokenService;
         this.usersDomainService = usersDomainService;
     }
 
-    // התחברות משתמש והחזרת token למובייל + כתיבת cookie לתאימות web.
+    // ה-UI שולח email + password, והשרת מחזיר אם ההתחברות הצליחה ואת פרטי המשתמש.
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         var result = await authService.LoginAsync(request);
-        if (!result.Ok)
-            return Unauthorized(result);
-
-        // שומרים גם cookie כדי לשמר תאימות ל-web flows הקיימים.
-        Response.Cookies.Append("session_token", result.Token, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = Request.IsHttps,
-            SameSite = SameSiteMode.Lax,
-            Expires = DateTimeOffset.UtcNow.AddDays(7)
-        });
-
-        return Ok(result);
+        return result.Ok ? Ok(result) : Unauthorized(result);
     }
 
-    // רישום משתמש חדש.
+    // הרשמה יוצרת רשומת משתמש חדשה במסד, אחרי בדיקות תקינות.
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
@@ -50,36 +36,26 @@ public sealed class AuthController : ControllerBase
         return ok ? Ok(new { ok = true, message }) : BadRequest(new { ok = false, message });
     }
 
-    // התנתקות לפי token מה-header/cookie.
-    [HttpPost("logout")]
-    public async Task<IActionResult> Logout()
-    {
-        var token = sessionTokenService.TryReadToken(HttpContext);
-        await authService.LogoutAsync(token);
-        Response.Cookies.Delete("session_token");
-        return Ok(new { ok = true });
-    }
-
-    // מצב משתמש מחובר נוכחי.
+    // המובייל כבר מחזיק userId מקומי, אז הוא מבקש את רשומת המשתמש ישירות לפי id.
     [HttpGet("me")]
-    public async Task<IActionResult> Me()
+    public async Task<IActionResult> Me([FromQuery] int userId)
     {
-        var user = await sessionTokenService.TryGetUserAsync(HttpContext);
+        var user = await usersDomainService.GetByIdAsync(userId);
         if (user is null)
-        {
-            return Ok(new CurrentUserResponse(false, 0, "", "", "", "User"));
-        }
+            return Ok(new { authenticated = false, userId = 0, username = "", fullName = "", email = "", role = "User" });
 
-        return Ok(new CurrentUserResponse(
-            true,
-            user.UserID,
-            user.Username,
-            user.FullName,
-            user.Email,
-            user.Role.ToString()));
+        return Ok(new
+        {
+            authenticated = true,
+            userId = user.UserID,
+            username = user.Username,
+            fullName = user.FullName,
+            email = user.Email,
+            role = user.Role.ToString()
+        });
     }
 
-    // יצירת reset-token ושליחת מייל.
+    // זרימת forgot-password: יוצרים token ושולחים מייל עם קישור לאיפוס.
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
     {
@@ -88,7 +64,7 @@ public sealed class AuthController : ControllerBase
         return ok ? Ok(new { ok = true, message }) : BadRequest(new { ok = false, message });
     }
 
-    // איפוס סיסמה לפי token.
+    // המסלול הזה מקבל token וסיסמה חדשה ומבצע את האיפוס בפועל.
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
     {

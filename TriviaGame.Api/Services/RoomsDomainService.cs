@@ -4,18 +4,21 @@ using TriviaGame.Api.Contracts;
 
 namespace TriviaGame.Api.Services;
 
+// שירות הדומיין של חדרים.
+// כאן נמצאת הלוגיקה העסקית, בעוד שה-controller רק קורא לשיטות האלה.
 public sealed class RoomsDomainService
 {
-    // שליפת קטגוריות שאלות ל-create-room/single-player.
+    // מחזיר את קטלוג סוגי השאלות, למשל כדי למלא את ה-picker במסך יצירת חדר.
     public async Task<List<QuestionType>> GetQuestionTypesAsync()
     {
         var questionTypeDb = new QuestionTypeDB();
         return await questionTypeDb.GetAllAsync();
     }
 
-    // יצירת חדר חדש לפי משתמש מחובר.
+    // יוצר חדר חדש עבור המשתמש שהעביר את הבקשה.
     public async Task<(bool Ok, string Message, Room? Room)> CreateRoomAsync(int userId, CreateRoomRequest req)
     {
+        // השרת מוודא שהשם תקין לפני הכתיבה למסד.
         var (validName, nameError) = ValidationHelper.ValidateRoomName(req.RoomName);
         if (!validName)
             return (false, nameError, null);
@@ -27,7 +30,7 @@ public sealed class RoomsDomainService
             : (true, "Room created.", room);
     }
 
-    // הצטרפות לחדר לפי קוד + nickname.
+    // מצטרף לחדר לפי קוד חדר וכינוי, ושומר את הקישור בין userId לבין החדר.
     public async Task<(bool Ok, string Message, RoomPlayer? Player, Room? Room)> JoinRoomAsync(int userId, JoinRoomRequest req)
     {
         var roomCode = (req.RoomCode ?? "").Trim().ToUpperInvariant();
@@ -54,28 +57,28 @@ public sealed class RoomsDomainService
             : (true, "Joined room.", player, room);
     }
 
-    // שליפת חדר לפי קוד.
+    // lookup בסיסי לפי קוד חדר, כי הרבה פעולות אחרות מתחילות מאותו קוד.
     public async Task<Room?> GetRoomByCodeAsync(string roomCode)
     {
         var roomDb = new RoomDB();
         return await roomDb.GetRoomByCodeAsync((roomCode ?? "").Trim().ToUpperInvariant());
     }
 
-    // רשימת חדרים ציבוריים פעילים.
+    // מחזיר את החדרים הציבוריים הפעילים, בלי סינון לפי משתמש.
     public async Task<List<Room>> GetPublicRoomsAsync()
     {
         var roomDb = new RoomDB();
         return await roomDb.GetPublicRoomsAsync();
     }
 
-    // רשימת שחקנים בחדר.
+    // מחזיר את כל השחקנים שכבר נמצאים בחדר.
     public async Task<List<RoomPlayer>> GetPlayersAsync(int roomId)
     {
         var roomDb = new RoomDB();
         return await roomDb.GetPlayersAsync(roomId);
     }
 
-    // יציאה מחדר.
+    // מסיר שחקן מחדר לפי roomId ו-userId.
     public async Task<bool> LeaveRoomAsync(int roomId, int userId)
     {
         var roomDb = new RoomDB();

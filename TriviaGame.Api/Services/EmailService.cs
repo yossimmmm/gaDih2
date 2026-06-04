@@ -4,11 +4,14 @@ using MimeKit;
 
 namespace TriviaGame.Api.Services;
 
+// השירות הזה שולח מיילים דרך SMTP.
+// כרגע השימוש העיקרי הוא עבור password reset.
 public sealed class EmailService
 {
-    // קונפיגורציית SMTP.
+    // הגדרות SMTP שנקראות מהקונפיגורציה.
     private readonly SmtpSettings settings;
-    // לוג תקלות/שליחה.
+
+    // לוגים של שליחה או כשל.
     private readonly ILogger<EmailService> logger;
 
     public EmailService(SmtpSettings settings, ILogger<EmailService> logger)
@@ -17,12 +20,14 @@ public sealed class EmailService
         this.logger = logger;
     }
 
-    // שולח מייל איפוס סיסמה עם קישור חד-פעמי.
+    // שולח מייל איפוס סיסמה.
+    // ה-link כבר נבנה לפני הקריאה, והמתודה רק שולחת אותו לכתובת המבוקשת.
     public async Task SendPasswordResetAsync(string toEmail, string resetLink)
     {
         if (string.IsNullOrWhiteSpace(toEmail))
             return;
 
+        // בניית מייל טקסטואלי פשוט.
         var message = new MimeMessage();
         message.From.Add(MailboxAddress.Parse(settings.From));
         message.To.Add(MailboxAddress.Parse(toEmail.Trim()));
@@ -32,9 +37,11 @@ public sealed class EmailService
             Text = $"We received a password reset request.\n\nOpen this link:\n{resetLink}\n\nIf this wasn't you, ignore this email."
         };
 
+        // SMTP client זמני שנפתח, שולח, ומתנתק.
         using var client = new SmtpClient();
         client.Timeout = 15000;
 
+        // בוחרים מצב אבטחת חיבור לפי פורט והגדרות.
         var secureMode = settings.Port == 465
             ? SecureSocketOptions.SslOnConnect
             : (settings.Secure ? SecureSocketOptions.StartTls : SecureSocketOptions.None);

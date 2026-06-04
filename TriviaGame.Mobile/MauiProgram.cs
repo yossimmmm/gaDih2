@@ -4,43 +4,50 @@ using TriviaGame.Mobile.Services;
 
 namespace TriviaGame.Mobile;
 
+// MauiProgram הוא קובץ ההתחלה של MAUI.
+// כאן אנחנו בונים את האפליקציה, טוענים קונפיגורציה, ורושמים services ל-DI.
 public static class MauiProgram
 {
 	public static MauiApp CreateMauiApp()
 	{
-		// יצירת builder ראשי של אפליקציית MAUI.
+		// מתחילים Builder שמרכז את כל ההגדרות של האפליקציה.
 		var builder = MauiApp.CreateBuilder();
 		builder
-			// הגדרת מחלקת App כשורש האפליקציה.
+			// מחברים את מחלקת App הראשית ל-MAUI runtime.
 			.UseMauiApp<App>()
-			// רישום פונטים לשימוש בכל המסכים.
+			// רושמים fonts כך שה-UI יכול להשתמש בהם דרך שמות לוגיים.
 			.ConfigureFonts(fonts =>
 			{
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
 				fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
 			});
 
-		// טעינת קובץ הגדרות סביבות API (dev/staging/prod).
+		// טוענים את appsettings.json כדי שהאפליקציה תדע לאן לשלוח בקשות.
 		builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: false);
 
-		// רישום תשתית HTTP ושירותי API.
+		// ApiEndpointResolver הוא מקור האמת לבחירת base URL ו-app code.
 		builder.Services.AddSingleton<ApiEndpointResolver>();
-		builder.Services.AddSingleton<AuthSessionStore>();
-		builder.Services.AddSingleton(sp =>
-		{
-			// HttpClient יחיד לכל האפליקציה לצמצום overhead של sockets.
-			return new HttpClient();
-		});
+
+		// HttpClient אחד לכל האפליקציה.
+		// כל קריאה ל-API תעבור דרכו, וה-ApiClient יוסיף עליו את הלוגיקה הנדרשת.
+		builder.Services.AddSingleton(_ => new HttpClient());
+
+		// השכבה הנמוכה שמבצעת HTTP בפועל, מוסיפה headers ומטפלת בשגיאות.
 		builder.Services.AddSingleton<ApiClient>();
+
+		// שכבת ה-API העסקית של ה-MAUI:
+		// כאן נמצאות מתודות כמו Login, JoinRoom, SubmitAnswer, וכו'.
 		builder.Services.AddSingleton<TriviaApiClient>();
+
+		// רושמים את המסך הראשי כך שהוא יקבל את השירותים דרך DI.
 		builder.Services.AddSingleton<MainPage>();
 
 #if DEBUG
-		// הפעלת לוג דיבוג בסביבת פיתוח.
+		// ב-debug מוסיפים לוגים כדי לראות מה קורה בזמן ריצה.
 		builder.Logging.AddDebug();
 #endif
 
-		// בנייה והחזרה של מופע האפליקציה המוכן להרצה.
+		// בונים את האפליקציה המלאה.
 		return builder.Build();
 	}
 }

@@ -6,10 +6,10 @@
     xmlns:local="clr-namespace:TriviaGame.Mobile"
     Title="Trivia Game">
 
+    <!-- ה-Shell הוא הקונטיינר הראשי של האפליקציה; כרגע יש בו מסך אחד בלבד. -->
     <ShellContent
         Title="Game"
         ContentTemplate="{DataTemplate local:MainPage}"
         Route="MainPage" />
 
 </Shell>
-

@@ -1,11 +1,13 @@
 namespace Models
 {
-    // Inherits common player stats from PlayerStatsBase for room scoreboard output.
+    // שורת ניקוד עבור חדר מסוים.
+    // זו תוצאה שמוצגת ב-scoreboard.
     public class ScoreRow : PlayerStatsBase
     {
-        // Unique id of the room participant row.
+        // מזהה השחקן בתוך החדר.
         public int RoomPlayerID { get; set; }
-        // Display nickname in the room.
+
+        // הכינוי של השחקן.
         public string Nickname { get; set; } = "";
     }
 }
