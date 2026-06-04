@@ -3,28 +3,28 @@
 ## קבצים מרכזיים ללימוד
 
 ### מודלים ומשותף
-- [ ] [ModelsTrivia/User.cs](ModelsTrivia/User.cs) - להבין משתמש, תפקידים ושדות הזדהות
-- [ ] [ModelsTrivia/Room.cs](ModelsTrivia/Room.cs) - להבין חדר, קוד חדר, מצב ציבורי/פעיל
-- [ ] [ModelsTrivia/RoomPlayer.cs](ModelsTrivia/RoomPlayer.cs) - להבין קשר משתמש-חדר
-- [ ] [ModelsTrivia/QuestionType.cs](ModelsTrivia/QuestionType.cs) - להבין סוג שאלה
-- [ ] [ModelsTrivia/Question.cs](ModelsTrivia/Question.cs) - להבין שאלה, זמן, אפשרויות
-- [ ] [ModelsTrivia/QuestionOption.cs](ModelsTrivia/QuestionOption.cs) - להבין אפשרות תשובה
-- [ ] [ModelsTrivia/PlayerStatsBase.cs](ModelsTrivia/PlayerStatsBase.cs) - להבין ירושה לסטטיסטיקות
-- [ ] [ModelsTrivia/ScoreRow.cs](ModelsTrivia/ScoreRow.cs) - להבין שורת ניקוד לחדר
-- [ ] [ModelsTrivia/TopPlayerRow.cs](ModelsTrivia/TopPlayerRow.cs) - להבין מובילי משחק
-- [ ] [ModelsTrivia/ValidationHelper.cs](ModelsTrivia/ValidationHelper.cs) - להבין בדיקות קלט וסניטציה
-- [ ] [ModelsTrivia/PasswordHelper.cs](ModelsTrivia/PasswordHelper.cs) - להבין hash ואימות סיסמה
-- [ ] [ModelsTrivia/UserSession.cs](ModelsTrivia/UserSession.cs) - להבין מצב משתמש גלובלי
+- [V] [ModelsTrivia/User.cs](ModelsTrivia/User.cs) - להבין משתמש, תפקידים ושדות הזדהות
+- [V] [ModelsTrivia/Room.cs](ModelsTrivia/Room.cs) - להבין חדר, קוד חדר, מצב ציבורי/פעיל
+- [V] [ModelsTrivia/RoomPlayer.cs](ModelsTrivia/RoomPlayer.cs) - להבין קשר משתמש-חדר
+- [V] [ModelsTrivia/QuestionType.cs](ModelsTrivia/QuestionType.cs) - להבין סוג שאלה
+- [V] [ModelsTrivia/Question.cs](ModelsTrivia/Question.cs) - להבין שאלה, זמן, אפשרויות
+- [V] [ModelsTrivia/QuestionOption.cs](ModelsTrivia/QuestionOption.cs) - להבין אפשרות תשובה
+- [V] [ModelsTrivia/PlayerStatsBase.cs](ModelsTrivia/PlayerStatsBase.cs) - להבין ירושה לסטטיסטיקות
+- [V] [ModelsTrivia/ScoreRow.cs](ModelsTrivia/ScoreRow.cs) - להבין שורת ניקוד לחדר
+- [V] [ModelsTrivia/TopPlayerRow.cs](ModelsTrivia/TopPlayerRow.cs) - להבין מובילי משחק
+- [V] [ModelsTrivia/ValidationHelper.cs](ModelsTrivia/ValidationHelper.cs) - להבין בדיקות קלט וסניטציה
+- [V] [ModelsTrivia/PasswordHelper.cs](ModelsTrivia/PasswordHelper.cs) - להבין hash ואימות סיסמה
+- [V] [ModelsTrivia/UserSession.cs](ModelsTrivia/UserSession.cs) - להבין מצב משתמש גלובלי
 
 ### מסד נתונים ושכבת DBL
-- [ ] [trivia_game.sql](trivia_game.sql) - להבין את כל הטבלאות והקשרים
-- [ ] [TriviaDBL/DB.cs](TriviaDBL/DB.cs) - להבין חיבור למסד נתונים
-- [ ] [TriviaDBL/UserDB.cs](TriviaDBL/UserDB.cs) - להבין CRUD למשתמשים, reset password
-- [ ] [TriviaDBL/RoomDB.cs](TriviaDBL/RoomDB.cs) - להבין יצירת חדר, הצטרפות, רשימת שחקנים
-- [ ] [TriviaDBL/SessionDB.cs](TriviaDBL/SessionDB.cs) - להבין session tokens
-- [ ] [TriviaDBL/GameDB.cs](TriviaDBL/GameDB.cs) - להבין בחירת שאלות, תשובות, scoreboard, סטטיסטיקות
-- [ ] [TriviaDBL/QuestionTypeDB.cs](TriviaDBL/QuestionTypeDB.cs) - להבין שליפת סוגי שאלות
-- [ ] [TriviaDBL/SeedData.cs](TriviaDBL/SeedData.cs) - להבין נתוני התחלה
+- [V] [trivia_game.sql](trivia_game.sql) - להבין את כל הטבלאות והקשרים
+- [V] [TriviaDBL/DB.cs](TriviaDBL/DB.cs) - להבין חיבור למסד נתונים
+- [V] [TriviaDBL/UserDB.cs](TriviaDBL/UserDB.cs) - להבין CRUD למשתמשים, reset password
+- [V] [TriviaDBL/RoomDB.cs](TriviaDBL/RoomDB.cs) - להבין יצירת חדר, הצטרפות, רשימת שחקנים
+- [V] [TriviaDBL/SessionDB.cs](TriviaDBL/SessionDB.cs) - להבין session tokens
+- [V] [TriviaDBL/GameDB.cs](TriviaDBL/GameDB.cs) - להבין בחירת שאלות, תשובות, scoreboard, סטטיסטיקות
+- [V] [TriviaDBL/QuestionTypeDB.cs](TriviaDBL/QuestionTypeDB.cs) - להבין שליפת סוגי שאלות
+- [V] [TriviaDBL/SeedData.cs](TriviaDBL/SeedData.cs) - להבין נתוני התחלה
 
 ### שרת API
 - [ ] [TriviaGame.Api/Program.cs](TriviaGame.Api/Program.cs) - להבין startup, DI, CORS, X-App-Code
