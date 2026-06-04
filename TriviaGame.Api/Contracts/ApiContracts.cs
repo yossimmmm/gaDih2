@@ -8,7 +8,7 @@ namespace TriviaGame.Api.Contracts;
 // הן לא מחזיקות לוגיקה, רק נתונים שמייצגים בקשה או תשובה.
 
 // ----------------------------
-// Auth
+// אימות
 // ----------------------------
 
 // בקשת התחברות: אימייל + סיסמה.
@@ -24,7 +24,7 @@ public sealed record ForgotPasswordRequest(string Email);
 public sealed record ResetPasswordRequest(string Token, string NewPassword);
 
 // ----------------------------
-// Profile / Admin user management
+// פרופיל / ניהול משתמשים
 // ----------------------------
 
 // עדכון פרופיל בסיסי של משתמש קיים.
@@ -40,7 +40,7 @@ public sealed record UpdateRoleRequest(string Role);
 public sealed record AdminUserUpdateRequest(string Username, string FullName, string Email, string Role);
 
 // ----------------------------
-// Rooms / game flow
+// חדרים / זרימת משחק
 // ----------------------------
 
 // בקשה ליצירת חדר חדש.
@@ -58,7 +58,7 @@ public sealed record StartGameRequest(int UserId, int QuestionCount = 10);
 public sealed record SubmitAnswerRequest(int RoomPlayerId, int QuestionId, int OptionId);
 
 // ----------------------------
-// Assistant
+// עוזר
 // ----------------------------
 
 // בקשה לעוזר חכם עם שאלה אחת ספציפית.
@@ -73,7 +73,7 @@ public sealed record AssistantChatMessage(string Role, string Text);
 public sealed record AssistantChatRequest(int UserId, string Message, List<AssistantChatMessage>? History);
 
 // ----------------------------
-// Auth responses
+// תשובות אימות
 // ----------------------------
 
 // תשובת הצלחה/כישלון מהתחברות או הרשמה.

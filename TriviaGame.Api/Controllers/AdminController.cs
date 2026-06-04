@@ -13,7 +13,7 @@ public sealed class AdminController : ControllerBase
 
     public AdminController(UsersDomainService usersDomainService)
     {
-        // controller נשאר דק ומעביר הכול לשירות המשתמשים.
+        // ה-controller נשאר דק ומעביר הכול לשירות המשתמשים.
         this.usersDomainService = usersDomainService;
     }
 

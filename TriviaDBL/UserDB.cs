@@ -250,13 +250,13 @@ namespace DBL
 
             await tx.CommitAsync();
 
-            // The raw token is returned to the caller so it can be sent in email.
+            // הטוקן הגולמי מוחזר למתקשר כדי שאפשר יהיה לשלוח אותו במייל.
             return rawToken;
         }
 
         public async Task<bool> ResetPasswordByTokenAsync(string token, string newPasswordHash)
         {
-            // The token must exist, still be unused, and still be within its expiry window.
+            // הטוקן חייב להתקיים, עדיין לא להיות בשימוש, ועדיין להיות בתוך חלון התפוגה שלו.
             if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(newPasswordHash)) return false;
 
             var tokenHash = Sha256Hex(token.Trim());

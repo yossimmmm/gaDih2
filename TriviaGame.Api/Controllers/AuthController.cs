@@ -5,7 +5,7 @@ using TriviaGame.Api.Services;
 namespace TriviaGame.Api.Controllers;
 
 // נקודות קצה של אימות משתמשים:
-// login, register, me, forgot-password, reset-password.
+// התחברות, הרשמה, me, שכחתי סיסמה, איפוס סיסמה.
 [ApiController]
 [Route("api/auth")]
 public sealed class AuthController : ControllerBase
@@ -15,7 +15,7 @@ public sealed class AuthController : ControllerBase
 
     public AuthController(AuthDomainService authService, UsersDomainService usersDomainService)
     {
-        // controller נשאר דק; הלוגיקה האמיתית יושבת בשירותים.
+        // ה-controller נשאר דק; הלוגיקה האמיתית יושבת בשירותים.
         this.authService = authService;
         this.usersDomainService = usersDomainService;
     }

@@ -14,7 +14,7 @@ public sealed class RoomsController : ControllerBase
 
     public RoomsController(RoomsDomainService roomsDomainService)
     {
-        // controller לא נוגע ישירות במסד; השירות מטפל בלוגיקה.
+        // ה-controller לא נוגע ישירות במסד; השירות מטפל בלוגיקה.
         this.roomsDomainService = roomsDomainService;
     }
 

@@ -5,7 +5,7 @@ using TriviaGame.Api.Contracts;
 namespace TriviaGame.Api.Services;
 
 // השירות הזה מחזיק את כל זרימת האימות:
-// login, register, forgot-password, reset-password.
+// התחברות, הרשמה, שכחתי סיסמה, איפוס סיסמה.
 // הוא לא יוצר sessions או cookies; לקוח ה־MAUI שומר את המידע שה־API מחזיר.
 public sealed class AuthDomainService
 {
@@ -28,7 +28,7 @@ public sealed class AuthDomainService
         this.logger = logger;
     }
 
-    // login בודק פרטי התחברות ומחזיר את נתוני המשתמש שהלקוח צריך.
+    // ההתחברות בודקת פרטי התחברות ומחזירה את נתוני המשתמש שהלקוח צריך.
     public async Task<AuthResultResponse> LoginAsync(LoginRequest req)
     {
         if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
@@ -44,7 +44,7 @@ public sealed class AuthDomainService
         return new(true, "Login succeeded.", "", user.UserID, user.Username, user.Role.ToString());
     }
 
-    // register מאמת קלט, בודק ייחודיות, מבצע hashing לסיסמה ומכניס את החשבון.
+    // ההרשמה מאמתת קלט, בודקת ייחודיות, עושה hash לסיסמה ומכניסה את החשבון.
     public async Task<(bool Ok, string Message)> RegisterAsync(RegisterRequest req)
     {
         var (usernameValid, usernameError) = ValidationHelper.ValidateUsername(req.Username);
@@ -89,7 +89,7 @@ public sealed class AuthDomainService
             : (true, "Registered successfully.");
     }
 
-    // forgot-password מייצר טוקן איפוס ושולח קישור במייל.
+    // "שכחתי סיסמה" מייצר טוקן איפוס ושולח קישור במייל.
     public async Task<(bool Ok, string Message)> ForgotPasswordAsync(ForgotPasswordRequest req, string requestBaseUrl)
     {
         if (string.IsNullOrWhiteSpace(req.Email))
@@ -122,7 +122,7 @@ public sealed class AuthDomainService
         }
     }
 
-    // reset-password מאמת את הסיסמה החדשה ומעביר את הטוקן לשכבת ה־DB.
+    // איפוס סיסמה מאמת את הסיסמה החדשה ומעביר את הטוקן לשכבת ה-DB.
     public async Task<(bool Ok, string Message)> ResetPasswordAsync(ResetPasswordRequest req)
     {
         if (string.IsNullOrWhiteSpace(req.Token) || string.IsNullOrWhiteSpace(req.NewPassword))
@@ -139,7 +139,7 @@ public sealed class AuthDomainService
             : (false, "Invalid or expired reset link.");
     }
 
-    // SMTP חייב להיות מוגדר כדי ש־forgot-password יעבוד.
+    // SMTP חייב להיות מוגדר כדי שמנגנון "שכחתי סיסמה" יעבוד.
     private bool IsSmtpConfigured()
     {
         var smtpFrom = Environment.GetEnvironmentVariable("SMTP_FROM") ?? configuration["Smtp:From"];

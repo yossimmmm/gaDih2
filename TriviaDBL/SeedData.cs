@@ -68,7 +68,7 @@ namespace DBL
             }
             catch
             {
-                // rollback במקרה כשל בכל שלב
+                // מבצעים rollback במקרה של כשל בכל שלב
                 await tx.RollbackAsync();
                 throw;
             }
@@ -468,7 +468,7 @@ VALUES ('admin', 'Admin', 'admin@example.com', @hash, 'Admin');";
                     "easy",
                     new[] { "12", "11", "13", "14" },
                     0),
-                // Extra General Knowledge
+                // ידע כללי נוסף
                 new SeedQuestion(
                     "Which language has the most native speakers worldwide?",
                     1,
@@ -481,7 +481,7 @@ VALUES ('admin', 'Admin', 'admin@example.com', @hash, 'Admin');";
                     "easy",
                     new[] { "Mercury", "Venus", "Earth", "Mars" },
                     0),
-                // Extra Science
+                // מדע נוסף
                 new SeedQuestion(
                     "What gas do plants absorb from the atmosphere?",
                     2,
@@ -494,7 +494,7 @@ VALUES ('admin', 'Admin', 'admin@example.com', @hash, 'Admin');";
                     "medium",
                     new[] { "Nucleus", "Mitochondria", "Ribosome", "Golgi apparatus" },
                     0),
-                // Extra History
+                // היסטוריה נוספת
                 new SeedQuestion(
                     "Who was the first President of the United States?",
                     3,
@@ -507,7 +507,7 @@ VALUES ('admin', 'Admin', 'admin@example.com', @hash, 'Admin');";
                     "medium",
                     new[] { "Seven", "Five", "Nine", "Three" },
                     0),
-                // Extra Geography
+                // גאוגרפיה נוספת
                 new SeedQuestion(
                     "Which continent is the Sahara Desert located in?",
                     4,
@@ -520,7 +520,7 @@ VALUES ('admin', 'Admin', 'admin@example.com', @hash, 'Admin');";
                     "medium",
                     new[] { "Nile", "Amazon", "Yangtze", "Mississippi" },
                     0),
-                // Extra Entertainment
+                // בידור נוסף
                 new SeedQuestion(
                     "Which movie features the quote, \"May the Force be with you\"?",
                     5,
@@ -533,7 +533,7 @@ VALUES ('admin', 'Admin', 'admin@example.com', @hash, 'Admin');";
                     "easy",
                     new[] { "Michael Jackson", "Elvis Presley", "Prince", "Freddie Mercury" },
                     0),
-                // Extra Sports
+                // ספורט נוסף
                 new SeedQuestion(
                     "How many players are on a soccer team on the field?",
                     6,
@@ -546,7 +546,7 @@ VALUES ('admin', 'Admin', 'admin@example.com', @hash, 'Admin');";
                     "easy",
                     new[] { "Badminton", "Tennis", "Squash", "Table Tennis" },
                     0),
-                // Extra Technology
+                // טכנולוגיה נוספת
                 new SeedQuestion(
                     "What does \"HTTP\" stand for?",
                     7,
@@ -559,7 +559,7 @@ VALUES ('admin', 'Admin', 'admin@example.com', @hash, 'Admin');";
                     "medium",
                     new[] { "Google", "Apple", "Microsoft", "IBM" },
                     0),
-                // Extra Math
+                // מתמטיקה נוספת
                 new SeedQuestion(
                     "What is 9 x 8?",
                     8,
@@ -572,7 +572,7 @@ VALUES ('admin', 'Admin', 'admin@example.com', @hash, 'Admin');";
                     "easy",
                     new[] { "3.14", "3.41", "3.04", "3.24" },
                     0),
-                // More General Knowledge
+                // עוד ידע כללי
                 new SeedQuestion(
                     "How many continents are there on Earth?",
                     1,
@@ -591,7 +591,7 @@ VALUES ('admin', 'Admin', 'admin@example.com', @hash, 'Admin');";
                     "medium",
                     new[] { "Mercury", "Iron", "Copper", "Aluminum" },
                     0),
-                // More Science
+                // עוד מדע
                 new SeedQuestion(
                     "What is H2O commonly known as?",
                     2,
@@ -610,7 +610,7 @@ VALUES ('admin', 'Admin', 'admin@example.com', @hash, 'Admin');";
                     "medium",
                     new[] { "Gravity", "Magnetism", "Friction", "Radiation pressure" },
                     0),
-                // More History
+                // עוד היסטוריה
                 new SeedQuestion(
                     "In which year did the Berlin Wall fall?",
                     3,
@@ -629,7 +629,7 @@ VALUES ('admin', 'Admin', 'admin@example.com', @hash, 'Admin');";
                     "easy",
                     new[] { "Roman Empire", "Ottoman Empire", "Mongol Empire", "British Empire" },
                     0),
-                // More Geography
+                // עוד גאוגרפיה
                 new SeedQuestion(
                     "What is the capital of Canada?",
                     4,
@@ -648,7 +648,7 @@ VALUES ('admin', 'Admin', 'admin@example.com', @hash, 'Admin');";
                     "medium",
                     new[] { "Alaska", "Texas", "California", "Montana" },
                     0),
-                // More Entertainment
+                // עוד בידור
                 new SeedQuestion(
                     "Which TV series features the character Walter White?",
                     5,
@@ -667,7 +667,7 @@ VALUES ('admin', 'Admin', 'admin@example.com', @hash, 'Admin');";
                     "medium",
                     new[] { "Steven Spielberg", "James Cameron", "Christopher Nolan", "Peter Jackson" },
                     0),
-                // More Sports
+                // עוד ספורט
                 new SeedQuestion(
                     "How many points is a touchdown worth in American football (before extra point)?",
                     6,
@@ -686,7 +686,7 @@ VALUES ('admin', 'Admin', 'admin@example.com', @hash, 'Admin');";
                     "medium",
                     new[] { "France", "Croatia", "Germany", "Brazil" },
                     0),
-                // More Technology
+                // עוד טכנולוגיה
                 new SeedQuestion(
                     "What does GPU stand for?",
                     7,
@@ -705,7 +705,7 @@ VALUES ('admin', 'Admin', 'admin@example.com', @hash, 'Admin');";
                     "easy",
                     new[] { "0 and 1", "1 and 2", "2 and 3", "0 and 2" },
                     0),
-                // More Math
+                // עוד מתמטיקה
                 new SeedQuestion(
                     "What is 7 squared?",
                     8,

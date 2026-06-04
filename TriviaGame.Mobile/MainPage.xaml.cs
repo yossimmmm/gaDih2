@@ -71,7 +71,7 @@ public partial class MainPage : ContentPage
     private void UpdateResolvedBaseUrlLabel() =>
         ResolvedBaseUrlLabel.Text = $"Base URL: {endpointResolver.GetBaseUrl()}";
 
-    // helper מרכזי שמנהל מצב טעינה, סטטוס וטיפול בחריגות במקום אחד.
+    // עזר מרכזי שמנהל מצב טעינה, סטטוס וטיפול בחריגות במקום אחד.
     private async Task RunUiActionAsync(string actionName, Func<Task> action)
     {
         BusyIndicator.IsVisible = true;
@@ -109,7 +109,7 @@ public partial class MainPage : ContentPage
         StatusLabel.Text = "Status: API settings applied.";
     }
 
-    // login: שולח אימייל וסיסמה לשרת ומעדכן את מצב המשתמש המקומי.
+    // התחברות: שולח אימייל וסיסמה לשרת ומעדכן את מצב המשתמש המקומי.
     private async void OnLoginClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("login", async () =>
@@ -141,7 +141,7 @@ public partial class MainPage : ContentPage
         });
     }
 
-    // register: שולח פרטי משתמש חדשים לשרת.
+    // הרשמה: שולח פרטי משתמש חדשים לשרת.
     private async void OnRegisterClicked(object? sender, EventArgs e)
     {
         await RunUiActionAsync("register", async () =>
@@ -158,7 +158,7 @@ public partial class MainPage : ContentPage
         });
     }
 
-    // logout רק מנקה את המצב המקומי.
+    // יציאה רק מנקה את המצב המקומי.
     // אין כאן session בצד שרת, לכן לא צריך לבטל משהו בשרת עצמו.
     private async void OnLogoutClicked(object? sender, EventArgs e)
     {

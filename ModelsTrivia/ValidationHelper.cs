@@ -3,16 +3,16 @@ using System.Text.RegularExpressions;
 
 namespace Models
 {
-    // Input validation and light sanitization helpers.
-    // These checks run before values are sent to the database or rendered in the UI.
+    // עזרי ולידציה וניקוי בסיסי של קלט.
+    // הבדיקות האלה רצות לפני ששומרים ערכים במסד או מציגים אותם ב-UI.
     public static class ValidationHelper
     {
-        // Simple email pattern used for basic validation.
+        // תבנית אימייל בסיסית לבדיקה ראשונית.
         private static readonly Regex EmailRegex = new Regex(
             @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-        // Returns true only when the email has a valid basic shape.
+        // מחזיר true רק כשהאימייל נראה תקין ברמה בסיסית.
         public static bool IsValidEmail(string? email)
         {
             if (string.IsNullOrWhiteSpace(email))
@@ -21,7 +21,7 @@ namespace Models
             return EmailRegex.IsMatch(email.Trim());
         }
 
-        // Password rules used by the app.
+        // כללי הסיסמה של האפליקציה.
         public static (bool IsValid, string ErrorMessage) ValidatePassword(string? password)
         {
             if (string.IsNullOrWhiteSpace(password))
@@ -36,7 +36,7 @@ namespace Models
             return (true, string.Empty);
         }
 
-        // Username rules.
+        // כללי שם המשתמש.
         public static (bool IsValid, string ErrorMessage) ValidateUsername(string? username)
         {
             if (string.IsNullOrWhiteSpace(username))
@@ -51,7 +51,7 @@ namespace Models
             return (true, string.Empty);
         }
 
-        // Full name is optional, but if provided it must not be too long.
+        // שם מלא הוא שדה אופציונלי, אבל אם ממלאים אותו הוא לא יכול להיות ארוך מדי.
         public static (bool IsValid, string ErrorMessage) ValidateFullName(string? fullName)
         {
             if (string.IsNullOrWhiteSpace(fullName))
@@ -63,7 +63,7 @@ namespace Models
             return (true, string.Empty);
         }
 
-        // Room name rules.
+        // כללי שם החדר.
         public static (bool IsValid, string ErrorMessage) ValidateRoomName(string? roomName)
         {
             if (string.IsNullOrWhiteSpace(roomName))
@@ -78,7 +78,7 @@ namespace Models
             return (true, string.Empty);
         }
 
-        // Room code rules.
+        // כללי קוד החדר.
         public static (bool IsValid, string ErrorMessage) ValidateRoomCode(string? roomCode)
         {
             if (string.IsNullOrWhiteSpace(roomCode))
@@ -95,7 +95,7 @@ namespace Models
             return (true, string.Empty);
         }
 
-        // Nickname rules.
+        // כללי הכינוי.
         public static (bool IsValid, string ErrorMessage) ValidateNickname(string? nickname)
         {
             if (string.IsNullOrWhiteSpace(nickname))
@@ -113,8 +113,8 @@ namespace Models
             return (true, string.Empty);
         }
 
-        // Basic HTML-oriented sanitization for user-entered text.
-        // This does not replace parameterized SQL, but it helps keep text safe in the UI.
+        // ניקוי בסיסי של טקסט שהמשתמש הקליד כדי לצמצם סיכון ל-HTML מיותר.
+        // זה לא מחליף SQL עם פרמטרים, אבל כן עוזר לשמור על תצוגה בטוחה ב-UI.
         public static string SanitizeInput(string? input, int maxLength = 500)
         {
             if (string.IsNullOrWhiteSpace(input))

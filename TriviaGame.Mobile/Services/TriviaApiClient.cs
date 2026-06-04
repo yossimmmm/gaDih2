@@ -2,8 +2,8 @@ using TriviaGame.Mobile.Models;
 
 namespace TriviaGame.Mobile.Services;
 
-// TriviaApiClient היא שכבת ה־API של המסכים.
-// במקום לעבוד ישירות עם HttpClient, המסכים קוראים למתודות ברורות כמו Login או JoinRoom.
+// TriviaApiClient היא שכבת ה-API של המסכים.
+// במקום לעבוד ישירות עם HttpClient, המסכים קוראים למתודות ברורות כמו login או join room.
 public sealed class TriviaApiClient
 {
     private readonly ApiClient apiClient;

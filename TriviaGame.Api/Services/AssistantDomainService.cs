@@ -67,7 +67,7 @@ Options:
 {optionsText}
 """;
 
-        // Gemini מצפה ל־payload מובנה ב־JSON.
+        // Gemini מצפה ל-payload מובנה ב-JSON.
         var payload = new
         {
             contents = new[]

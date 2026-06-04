@@ -1,10 +1,10 @@
 namespace Models
 {
-    // Lightweight global holder for the current user ID.
-    // This is a convenience helper, not a full authentication system.
+    // מחזיק גלובלי קליל של מזהה המשתמש הנוכחי.
+    // זה עזר נוח בלבד, לא מערכת אימות מלאה.
     public static class UserSession
     {
-        // The currently logged-in user ID, if one is set.
+        // מזהה המשתמש המחובר כרגע, אם הוגדר כזה.
         public static int? CurrentUserID { get; set; }
     }
 }

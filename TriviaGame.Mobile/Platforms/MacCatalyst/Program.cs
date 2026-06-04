@@ -5,11 +5,11 @@ namespace TriviaGame.Mobile;
 
 public class Program
 {
-	// This is the main entry point of the application.
+	// זהו נקודת הכניסה הראשית של האפליקציה.
 	static void Main(string[] args)
 	{
-		// if you want to use a different Application Delegate class from "AppDelegate"
-		// you can specify it here.
+		// אם רוצים להשתמש במחלקת Application Delegate אחרת מ-"AppDelegate",
+		// אפשר להגדיר אותה כאן.
 		UIApplication.Main(args, null, typeof(AppDelegate));
 	}
 }

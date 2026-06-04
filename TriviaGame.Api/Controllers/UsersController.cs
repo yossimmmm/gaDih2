@@ -14,7 +14,7 @@ public sealed class UsersController : ControllerBase
 
     public UsersController(UsersDomainService usersDomainService, GameDomainService gameDomainService)
     {
-        // controller זה רק מעביר לשירותים.
+        // ה-controller הזה רק מעביר לשירותים.
         this.usersDomainService = usersDomainService;
         this.gameDomainService = gameDomainService;
     }
