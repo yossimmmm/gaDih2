@@ -11,7 +11,8 @@ namespace DBL
         protected const string ConnStr =
             "server=localhost;user id=root;password=999GtaS999An;persistsecurityinfo=True;database=trivia_game";
 
-        // אובייקטים לשימוש מחלקות יורשות.
+        // אובייקטים שהמחלקות היורשות משתמשות בהם כדי לעבוד מול ה-DB.
+        // conn מחזיק חיבור פעיל, cmd מחזיק את פקודת ה-SQL, ו-reader קורא את התוצאות.
         protected MySqlConnection? conn;
         protected MySqlCommand? cmd;
         protected MySqlDataReader? reader;
