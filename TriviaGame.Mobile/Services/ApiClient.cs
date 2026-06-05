@@ -20,7 +20,10 @@ public sealed class ApiClient
 
     public ApiClient(HttpClient httpClient, ApiEndpointResolver endpointResolver)
     {
+        // HttpClient מגיע מ-DI, ולכן לא יוצרים אותו ידנית בכל בקשה.
         this.httpClient = httpClient;
+
+        // resolver אחראי לדעת לאיזה שרת לשלוח את הבקשות.
         this.endpointResolver = endpointResolver;
     }
 
@@ -50,6 +53,7 @@ public sealed class ApiClient
         // ה־base URL נקבע לפי environment או קונפיגורציה, ואז מצרפים אליו את path של ה־endpoint.
         var requestUri = $"{endpointResolver.GetBaseUrl()}/{path.TrimStart('/')}";
 
+        // מנסים עד 3 פעמים כדי להתמודד עם תקלות רשת זמניות.
         for (var attempt = 1; attempt <= 3; attempt++)
         {
             // בכל ניסיון בונים request חדש כדי לא להשתמש שוב באובייקט request ישן.
@@ -61,7 +65,10 @@ public sealed class ApiClient
 
             // רק בקשות שאינן GET מקבלות body.
             if (payload is not null && method != HttpMethod.Get)
+            {
+                // JsonContent.Create הופך את האובייקט ל-JSON ושם Content-Type מתאים.
                 request.Content = JsonContent.Create(payload);
+            }
 
             // timeout נפרד לכל ניסיון.
             using var attemptCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -73,6 +80,7 @@ public sealed class ApiClient
                 var response = await httpClient.SendAsync(request, attemptCts.Token);
                 var statusCode = (int)response.StatusCode;
 
+                // כל קוד 2xx נחשב הצלחה: 200, 201, 204 וכו'.
                 if (response.IsSuccessStatusCode)
                 {
                     // אם אין גוף תשובה, מחזירים פשוט Ok.
@@ -84,6 +92,7 @@ public sealed class ApiClient
                     if (string.IsNullOrWhiteSpace(responseText))
                         return ApiResult<TResponse>.Ok(default, statusCode);
 
+                    // PropertyNameCaseInsensitive מאפשר לקבל JSON גם אם casing שונה בין שרת ללקוח.
                     var value = JsonSerializer.Deserialize<TResponse>(responseText, JsonOptions);
                     return ApiResult<TResponse>.Ok(value, statusCode);
                 }
@@ -94,10 +103,12 @@ public sealed class ApiClient
                 // על קודי HTTP זמניים אפשר לנסות שוב.
                 if (ShouldRetry(response.StatusCode, attempt))
                 {
+                    // מחכים מעט לפני ניסיון חוזר כדי לא להעמיס על השרת.
                     await Task.Delay(GetBackoff(attempt), cancellationToken);
                     continue;
                 }
 
+                // אם זו לא שגיאה זמנית, מחזירים כישלון מיד.
                 return ApiResult<TResponse>.Fail(message, statusCode);
             }
             catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
@@ -105,6 +116,7 @@ public sealed class ApiClient
                 // timeout לא אומר שהאפליקציה קרסה, רק שהשרת היה איטי מדי.
                 if (attempt < 3)
                 {
+                    // גם timeout זמני מקבל retry.
                     await Task.Delay(GetBackoff(attempt), cancellationToken);
                     continue;
                 }
@@ -116,6 +128,7 @@ public sealed class ApiClient
                 // רשת לא זמינה, DNS, או תקשורת כללית שנפלה.
                 if (attempt < 3)
                 {
+                    // שגיאות רשת יכולות להיות זמניות, לכן מנסים שוב.
                     await Task.Delay(GetBackoff(attempt), cancellationToken);
                     continue;
                 }
@@ -129,6 +142,7 @@ public sealed class ApiClient
             }
         }
 
+        // אם הלולאה הסתיימה בלי תשובה, מחזירים כישלון כללי.
         return ApiResult<TResponse>.Fail("Request failed after retries.");
     }
 
@@ -137,9 +151,14 @@ public sealed class ApiClient
     private static bool ShouldRetry(HttpStatusCode statusCode, int attempt)
     {
         if (attempt >= 3)
+        {
+            // ניסיון שלישי הוא האחרון, ולכן לא מנסים שוב אחריו.
             return false;
+        }
 
         var code = (int)statusCode;
+
+        // 408 = timeout, 429 = rate limit, 5xx = בעיית שרת.
         return code == 408 || code == 429 || code >= 500;
     }
 
@@ -151,6 +170,8 @@ public sealed class ApiClient
     private static async Task<string> ExtractErrorMessageAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
         var fallback = $"Request failed ({(int)response.StatusCode}).";
+
+        // קוראים את גוף התגובה כדי לנסות להוציא ממנו הודעה מפורטת.
         var text = await response.Content.ReadAsStringAsync(cancellationToken);
         if (string.IsNullOrWhiteSpace(text))
             return fallback;
@@ -158,8 +179,12 @@ public sealed class ApiClient
         try
         {
             using var doc = JsonDocument.Parse(text);
+
+            // הרבה endpoints מחזירים שדה message לשגיאה.
             if (doc.RootElement.TryGetProperty("message", out var messageNode))
                 return messageNode.GetString() ?? fallback;
+
+            // חלק מתשובות ASP.NET מחזירות title במקום message.
             if (doc.RootElement.TryGetProperty("title", out var titleNode))
                 return titleNode.GetString() ?? fallback;
         }
