@@ -21,11 +21,14 @@ public sealed class AdminController : ControllerBase
     [HttpGet("users")]
     public async Task<IActionResult> GetUsers([FromQuery] string? role = null)
     {
+        // טוענים את כל המשתמשים משכבת השירות.
         var users = await usersDomainService.GetAllUsersAsync();
+        // אם נשלח role בשאילתה, מסננים את הרשימה לפי התפקיד.
         var filtered = string.IsNullOrWhiteSpace(role)
             ? users
             : users.Where(u => string.Equals(u.Role.ToString(), role, StringComparison.OrdinalIgnoreCase)).ToList();
 
+        // מחזירים לאדמין פרטי ניהול, אבל עדיין בלי PasswordHash.
         return Ok(filtered.Select(u => new
         {
             userId = u.UserID,
@@ -40,6 +43,7 @@ public sealed class AdminController : ControllerBase
     [HttpPost("users/{userId:int}/role")]
     public async Task<IActionResult> UpdateRole(int userId, [FromBody] UpdateRoleRequest request)
     {
+        // userId מגיע מהנתיב, והתפקיד החדש מגיע מגוף הבקשה.
         var (ok, message) = await usersDomainService.UpdateRoleAsync(userId, request.Role);
         return ok ? Ok(new { ok = true, message }) : BadRequest(new { ok = false, message });
     }
@@ -48,6 +52,7 @@ public sealed class AdminController : ControllerBase
     [HttpPut("users/{userId:int}")]
     public async Task<IActionResult> UpdateUser(int userId, [FromBody] AdminUserUpdateRequest request)
     {
+        // עדכון אדמין יכול לשנות כמה שדות יחד, כולל role.
         var (ok, message) = await usersDomainService.UpdateUserByAdminAsync(userId, request);
         return ok ? Ok(new { ok = true, message }) : BadRequest(new { ok = false, message });
     }
@@ -56,6 +61,7 @@ public sealed class AdminController : ControllerBase
     [HttpDelete("users/{userId:int}")]
     public async Task<IActionResult> DeleteUser(int userId)
     {
+        // השירות אחראי למחיקה ולכללי ההתנהגות אם המשתמש לא קיים.
         var (ok, message) = await usersDomainService.DeleteUserAsync(userId);
         return ok ? Ok(new { ok = true, message }) : BadRequest(new { ok = false, message });
     }

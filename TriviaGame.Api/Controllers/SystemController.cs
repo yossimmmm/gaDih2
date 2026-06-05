@@ -13,6 +13,7 @@ public sealed class SystemController : ControllerBase
     [HttpGet("health")]
     public IActionResult Health()
     {
+        // endpoint זה נשאר פשוט ופתוח כדי לבדוק מהר שהשרת רץ.
         return Ok(new { ok = true, utc = DateTime.UtcNow });
     }
 }

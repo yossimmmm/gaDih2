@@ -24,7 +24,11 @@ public sealed class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
+        // מעבירים את פרטי ההתחברות לשירות האימות.
+        // ה-controller לא בודק סיסמה בעצמו כדי שכל חוקי האימות יהיו במקום אחד.
         var result = await authService.LoginAsync(request);
+
+        // אם ההתחברות הצליחה מחזירים 200; אם לא, מחזירים 401 כי זו בעיית אימות.
         return result.Ok ? Ok(result) : Unauthorized(result);
     }
 
@@ -32,7 +36,10 @@ public sealed class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
+        // השירות בודק תקינות, כפילויות של אימייל/שם משתמש, ויוצר משתמש חדש.
         var (ok, message) = await authService.RegisterAsync(request);
+
+        // הצלחה חוזרת כ-200, וקלט לא תקין חוזר כ-400.
         return ok ? Ok(new { ok = true, message }) : BadRequest(new { ok = false, message });
     }
 
@@ -40,10 +47,15 @@ public sealed class AuthController : ControllerBase
     [HttpGet("me")]
     public async Task<IActionResult> Me([FromQuery] int userId)
     {
+        // הלקוח שולח userId, והשרת מנסה למצוא את המשתמש המתאים.
         var user = await usersDomainService.GetByIdAsync(userId);
         if (user is null)
+        {
+            // כאן מחזירים authenticated=false במקום שגיאה כדי שהלקוח יוכל להציג מצב "לא מחובר".
             return Ok(new { authenticated = false, userId = 0, username = "", fullName = "", email = "", role = "User" });
+        }
 
+        // מחזירים רק פרטים בטוחים להצגה, בלי PasswordHash.
         return Ok(new
         {
             authenticated = true,
@@ -59,7 +71,10 @@ public sealed class AuthController : ControllerBase
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
     {
+        // בונים baseUrl מתוך הבקשה הנוכחית כדי שקישור האיפוס יוביל לאותו שרת.
         var baseUrl = $"{Request.Scheme}://{Request.Host}";
+
+        // השירות יוצר טוקן איפוס, שומר hash שלו במסד, ושולח מייל.
         var (ok, message) = await authService.ForgotPasswordAsync(request, baseUrl);
         return ok ? Ok(new { ok = true, message }) : BadRequest(new { ok = false, message });
     }
@@ -68,6 +83,7 @@ public sealed class AuthController : ControllerBase
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
     {
+        // השירות מאמת את הטוקן ואת הסיסמה החדשה, ואז מעדכן את ה-hash במסד.
         var (ok, message) = await authService.ResetPasswordAsync(request);
         return ok ? Ok(new { ok = true, message }) : BadRequest(new { ok = false, message });
     }

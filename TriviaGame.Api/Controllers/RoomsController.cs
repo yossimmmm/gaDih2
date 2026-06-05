@@ -22,6 +22,7 @@ public sealed class RoomsController : ControllerBase
     [HttpGet("question-types")]
     public async Task<IActionResult> GetQuestionTypes()
     {
+        // שולפים את סוגי השאלות מה-DB כדי למלא את הבחירה במסך יצירת חדר.
         var rows = await roomsDomainService.GetQuestionTypesAsync();
         return Ok(rows);
     }
@@ -30,7 +31,10 @@ public sealed class RoomsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateRoom([FromBody] CreateRoomRequest request)
     {
+        // השירות אחראי לוולידציה, יצירת קוד חדר, ושמירת החדר במסד.
         var (ok, message, room) = await roomsDomainService.CreateRoomAsync(request.UserId, request);
+
+        // במקרה הצלחה מחזירים גם את פרטי החדר שנוצרו.
         return ok
             ? Ok(new { ok = true, message, room })
             : BadRequest(new { ok = false, message });
@@ -40,6 +44,7 @@ public sealed class RoomsController : ControllerBase
     [HttpGet("public")]
     public async Task<IActionResult> GetPublicRooms()
     {
+        // הרשימה כוללת רק חדרים ציבוריים ופעילים שהמשתמש יכול לראות בלובי.
         var rooms = await roomsDomainService.GetPublicRoomsAsync();
         return Ok(rooms);
     }
@@ -48,6 +53,7 @@ public sealed class RoomsController : ControllerBase
     [HttpGet("{roomCode}")]
     public async Task<IActionResult> GetRoom(string roomCode)
     {
+        // קוד החדר מגיע מהנתיב, והשירות מנרמל אותו ומחפש במסד.
         var room = await roomsDomainService.GetRoomByCodeAsync(roomCode);
         return room is null ? NotFound(new { ok = false, message = "Room not found." }) : Ok(room);
     }
@@ -56,7 +62,10 @@ public sealed class RoomsController : ControllerBase
     [HttpPost("join")]
     public async Task<IActionResult> Join([FromBody] JoinRoomRequest request)
     {
+        // השירות בודק שהחדר קיים ופעיל, ואז יוצר או מחזיר רשומת שחקן בחדר.
         var (ok, message, player, room) = await roomsDomainService.JoinRoomAsync(request.UserId, request);
+
+        // הלקוח צריך גם את החדר וגם את player כדי לדעת את roomPlayerId להמשך המשחק.
         return ok
             ? Ok(new { ok = true, message, room, player })
             : BadRequest(new { ok = false, message });
@@ -66,10 +75,12 @@ public sealed class RoomsController : ControllerBase
     [HttpPost("{roomCode}/leave")]
     public async Task<IActionResult> Leave(string roomCode, [FromQuery] int userId)
     {
+        // קודם מאתרים את החדר לפי הקוד כדי לקבל roomId פנימי.
         var room = await roomsDomainService.GetRoomByCodeAsync(roomCode);
         if (room is null)
             return NotFound(new { ok = false, message = "Room not found." });
 
+        // אחרי שיש roomId, השירות מוחק את הקשר בין המשתמש לחדר.
         var ok = await roomsDomainService.LeaveRoomAsync(room.RoomID, userId);
         return ok ? Ok(new { ok = true }) : BadRequest(new { ok = false, message = "Failed to leave room." });
     }
@@ -78,10 +89,12 @@ public sealed class RoomsController : ControllerBase
     [HttpGet("{roomCode}/players")]
     public async Task<IActionResult> Players(string roomCode)
     {
+        // שוב מתחילים מקוד חדר חיצוני וממירים אותו לחדר אמיתי במסד.
         var room = await roomsDomainService.GetRoomByCodeAsync(roomCode);
         if (room is null)
             return NotFound(new { ok = false, message = "Room not found." });
 
+        // מחזירים את כל השחקנים כדי שהלקוח יציג מי נמצא בחדר.
         var players = await roomsDomainService.GetPlayersAsync(room.RoomID);
         return Ok(players);
     }
