@@ -28,20 +28,28 @@ public static class SmtpSettingsFactory
     // בונה אובייקט הגדרות אחד מתוך environment + configuration.
     public static SmtpSettings Build(IConfiguration cfg)
     {
+        // פורט SMTP יכול להגיע ממשתנה סביבה או מ-appsettings.
+        // SMTP_POR נשאר כאן כדי לתמוך בטעות כתיב קיימת אם הוגדרה בסביבה.
         var smtpPortRaw = Environment.GetEnvironmentVariable("SMTP_PORT")
             ?? Environment.GetEnvironmentVariable("SMTP_POR")
             ?? cfg["Smtp:Port"]
             ?? "465";
 
+        // Secure קובע אם נשתמש בחיבור מאובטח.
         var secureRaw = Environment.GetEnvironmentVariable("SMTP_SECURE")
             ?? cfg["Smtp:Secure"]
             ?? "true";
 
+        // אם הפורט לא מספר תקין, נשתמש בהמשך בברירת מחדל 465.
         _ = int.TryParse(smtpPortRaw, out var smtpPort);
+
+        // אם secure לא הוגדר בצורה תקינה, ברירת המחדל היא true.
         var smtpSecure = !bool.TryParse(secureRaw, out var parsedSecure) || parsedSecure;
 
+        // בונים אובייקט הגדרות אחד שמוזרק ל-EmailService.
         return new SmtpSettings
         {
+            // משתני סביבה מקבלים עדיפות על appsettings כדי לא לשמור סודות בקוד.
             From = Environment.GetEnvironmentVariable("SMTP_FROM") ?? cfg["Smtp:From"] ?? "",
             Host = Environment.GetEnvironmentVariable("SMTP_HOST") ?? cfg["Smtp:Host"] ?? "",
             User = Environment.GetEnvironmentVariable("SMTP_USER") ?? cfg["Smtp:User"] ?? "",

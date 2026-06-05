@@ -13,12 +13,15 @@ public sealed class UsersDomainService
     {
         // בכל קריאה נוצרת מעטפת גישה ל-DB.
         var userDb = new UserDB();
+
+        // מחזירים null אם לא נמצא משתמש, וה-controller מחליט איך לענות ללקוח.
         return await userDb.GetByIdAsync(userId);
     }
 
     // מעדכן פרופיל משתמש.
     public async Task<(bool Ok, string Message)> UpdateProfileAsync(int userId, UpdateProfileRequest req)
     {
+        // כל עדכון פרופיל מתחיל מבדיקות קלט כדי לא להכניס נתונים לא תקינים למסד.
         // בודקים שהשם תקין לפני שממשיכים.
         var (usernameValid, usernameError) = ValidationHelper.ValidateUsername(req.Username);
         if (!usernameValid)
@@ -40,6 +43,7 @@ public sealed class UsersDomainService
             return (false, "User not found.");
 
         // מנרמלים את הערכים לפני שמכניסים אותם למסד.
+        // SanitizeInput גם מקצרת לפי אורך מקסימלי וגם מחליפה תווים בעייתיים לתצוגה.
         var normalizedUsername = ValidationHelper.SanitizeInput(req.Username, 50);
         var normalizedFullName = ValidationHelper.SanitizeInput(req.FullName, 100);
         var normalizedEmail = ValidationHelper.SanitizeInput(req.Email, 100).ToLowerInvariant().Trim();
@@ -56,6 +60,8 @@ public sealed class UsersDomainService
 
         // אם הכול תקין, שומרים את הפרופיל המעודכן.
         var ok = await userDb.UpdateProfileAsync(userId, normalizedUsername, normalizedFullName, normalizedEmail);
+
+        // מחזירים tuple פשוט כדי שה-controller יתורגם בקלות ל-HTTP response.
         return ok ? (true, "Profile updated.") : (false, "Profile update failed.");
     }
 
@@ -79,6 +85,8 @@ public sealed class UsersDomainService
 
         // שומרים רק hash חדש ולא את הטקסט הגלוי.
         var updated = await userDb.UpdatePasswordAsync(userId, PasswordHelper.Hash(req.NewPassword.Trim()));
+
+        // אם update נכשל, כנראה שהמשתמש לא נמצא או שהמסד לא עדכן שורה.
         return updated ? (true, "Password updated.") : (false, "Password update failed.");
     }
 
@@ -86,6 +94,7 @@ public sealed class UsersDomainService
     public async Task<List<User>> GetAllUsersAsync()
     {
         // אין כאן לוגיקת עסקית, רק קריאה ישירה ל-DB.
+        // השימוש העיקרי הוא מסך אדמין שמציג רשימת משתמשים.
         var userDb = new UserDB();
         return await userDb.GetAllUsersAsync();
     }
@@ -94,6 +103,7 @@ public sealed class UsersDomainService
     public async Task<(bool Ok, string Message)> UpdateRoleAsync(int userId, string role)
     {
         // ממירים את המחרוזת ל-enum.
+        // כך מונעים שמירה של תפקידים שלא קיימים בקוד.
         if (!Enum.TryParse<UserRole>(role, true, out var parsedRole))
             return (false, "Role must be User or Admin.");
 
@@ -106,6 +116,7 @@ public sealed class UsersDomainService
     // מעדכן משתמש ברמת אדמין.
     public async Task<(bool Ok, string Message)> UpdateUserByAdminAsync(int userId, AdminUserUpdateRequest req)
     {
+        // עדכון אדמין עדיין חייב לעבור ולידציה, גם אם מי שמבצע אותו הוא אדמין.
         // גם האימייל חייב להיות תקין.
         if (!ValidationHelper.IsValidEmail(req.Email))
             return (false, "Invalid email.");
@@ -117,12 +128,15 @@ public sealed class UsersDomainService
         // ה-DBL מבצע את הכתיבה בפועל.
         var userDb = new UserDB();
         var ok = await userDb.UpdateUserByAdminAsync(userId, req.Username ?? "", req.FullName ?? "", req.Email, parsedRole);
+
+        // השירות מחזיר הודעה קצרה שה-controller מחזיר ללקוח.
         return ok ? (true, "User updated.") : (false, "User update failed.");
     }
 
     // מוחק משתמש.
     public async Task<(bool Ok, string Message)> DeleteUserAsync(int userId)
     {
+        // מחיקה עוברת דרך ה-DBL כדי שכל קשרי המסד יטופלו במקום אחד.
         var userDb = new UserDB();
         var ok = await userDb.DeleteUserAsync(userId);
         return ok ? (true, "User deleted.") : (false, "Delete failed.");

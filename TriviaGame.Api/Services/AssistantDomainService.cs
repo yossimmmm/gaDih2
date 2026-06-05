@@ -44,10 +44,12 @@ public sealed class AssistantDomainService
         if (question is null || question.Options.Count == 0)
             return (false, "No active question to advise on.");
 
+        // בלי API key אי אפשר לבצע קריאה חיצונית ל-Gemini.
         var apiKey = GetGeminiApiKey();
         if (string.IsNullOrWhiteSpace(apiKey))
             return (false, "Gemini API key is missing.");
 
+        // endpoint/model יכולים להגיע מהקונפיגורציה או מברירות המחדל.
         var endpoint = GetGeminiEndpoint();
         var model = GetGeminiModel();
 
@@ -82,7 +84,9 @@ Options:
             },
             generationConfig = new
             {
+                // temperature נמוך יחסית כדי לקבל רמז יציב ולא אקראי מדי.
                 temperature = 0.4,
+                // מגבילים את אורך התשובה כדי שהרמז יישאר קצר.
                 maxOutputTokens = 120
             }
         };
@@ -91,6 +95,8 @@ Options:
         {
             // בונים את כתובת הקריאה ל־Gemini.
             var url = BuildGenerateContentUrl(endpoint, model, apiKey);
+
+            // GenerateTextAsync מבצע את הקריאה ומחזיר רק את הטקסט מתוך התגובה.
             var text = await GenerateTextAsync(url, payload, "advice", cancellationToken);
             return string.IsNullOrWhiteSpace(text)
                 ? (false, "Gemini returned an empty response.")
@@ -110,11 +116,15 @@ Options:
         List<AssistantChatMessage>? history,
         CancellationToken cancellationToken = default)
     {
+        // השיחה האישית חייבת משתמש מחובר כדי לדעת על מי לשלוף נתונים.
         if (userId <= 0)
             return (false, "You must be logged in.");
+
+        // הודעה ריקה לא נשלחת למודל.
         if (string.IsNullOrWhiteSpace(userMessage))
             return (false, "Message is empty.");
 
+        // גם כאן נדרש API key לפני כל קריאת AI.
         var apiKey = GetGeminiApiKey();
         if (string.IsNullOrWhiteSpace(apiKey))
             return (false, "Gemini API key is missing.");
@@ -126,6 +136,7 @@ Options:
         if (user is null)
             return (false, "User not found.");
 
+        // stats הם נתונים מצטברים; recent הוא פירוט משחקים אחרונים.
         var stats = await gameDb.GetUserStatsAsync(userId);
         var recent = await gameDb.GetRecentUserResultsAsync(userId, 10);
 
@@ -147,6 +158,8 @@ Options:
 
         // יש שאלות שהן רק חישוב מדדים פשוט, ולכן עונים עליהן ישירות בלי לקרוא ל־Gemini.
         var normalized = userMessage.Trim().ToLowerInvariant();
+
+        // מזהים כמה ניסוחים נפוצים לשאלה על אחוז/מקדם ניצחונות.
         var asksWinCoeff = normalized.Contains("cooficent")
                            || normalized.Contains("coefficient")
                            || normalized.Contains("win rate")
@@ -154,8 +167,11 @@ Options:
                            || normalized.Contains("winning coefficient");
         if (asksWinCoeff)
         {
+            // אם אין משחקים, אין באמת יחס ניצחונות לחישוב.
             if (stats.GamesPlayed == 0)
                 return (true, "You have no completed games yet, so your winning coefficient is currently 0.00 (0%).");
+
+            // כאן עונים ישירות בלי AI כי זו תשובה מתמטית פשוטה מהנתונים.
             return (true, $"Your winning coefficient is {winCoeff:F2} ({winPercent:F1}%), based on {stats.Wins} wins out of {stats.GamesPlayed} games.");
         }
 
@@ -204,13 +220,16 @@ Current user message:
             },
             generationConfig = new
             {
+                // טמפרטורה נמוכה כדי שהתשובה האישית תהיה יציבה ומבוססת נתונים.
                 temperature = 0.25,
+                // מגבילים את התשובה כדי שהצ'אט לא יחזיר טקסט ארוך מדי.
                 maxOutputTokens = 300
             }
         };
 
         try
         {
+            // כאן משתמשים שוב ב-endpoint/model הנוכחיים מהקונפיגורציה.
             var url = BuildGenerateContentUrl(GetGeminiEndpoint(), GetGeminiModel(), apiKey);
             var text = await GenerateTextAsync(url, payload, "assistant", cancellationToken);
             return string.IsNullOrWhiteSpace(text)
@@ -227,6 +246,8 @@ Current user message:
     // קורא את מפתח ה־API של Gemini קודם מהקונפיגורציה ואז מה־environment כגיבוי.
     private string? GetGeminiApiKey()
     {
+        // קודם appsettings, אחר כך משתנה סביבה.
+        // זה מאפשר להחזיק מפתח סודי מחוץ לקוד בפריסה אמיתית.
         var apiKey = configuration["Gemini:ApiKey"];
         if (string.IsNullOrWhiteSpace(apiKey))
             apiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY");
@@ -236,6 +257,7 @@ Current user message:
     // מאפשרים לעקוף את ה־endpoint דרך הקונפיגורציה.
     private string GetGeminiEndpoint()
     {
+        // אם אין endpoint בקונפיגורציה, משתמשים בכתובת הרשמית שהוגדרה כברירת מחדל.
         var endpoint = configuration["Gemini:Endpoint"];
         return string.IsNullOrWhiteSpace(endpoint) ? DefaultEndpoint : endpoint;
     }
@@ -243,6 +265,7 @@ Current user message:
     // מאפשרים לעקוף גם את שם המודל דרך הקונפיגורציה.
     private string GetGeminiModel()
     {
+        // שם המודל יכול להשתנות בלי לערוך קוד, דרך appsettings.
         var model = configuration["Gemini:Model"];
         return string.IsNullOrWhiteSpace(model) ? DefaultModel : model;
     }
@@ -254,7 +277,10 @@ Current user message:
     // שולחים את הבקשה ומחלצים טקסט פשוט מה־candidate הראשון של Gemini.
     private async Task<string?> GenerateTextAsync(string url, object payload, string scope, CancellationToken cancellationToken)
     {
+        // HttpClient נוצר דרך factory כדי להשתלב נכון עם DI וניהול חיבורים.
         using var client = httpClientFactory.CreateClient();
+
+        // שולחים JSON ל-Gemini עם ה-prompt והגדרות generationConfig.
         using var response = await client.PostAsJsonAsync(url, payload, cancellationToken);
 
         // אם יש כשל, רושמים את גוף התגובה כדי שיהיה אפשר לדבג.
@@ -267,12 +293,15 @@ Current user message:
 
         await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
         using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+
+        // מפרקים את ה-JSON של Gemini ומחזירים רק את הטקסט הסופי.
         return TryExtractCandidateText(doc);
     }
 
     // Gemini מחזיר JSON מקונן; העזר הזה יורד עד שדה הטקסט.
     private static string? TryExtractCandidateText(JsonDocument doc)
     {
+        // קודם מוודאים שקיים מערך candidates תקין.
         if (!doc.RootElement.TryGetProperty("candidates", out var candidates) ||
             candidates.ValueKind != JsonValueKind.Array ||
             candidates.GetArrayLength() == 0)
@@ -281,6 +310,8 @@ Current user message:
         }
 
         var first = candidates[0];
+
+        // בתוך candidate צריך להיות content.parts, ושם נמצא הטקסט.
         if (!first.TryGetProperty("content", out var content) ||
             !content.TryGetProperty("parts", out var parts) ||
             parts.ValueKind != JsonValueKind.Array ||
@@ -289,6 +320,7 @@ Current user message:
             return null;
         }
 
+        // אם קיים text בתוך החלק הראשון, זה הטקסט שמחזירים ל-controller.
         return parts[0].TryGetProperty("text", out var textNode)
             ? textNode.GetString()
             : null;
