@@ -25,18 +25,24 @@
 @* מסך הרשמה ראשי *@
 <div class="auth-wrap">
     <div class="card">
+        @* מסך רישום: כאן המשתמש יוצר חשבון חדש למערכת *@
         <div class="title">📝 Create account</div>
 
         @* שם משתמש *@
+        @* זהו מזהה ייחודי שנשמר במסד הנתונים ולכן צריך לעבור בדיקת תקינות וכפילות *@
         <input class="in @(UsernameInvalid ? "invalid" : "")" @bind="Username" placeholder="Username" />
         @* שם מלא *@
+        @* השם המלא מיועד להצגה למשתמשים אחרים ולמסכים אדמיניסטרטיביים *@
         <input class="in @(FullNameInvalid ? "invalid" : "")" @bind="FullName" placeholder="Full name" />
         @* אימייל *@
+        @* האימייל משמש גם לכניסה עתידית וגם לשחזור סיסמה *@
         <input class="in @(EmailInvalid ? "invalid" : "")" @bind="Email" type="email" placeholder="Email" />
         @* סיסמה *@
+        @* הסיסמה לא נשמרת כטקסט גלוי אלא עוברת hash לפני שמירה *@
         <input class="in @(PasswordInvalid ? "invalid" : "")" @bind="Password" type="password" placeholder="Password" />
 
         @* כפתור יצירת חשבון *@
+        @* לחיצה על הכפתור מפעילה את זרימת ההרשמה המלאה *@
         <button class="btn" @onclick="RegisterAsync" disabled="@IsLoading">
             @(IsLoading ? "Creating..." : "Create Account")
         </button>
@@ -63,6 +69,7 @@
     private readonly UserDB userDB = new();
 
     // ולידציה מלאה לשדות.
+    // כאן בודקים כל שדה בנפרד לפני שמנסים לגשת למסד.
     private void ValidateInputs()
     {
         UsernameInvalid = false;
@@ -71,6 +78,7 @@
         PasswordInvalid = false;
         Status = "";
 
+        // שם משתמש חייב לעמוד בחוקים של המערכת.
         var (usernameValid, usernameError) = ValidationHelper.ValidateUsername(Username);
         if (!usernameValid)
         {
@@ -79,6 +87,7 @@
             return;
         }
 
+        // שם מלא חייב להיות הגיוני ולא ריק.
         var (fullNameValid, fullNameError) = ValidationHelper.ValidateFullName(FullName);
         if (!fullNameValid)
         {
@@ -87,6 +96,7 @@
             return;
         }
 
+        // אימייל חייב להיות קיים כדי שהמשתמש יוכל להתחבר ולהחזיר סיסמה.
         if (string.IsNullOrWhiteSpace(Email))
         {
             EmailInvalid = true;
@@ -94,6 +104,7 @@
             return;
         }
 
+        // בודקים גם שהפורמט של האימייל תקין.
         if (!ValidationHelper.IsValidEmail(Email))
         {
             EmailInvalid = true;
@@ -101,6 +112,7 @@
             return;
         }
 
+        // סיסמה חייבת לעמוד בחוקי האבטחה של הפרויקט.
         var (passwordValid, passwordError) = ValidationHelper.ValidatePassword(Password);
         if (!passwordValid)
         {
@@ -110,6 +122,7 @@
     }
 
     // פעולה ראשית של הרשמה.
+    // זהו הזרימה שמקשרת בין ה-UI, הוולידציה, ה-DB, והניווט למסך login.
     private async Task RegisterAsync()
     {
         Status = "";
@@ -121,15 +134,18 @@
 
         try
         {
+            // קודם מאמתים את כל הקלט לפני כל גישה לשרת או למסד.
             ValidateInputs();
             if (!string.IsNullOrEmpty(Status) && Status.StartsWith("❌"))
                 return;
 
+            // מנקים את הערכים לפני שמירה כדי לצמצם קלט בעייתי.
             Username = ValidationHelper.SanitizeInput(Username, 50);
             FullName = ValidationHelper.SanitizeInput(FullName, 100);
             Email = ValidationHelper.SanitizeInput(Email, 100).ToLowerInvariant().Trim();
             Password = Password.Trim();
 
+            // מונעים רישום כפול עם אותו אימייל.
             var existingEmail = await userDB.GetByEmailAsync(Email);
             if (existingEmail != null)
             {
@@ -138,6 +154,7 @@
                 return;
             }
 
+            // גם שם המשתמש חייב להיות ייחודי.
             var existingUsername = await userDB.GetByUsernameAsync(Username);
             if (existingUsername != null)
             {
@@ -146,6 +163,7 @@
                 return;
             }
 
+            // בונים אובייקט משתמש מוכן לשמירה.
             var u = new Models.User
             {
                 Username = Username,
@@ -154,6 +172,7 @@
                 PasswordHash = PasswordHelper.Hash(Password)
             };
 
+            // שומרים למסד רק אחרי שכל הבדיקות עברו.
             var created = await userDB.InsertUserAsync(u);
             if (created == null)
             {
@@ -161,6 +180,7 @@
                 return;
             }
 
+            // אחרי הצלחה מפנים את המשתמש ל-login.
             Status = "✅ Registered! Redirecting to login...";
             await Task.Delay(1200);
             Nav.NavigateTo("/login");
