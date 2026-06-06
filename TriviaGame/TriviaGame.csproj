@@ -18,4 +18,14 @@
     <ProjectReference Include="..\TriviaDBL\TriviaDBL.csproj" />
   </ItemGroup>
 
+  <Target
+    Name="StopPreviousTriviaGameProcess"
+    BeforeTargets="PrepareForBuild"
+    Condition="'$(OS)' == 'Windows_NT' and '$(Configuration)' == 'Debug'">
+    <!-- תהליך אתר ישן מחזיק את קובצי ה-DLL פתוחים ומונע מ-dotnet run לבנות גרסה חדשה. -->
+    <Exec
+      Command="powershell -NoProfile -NonInteractive -Command &quot;Get-Process -Name 'TriviaGame' -ErrorAction SilentlyContinue | Stop-Process -Force&quot;"
+      IgnoreExitCode="true" />
+  </Target>
+
 </Project>
