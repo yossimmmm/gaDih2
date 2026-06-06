@@ -1,5 +1,5 @@
-// GameDB היא שכבת הנתונים של מהלך המשחק עצמו.
-// היא מטפלת בבחירת שאלות, שליחת תשובות, ניקוד ותוצאות שמורות.
+﻿// GameDB ×”×™× ×©×›×‘×ª ×”× ×ª×•× ×™× ×©×œ ×ž×”×œ×š ×”×ž×©×—×§ ×¢×¦×ž×•.
+// ×”×™× ×ž×˜×¤×œ×ª ×‘×‘×—×™×¨×ª ×©××œ×•×ª, ×©×œ×™×—×ª ×ª×©×•×‘×•×ª, × ×™×§×•×“ ×•×ª×•×¦××•×ª ×©×ž×•×¨×•×ª.
 
 using Models;
 using MySql.Data.MySqlClient;
@@ -12,15 +12,15 @@ namespace DBL
 {
     public class GameDB
     {
-        // מחרוזת חיבור למסד
+        // ×ž×—×¨×•×–×ª ×—×™×‘×•×¨ ×œ×ž×¡×“
         private const string ConnStr =
             "server=localhost;user id=root;password=999GtaS999An;persistsecurityinfo=True;database=trivia_game";
 
-        // בוחרת סט חדש של שאלות לחדר.
-        // הפעולה מנקה שאלות ותשובות ישנות של החדר ואז שומרת רשימה חדשה ומסודרת.
+        // ×‘×•×—×¨×ª ×¡×˜ ×—×“×© ×©×œ ×©××œ×•×ª ×œ×—×“×¨.
+        // ×”×¤×¢×•×œ×” ×ž× ×§×” ×©××œ×•×ª ×•×ª×©×•×‘×•×ª ×™×©× ×•×ª ×©×œ ×”×—×“×¨ ×•××– ×©×•×ž×¨×ª ×¨×©×™×ž×” ×—×“×©×” ×•×ž×¡×•×“×¨×ª.
         public async Task<int> PickQuestionsForRoomAsync(int roomId, int count)
         {
-            // ולידציה בסיסית לקלט
+            // ×•×œ×™×“×¦×™×” ×‘×¡×™×¡×™×ª ×œ×§×œ×˜
             // #gamedb #question-pick #start-game
             if (roomId <= 0 || count <= 0) 
                 return 0;
@@ -33,12 +33,12 @@ namespace DBL
                 await using var conn = new MySqlConnection(ConnStr);
                 await conn.OpenAsync();
 
-                // טרנזקציה מחזיקה את הניקוי וההכנסה ביחד.
+                // ×˜×¨× ×–×§×¦×™×” ×ž×—×–×™×§×” ××ª ×”× ×™×§×•×™ ×•×”×”×›× ×¡×” ×‘×™×—×“.
                 await using var tx = await conn.BeginTransactionAsync();
 
                 try
                 {
-                    // מוחקים תשובות ששייכות לסיבוב ישן באותו חדר.
+                    // ×ž×•×—×§×™× ×ª×©×•×‘×•×ª ×©×©×™×™×›×•×ª ×œ×¡×™×‘×•×‘ ×™×©×Ÿ ×‘××•×ª×• ×—×“×¨.
                     {
                         const string delAnswers = @"DELETE FROM player_answers WHERE room_id = @room_id;";
                         await using var cmd = new MySqlCommand(delAnswers, conn, (MySqlTransaction)tx);
@@ -46,7 +46,7 @@ namespace DBL
                         await cmd.ExecuteNonQueryAsync();
                     }
 
-                    // מוחקים את שורות room_questions הישנות לפני הכנסת הסיבוב החדש.
+                    // ×ž×•×—×§×™× ××ª ×©×•×¨×•×ª room_questions ×”×™×©× ×•×ª ×œ×¤× ×™ ×”×›× ×¡×ª ×”×¡×™×‘×•×‘ ×”×—×“×©.
                     {
                         const string delRoomQs = @"DELETE FROM room_questions WHERE room_id = @room_id;";
                         await using var cmd = new MySqlCommand(delRoomQs, conn, (MySqlTransaction)tx);
@@ -54,21 +54,21 @@ namespace DBL
                         await cmd.ExecuteNonQueryAsync();
                     }
 
-                    // קוראים את סוג השאלות המועדף של החדר, אם המארח הגדיר כזה.
+                    // ×§×•×¨××™× ××ª ×¡×•×’ ×”×©××œ×•×ª ×”×ž×•×¢×“×£ ×©×œ ×”×—×“×¨, ×× ×”×ž××¨×— ×”×’×“×™×¨ ×›×–×”.
                     // #gamedb #question-type #room-settings
                     int? questionTypeId = null;
                     {
                         const string roomSql = @"SELECT question_type_id FROM rooms WHERE room_id = @room_id LIMIT 1;";
                         await using var cmd = new MySqlCommand(roomSql, conn, (MySqlTransaction)tx);
-                        // room_id נשלח כפרמטר ולא משורשר לתוך SQL.
+                        // room_id × ×©×œ×— ×›×¤×¨×ž×˜×¨ ×•×œ× ×ž×©×•×¨×©×¨ ×œ×ª×•×š SQL.
                         cmd.Parameters.AddWithValue("@room_id", roomId);
-                        // NULL אומר "כל סוג שאלה".
+                        // NULL ××•×ž×¨ "×›×œ ×¡×•×’ ×©××œ×”".
                         var obj = await cmd.ExecuteScalarAsync();
                         if (obj != null && obj != DBNull.Value)
                             questionTypeId = Convert.ToInt32(obj);
                     }
 
-                    // שולפים שאלות אקראיות שמתאימות לסינון סוג השאלה של החדר.
+                    // ×©×•×œ×¤×™× ×©××œ×•×ª ××§×¨××™×•×ª ×©×ž×ª××™×ž×•×ª ×œ×¡×™× ×•×Ÿ ×¡×•×’ ×”×©××œ×” ×©×œ ×”×—×“×¨.
                     List<int> qids = new();
                     {
                         const string pickSql = @"
@@ -78,13 +78,13 @@ WHERE (@qtype IS NULL OR question_type_id = @qtype)
 ORDER BY RAND()
 LIMIT @cnt;";
                         await using var cmd = new MySqlCommand(pickSql, conn, (MySqlTransaction)tx);
-                        // כמה שורות אנחנו רוצים בסיבוב הזה.
+                        // ×›×ž×” ×©×•×¨×•×ª ×× ×—× ×• ×¨×•×¦×™× ×‘×¡×™×‘×•×‘ ×”×–×”.
                         cmd.Parameters.AddWithValue("@cnt", count);
-                        // אם אין הגבלת סוג, הסינון מאפשר את כל השאלות.
+                        // ×× ××™×Ÿ ×”×’×‘×œ×ª ×¡×•×’, ×”×¡×™× ×•×Ÿ ×ž××¤×©×¨ ××ª ×›×œ ×”×©××œ×•×ª.
                         cmd.Parameters.AddWithValue("@qtype", (object?)questionTypeId ?? DBNull.Value);
 
                         await using var reader = await cmd.ExecuteReaderAsync();
-                        // שומרים קודם את מזהי השאלות בזיכרון.
+                        // ×©×•×ž×¨×™× ×§×•×“× ××ª ×ž×–×”×™ ×”×©××œ×•×ª ×‘×–×™×›×¨×•×Ÿ.
                         while (await reader.ReadAsync())
                             qids.Add(reader.GetInt32("question_id"));
                     }
@@ -95,7 +95,7 @@ LIMIT @cnt;";
                         return 0;
                     }
 
-                    // מכניסים את השאלות שנבחרו ל־room_questions עם סדר קבוע.
+                    // ×ž×›× ×™×¡×™× ××ª ×”×©××œ×•×ª ×©× ×‘×—×¨×• ×œÖ¾room_questions ×¢× ×¡×“×¨ ×§×‘×•×¢.
                     int inserted = 0;
                     for (int i = 0; i < qids.Count; i++)
                     {
@@ -104,7 +104,7 @@ INSERT INTO room_questions (room_id, question_id, question_order, time_limit_sec
 VALUES (@room_id, @qid, @ord, 15);";
 
                         await using var cmd = new MySqlCommand(insSql, conn, (MySqlTransaction)tx);
-                        // שומרים את הקישור בין החדר לשאלה ואת מיקום ההצגה שלה.
+                        // ×©×•×ž×¨×™× ××ª ×”×§×™×©×•×¨ ×‘×™×Ÿ ×”×—×“×¨ ×œ×©××œ×” ×•××ª ×ž×™×§×•× ×”×”×¦×’×” ×©×œ×”.
                         cmd.Parameters.AddWithValue("@room_id", roomId);
                         cmd.Parameters.AddWithValue("@qid", qids[i]);
                         cmd.Parameters.AddWithValue("@ord", i + 1);
@@ -131,12 +131,12 @@ VALUES (@room_id, @qid, @ord, 15);";
             }
         }
 
-        // מחזירה את השאלה החיה הנוכחית של החדר.
-        // השאלה הראשונה שעדיין לא נענתה מופעלת לפי הצורך ומקבלת זמן התחלה.
+        // ×ž×—×–×™×¨×” ××ª ×”×©××œ×” ×”×—×™×” ×”× ×•×›×—×™×ª ×©×œ ×”×—×“×¨.
+        // ×”×©××œ×” ×”×¨××©×•× ×” ×©×¢×“×™×™×Ÿ ×œ× × ×¢× ×ª×” ×ž×•×¤×¢×œ×ª ×œ×¤×™ ×”×¦×•×¨×š ×•×ž×§×‘×œ×ª ×–×ž×Ÿ ×”×ª×—×œ×”.
         // #gamedb #play #question
         public async Task<Question?> GetCurrentQuestionAsync(int roomId)
         {
-            // ולידציה בסיסית למזהה חדר
+            // ×•×œ×™×“×¦×™×” ×‘×¡×™×¡×™×ª ×œ×ž×–×”×” ×—×“×¨
             if (roomId <= 0)
                 return null;
 
@@ -145,14 +145,14 @@ VALUES (@room_id, @qid, @ord, 15);";
                 await using var conn = new MySqlConnection(ConnStr);
                 await conn.OpenAsync();
 
-                // סופרים שחקנים פעילים כדי לדעת מתי שאלה נענתה במלואה.
+                // ×¡×•×¤×¨×™× ×©×—×§× ×™× ×¤×¢×™×œ×™× ×›×“×™ ×œ×“×¢×ª ×ž×ª×™ ×©××œ×” × ×¢× ×ª×” ×‘×ž×œ×•××”.
                 var playersCount = await GetRoomPlayersCountAsync(conn, roomId);
-                // מחפשים את השאלה הפעילה של החדר, אם יש כזו.
+                // ×ž×—×¤×©×™× ××ª ×”×©××œ×” ×”×¤×¢×™×œ×” ×©×œ ×”×—×“×¨, ×× ×™×© ×›×–×•.
                 var current = await TryGetCurrentRoomQuestionAsync(conn, roomId, playersCount);
                 if (current is null)
                     return null;
 
-                // טוענים את הטקסט ואת אפשרויות התשובה אחרי שיודעים איזו שורה פעילה.
+                // ×˜×•×¢× ×™× ××ª ×”×˜×§×¡×˜ ×•××ª ××¤×©×¨×•×™×•×ª ×”×ª×©×•×‘×” ××—×¨×™ ×©×™×•×“×¢×™× ××™×–×• ×©×•×¨×” ×¤×¢×™×œ×”.
                 var q = await LoadQuestionAsync(conn, current.Value.QuestionId, current.Value.TimeLimitSec, current.Value.StartedAt);
                 if (q is null)
                     return null;
@@ -171,12 +171,12 @@ VALUES (@room_id, @qid, @ord, 15);";
             }
         }
 
-        // שומרת תשובה של שחקן אחד לשאלה אחת.
-        // המתודה מחליפה כל תשובה קודמת של אותו שחקן לאותה שאלה.
+        // ×©×•×ž×¨×ª ×ª×©×•×‘×” ×©×œ ×©×—×§×Ÿ ××—×“ ×œ×©××œ×” ××—×ª.
+        // ×”×ž×ª×•×“×” ×ž×—×œ×™×¤×” ×›×œ ×ª×©×•×‘×” ×§×•×“×ž×ª ×©×œ ××•×ª×• ×©×—×§×Ÿ ×œ××•×ª×” ×©××œ×”.
         // #gamedb #answer #scoreboard
         public async Task<bool> SubmitAnswerAsync(int roomPlayerId, int questionId, int optionId)
         {
-            // ולידציה בסיסית לקלט תשובה
+            // ×•×œ×™×“×¦×™×” ×‘×¡×™×¡×™×ª ×œ×§×œ×˜ ×ª×©×•×‘×”
             if (roomPlayerId <= 0 || questionId <= 0 || optionId <= 0) 
                 return false;
 
@@ -184,13 +184,13 @@ VALUES (@room_id, @qid, @ord, 15);";
             {
                 await using var conn = new MySqlConnection(ConnStr);
                 await conn.OpenAsync();
-                // מחיקת השורה הישנה והכנסת החדשה חייבות לקרות יחד.
+                // ×ž×—×™×§×ª ×”×©×•×¨×” ×”×™×©× ×” ×•×”×›× ×¡×ª ×”×—×“×©×” ×—×™×™×‘×•×ª ×œ×§×¨×•×ª ×™×—×“.
                 await using var tx = await conn.BeginTransactionAsync();
 
                 try
                 {
                     int roomId;
-                    // קוראים את room_id של שורת השחקן ונכשלים אם השחקן לא קיים.
+                    // ×§×•×¨××™× ××ª room_id ×©×œ ×©×•×¨×ª ×”×©×—×§×Ÿ ×•× ×›×©×œ×™× ×× ×”×©×—×§×Ÿ ×œ× ×§×™×™×.
                     {
                         const string rpSql = @"
 SELECT room_id
@@ -208,7 +208,7 @@ LIMIT 1;";
                         roomId = Convert.ToInt32(obj);
                     }
 
-                    // אימות שהאפשרות שייכת לשאלה ושליפת דגל תשובה נכונה
+                    // ××™×ž×•×ª ×©×”××¤×©×¨×•×ª ×©×™×™×›×ª ×œ×©××œ×” ×•×©×œ×™×¤×ª ×“×’×œ ×ª×©×•×‘×” × ×›×•× ×”
                     bool isCorrect;
                     {
                         const string chkSql = @"
@@ -217,7 +217,7 @@ FROM question_options
 WHERE option_id = @oid AND question_id = @qid
 LIMIT 1;";
                         await using var cmd = new MySqlCommand(chkSql, conn, (MySqlTransaction)tx);
-                        // מוודאים שהאפשרות שנבחרה באמת שייכת לשאלה הזאת.
+                        // ×ž×•×•×“××™× ×©×”××¤×©×¨×•×ª ×©× ×‘×—×¨×” ×‘××ž×ª ×©×™×™×›×ª ×œ×©××œ×” ×”×–××ª.
                         cmd.Parameters.AddWithValue("@oid", optionId);
                         cmd.Parameters.AddWithValue("@qid", questionId);
 
@@ -231,25 +231,25 @@ LIMIT 1;";
                         isCorrect = Convert.ToInt32(obj) == 1;
                     }
 
-                    // מוחקים כל תשובה קודמת כדי שלשחקן תהיה רק תשובה אחת נוכחית.
+                    // ×ž×•×—×§×™× ×›×œ ×ª×©×•×‘×” ×§×•×“×ž×ª ×›×“×™ ×©×œ×©×—×§×Ÿ ×ª×”×™×” ×¨×§ ×ª×©×•×‘×” ××—×ª × ×•×›×—×™×ª.
                     {
                         const string delSql = @"
 DELETE FROM player_answers
 WHERE room_player_id = @rpid AND question_id = @qid;";
                         await using var cmd = new MySqlCommand(delSql, conn, (MySqlTransaction)tx);
-                        // אוכפים תשובה אחת שמורה לכל שחקן לכל שאלה.
+                        // ××•×›×¤×™× ×ª×©×•×‘×” ××—×ª ×©×ž×•×¨×” ×œ×›×œ ×©×—×§×Ÿ ×œ×›×œ ×©××œ×”.
                         cmd.Parameters.AddWithValue("@rpid", roomPlayerId);
                         cmd.Parameters.AddWithValue("@qid", questionId);
                         await cmd.ExecuteNonQueryAsync();
                     }
 
-                    // מכניסים את התשובה החדשה ומפיקים את נכונותה משורת האפשרות.
+                    // ×ž×›× ×™×¡×™× ××ª ×”×ª×©×•×‘×” ×”×—×“×©×” ×•×ž×¤×™×§×™× ××ª × ×›×•× ×•×ª×” ×ž×©×•×¨×ª ×”××¤×©×¨×•×ª.
                     {
                         const string insSql = @"
 INSERT INTO player_answers (room_id, room_player_id, question_id, selected_option_id, is_correct, answered_at)
 VALUES (@room_id, @rpid, @qid, @oid, @isc, NOW());";
                         await using var cmd = new MySqlCommand(insSql, conn, (MySqlTransaction)tx);
-                        // room_id נשמר כדי ששאילתות ניקוד עתידיות יוכלו לקבץ לפי חדר.
+                        // room_id × ×©×ž×¨ ×›×“×™ ×©×©××™×œ×ª×•×ª × ×™×§×•×“ ×¢×ª×™×“×™×•×ª ×™×•×›×œ×• ×œ×§×‘×¥ ×œ×¤×™ ×—×“×¨.
                         cmd.Parameters.AddWithValue("@room_id", roomId);
                         cmd.Parameters.AddWithValue("@rpid", roomPlayerId);
                         cmd.Parameters.AddWithValue("@qid", questionId);
@@ -277,12 +277,12 @@ VALUES (@room_id, @rpid, @qid, @oid, @isc, NOW());";
             }
         }
 
-        // בונה את ה־scoreboard הנוכחי של החדר.
-        // השאילתה סופרת תשובות נכונות וסך תשובות לכל שחקן.
+        // ×‘×•× ×” ××ª ×”Ö¾scoreboard ×”× ×•×›×—×™ ×©×œ ×”×—×“×¨.
+        // ×”×©××™×œ×ª×” ×¡×•×¤×¨×ª ×ª×©×•×‘×•×ª × ×›×•× ×•×ª ×•×¡×š ×ª×©×•×‘×•×ª ×œ×›×œ ×©×—×§×Ÿ.
         // #gamedb #results #scoreboard
         public async Task<List<ScoreRow>> GetScoreboardAsync(int roomId)
         {
-            // יצירת אוסף תוצאות להחזרה
+            // ×™×¦×™×¨×ª ××•×¡×£ ×ª×•×¦××•×ª ×œ×”×—×–×¨×”
             var result = new List<ScoreRow>();
             if (roomId <= 0) 
                 return result;
@@ -292,7 +292,7 @@ VALUES (@room_id, @rpid, @qid, @oid, @isc, NOW());";
                 await using var conn = new MySqlConnection(ConnStr);
                 await conn.OpenAsync();
 
-                // מאגדים את סך התשובות של כל שחקן בשאילתת SQL אחת.
+                // ×ž××’×“×™× ××ª ×¡×š ×”×ª×©×•×‘×•×ª ×©×œ ×›×œ ×©×—×§×Ÿ ×‘×©××™×œ×ª×ª SQL ××—×ª.
                 const string sql = @"
 SELECT
   rp.room_player_id,
@@ -309,13 +309,13 @@ GROUP BY rp.room_player_id, rp.user_id, rp.nickname
 ORDER BY correct_count DESC, answered_count DESC, rp.nickname ASC;";
 
                 await using var cmd = new MySqlCommand(sql, conn);
-                // מזהה חדר עבורו מחשבים scoreboard
+                // ×ž×–×”×” ×—×“×¨ ×¢×‘×•×¨×• ×ž×—×©×‘×™× scoreboard
                 cmd.Parameters.AddWithValue("@room_id", roomId);
 
                 await using var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
-                    // ממירים כל שורת SQL למודל scoreboard שה־API משתמש בו.
+                    // ×ž×ž×™×¨×™× ×›×œ ×©×•×¨×ª SQL ×œ×ž×•×“×œ scoreboard ×©×”Ö¾API ×ž×©×ª×ž×© ×‘×•.
                     result.Add(new ScoreRow
                     {
                         RoomPlayerID = reader.GetInt32("room_player_id"),
@@ -338,7 +338,7 @@ ORDER BY correct_count DESC, answered_count DESC, rp.nickname ASC;";
             }
         }
         
-        // בודקת אם שחקן מסוים כבר ענה על שאלה מסוימת בחדר הזה.
+        // ×‘×•×“×§×ª ×× ×©×—×§×Ÿ ×ž×¡×•×™× ×›×‘×¨ ×¢× ×” ×¢×œ ×©××œ×” ×ž×¡×•×™×ž×ª ×‘×—×“×¨ ×”×–×”.
         public async Task<bool> HasPlayerAnsweredAsync(int roomId, int roomPlayerId, int questionId)
         {
             if (roomId <= 0 || roomPlayerId <= 0 || questionId <= 0)
@@ -375,7 +375,7 @@ LIMIT 1;";
             }
         }
 
-        // סופרת כמה שאלות משויכות לחדר.
+        // ×¡×•×¤×¨×ª ×›×ž×” ×©××œ×•×ª ×ž×©×•×™×›×•×ª ×œ×—×“×¨.
         // #gamedb #results #game-over
         public async Task<int> GetRoomQuestionCountAsync(int roomId)
         {
@@ -408,7 +408,7 @@ WHERE room_id = @room_id;";
             }
         }
 
-        // סופרת כמה תשובות שחקן אחד הגיש בחדר.
+        // ×¡×•×¤×¨×ª ×›×ž×” ×ª×©×•×‘×•×ª ×©×—×§×Ÿ ××—×“ ×”×’×™×© ×‘×—×“×¨.
         // #gamedb #stats #progress
         public async Task<int> GetPlayerAnswerCountAsync(int roomId, int roomPlayerId)
         {
@@ -443,28 +443,32 @@ WHERE room_id = @room_id
             }
         }
 
-        // שומרת את סיכום התוצאה הסופי של כל שחקן בחדר.
+        // ×©×•×ž×¨×ª ××ª ×¡×™×›×•× ×”×ª×•×¦××” ×”×¡×•×¤×™ ×©×œ ×›×œ ×©×—×§×Ÿ ×‘×—×“×¨.
         public async Task SaveRoomResultsAsync(int roomId)
         {
-            // אם מזהה חדר לא תקין אין מה לשמור
+            // הפונקציה הזו היא שלב הסיום של המשחק מבחינת מסד הנתונים.
+            // היא מעבירה את ה-scoreboard החי לטבלת game_results הקבועה.
+            // ×× ×ž×–×”×” ×—×“×¨ ×œ× ×ª×§×™×Ÿ ××™×Ÿ ×ž×” ×œ×©×ž×•×¨
             if (roomId <= 0)
                 return;
 
             try
             {
+                // קודם קוראים את המצב הנוכחי של החדר לפני ששומרים אותו כתוצאה סופית.
                 var rows = await GetScoreboardAsync(roomId);
                 if (rows.Count == 0)
                     return;
 
-                // קוראים את הנתונים שצריך כדי להחליט מי מסומן כמנצח.
+                // ×§×•×¨××™× ××ª ×”× ×ª×•× ×™× ×©×¦×¨×™×š ×›×“×™ ×œ×”×—×œ×™×˜ ×ž×™ ×ž×¡×•×ž×Ÿ ×›×ž× ×¦×—.
                 var totalQuestions = await GetRoomQuestionCountAsync(roomId);
                 var isSinglePlayer = rows.Count == 1;
                 var maxCorrect = GetMaxCorrect(rows);
+                // totalQuestions, isSinglePlayer ו-maxCorrect קובעים איך מסמנים מנצח.
 
                 await using var conn = new MySqlConnection(ConnStr);
                 await conn.OpenAsync();
 
-                // מבצעים upsert לשורת סיכום אחת לכל שחקן כדי ששמירות חוזרות לא יכפילו היסטוריה.
+                // ×ž×‘×¦×¢×™× upsert ×œ×©×•×¨×ª ×¡×™×›×•× ××—×ª ×œ×›×œ ×©×—×§×Ÿ ×›×“×™ ×©×©×ž×™×¨×•×ª ×—×•×–×¨×•×ª ×œ× ×™×›×¤×™×œ×• ×”×™×¡×˜×•×¨×™×”.
                 const string sql = @"
 INSERT INTO game_results (room_id, user_id, correct_count, answered_count, is_winner)
 VALUES (@room_id, @user_id, @correct_count, @answered_count, @is_winner)
@@ -475,11 +479,11 @@ ON DUPLICATE KEY UPDATE
 
                 foreach (var row in rows)
                 {
-                    // לוגיקת מנצח תלויה אם זה משחק יחיד או משחק מרובה משתתפים.
+                    // כל שורה ב-scoreboard הופכת לרשומת תוצאה אחת ב-DB.
                     var isWinner = IsWinnerRow(row, isSinglePlayer, totalQuestions, maxCorrect);
 
                     await using var cmd = new MySqlCommand(sql, conn);
-                    // שומרים את הציון המצטבר של המשתתף.
+                    // כאן נשמרים הערכים בפועל: room_id, user_id, correct_count, answered_count, is_winner.
                     cmd.Parameters.AddWithValue("@room_id", roomId);
                     cmd.Parameters.AddWithValue("@user_id", row.UserID);
                     cmd.Parameters.AddWithValue("@correct_count", row.CorrectCount);
@@ -498,7 +502,7 @@ ON DUPLICATE KEY UPDATE
             }
         }
 
-        // שולפת סטטיסטיקה מצטברת של משתמש אחד מכל תוצאות המשחקים השמורות.
+        // ×©×•×œ×¤×ª ×¡×˜×˜×™×¡×˜×™×§×” ×ž×¦×˜×‘×¨×ª ×©×œ ×ž×©×ª×ž×© ××—×“ ×ž×›×œ ×ª×•×¦××•×ª ×”×ž×©×—×§×™× ×”×©×ž×•×¨×•×ª.
         public async Task<(int GamesPlayed, int Wins, int Correct, int Answered)> GetUserStatsAsync(int userId)
         {
             if (userId <= 0)
@@ -542,7 +546,7 @@ WHERE user_id = @user_id;";
             }
         }
 
-        // בונה leaderboad על פי דיוק, ואז ניצחונות, ואז נפח משחקים.
+        // ×‘×•× ×” leaderboad ×¢×œ ×¤×™ ×“×™×•×§, ×•××– × ×™×¦×—×•× ×•×ª, ×•××– × ×¤×— ×ž×©×—×§×™×.
         public async Task<List<TopPlayerRow>> GetTopPlayersAsync(int limit)
         {
             var result = new List<TopPlayerRow>();
@@ -575,7 +579,7 @@ ORDER BY
 LIMIT @limit;";
 
                 await using var cmd = new MySqlCommand(sql, conn);
-                // limit עובר כפרמטר כדי שהקורא ישלוט בכמה שורות יחזרו.
+                // limit ×¢×•×‘×¨ ×›×¤×¨×ž×˜×¨ ×›×“×™ ×©×”×§×•×¨× ×™×©×œ×•×˜ ×‘×›×ž×” ×©×•×¨×•×ª ×™×—×–×¨×•.
                 cmd.Parameters.AddWithValue("@limit", limit);
 
                 await using var reader = await cmd.ExecuteReaderAsync();
@@ -606,7 +610,7 @@ LIMIT @limit;";
 
         public async Task<List<(DateTime CreatedAt, string RoomName, int CorrectCount, int AnsweredCount, bool IsWinner)>> GetRecentUserResultsAsync(int userId, int limit)
         {
-        // מחזירה את תצוגת ההיסטוריה האחרונה שמופיעה במסך הפרופיל.
+        // ×ž×—×–×™×¨×” ××ª ×ª×¦×•×’×ª ×”×”×™×¡×˜×•×¨×™×” ×”××—×¨×•× ×” ×©×ž×•×¤×™×¢×” ×‘×ž×¡×š ×”×¤×¨×•×¤×™×œ.
             var result = new List<(DateTime CreatedAt, string RoomName, int CorrectCount, int AnsweredCount, bool IsWinner)>();
             if (userId <= 0 || limit <= 0)
                 return result;
@@ -616,7 +620,7 @@ LIMIT @limit;";
                 await using var conn = new MySqlConnection(ConnStr);
                 await conn.OpenAsync();
 
-                // מחברים את טבלת התוצאות לחדרים כדי שה־UI יוכל להציג גם את שם החדר.
+                // ×ž×—×‘×¨×™× ××ª ×˜×‘×œ×ª ×”×ª×•×¦××•×ª ×œ×—×“×¨×™× ×›×“×™ ×©×”Ö¾UI ×™×•×›×œ ×œ×”×¦×™×’ ×’× ××ª ×©× ×”×—×“×¨.
                 const string sql = @"
 SELECT
   gr.created_at,
@@ -634,7 +638,7 @@ LIMIT @limit;";
                 cmd.Parameters.AddWithValue("@user_id", userId);
                 cmd.Parameters.AddWithValue("@limit", limit);
 
-                // ממירים שורות SQL לטאפלים קלים עבור שכבת ה־API.
+                // ×ž×ž×™×¨×™× ×©×•×¨×•×ª SQL ×œ×˜××¤×œ×™× ×§×œ×™× ×¢×‘×•×¨ ×©×›×‘×ª ×”Ö¾API.
                 await using var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
@@ -659,7 +663,7 @@ LIMIT @limit;";
             }
         }
 
-        // מחשבת את מספר התשובות הנכונות הגבוה ביותר בחדר הנוכחי.
+        // ×ž×—×©×‘×ª ××ª ×ž×¡×¤×¨ ×”×ª×©×•×‘×•×ª ×”× ×›×•× ×•×ª ×”×’×‘×•×” ×‘×™×•×ª×¨ ×‘×—×“×¨ ×”× ×•×›×—×™.
         private static int GetMaxCorrect(List<ScoreRow> rows)
         {
             var maxCorrect = 0;
@@ -672,7 +676,7 @@ LIMIT @limit;";
             return maxCorrect;
         }
 
-        // כללי המנצח שונים בין משחק יחיד למשחק מרובה משתתפים.
+        // ×›×œ×œ×™ ×”×ž× ×¦×— ×©×•× ×™× ×‘×™×Ÿ ×ž×©×—×§ ×™×—×™×“ ×œ×ž×©×—×§ ×ž×¨×•×‘×” ×ž×©×ª×ª×¤×™×.
         private static bool IsWinnerRow(ScoreRow row, bool isSinglePlayer, int totalQuestions, int maxCorrect)
         {
             if (isSinglePlayer)
@@ -685,7 +689,7 @@ LIMIT @limit;";
             return row.CorrectCount == maxCorrect;
         }
 
-        // עזר: סופר כמה שחקנים מחוברים כרגע לחדר.
+        // ×¢×–×¨: ×¡×•×¤×¨ ×›×ž×” ×©×—×§× ×™× ×ž×—×•×‘×¨×™× ×›×¨×’×¢ ×œ×—×“×¨.
         private static async Task<int> GetRoomPlayersCountAsync(MySqlConnection conn, int roomId)
         {
             const string playersSql = @"SELECT COUNT(*) FROM room_players WHERE room_id = @room_id;";
@@ -695,10 +699,10 @@ LIMIT @limit;";
             return Convert.ToInt32(obj);
         }
 
-        // עזר: סורק שאלות לפי סדר ומפעיל את השאלה הראשונה שצריכה להיות חיה עכשיו.
+        // ×¢×–×¨: ×¡×•×¨×§ ×©××œ×•×ª ×œ×¤×™ ×¡×“×¨ ×•×ž×¤×¢×™×œ ××ª ×”×©××œ×” ×”×¨××©×•× ×” ×©×¦×¨×™×›×” ×œ×”×™×•×ª ×—×™×” ×¢×›×©×™×•.
         private static async Task<(int QuestionId, int TimeLimitSec, DateTime? StartedAt)?> TryGetCurrentRoomQuestionAsync(MySqlConnection conn, int roomId, int playersCount)
         {
-            // השאילתה מחזירה כל שאלה בחדר וגם את מספר השחקנים הייחודיים שענו עליה.
+            // ×”×©××™×œ×ª×” ×ž×—×–×™×¨×” ×›×œ ×©××œ×” ×‘×—×“×¨ ×•×’× ××ª ×ž×¡×¤×¨ ×”×©×—×§× ×™× ×”×™×™×—×•×“×™×™× ×©×¢× ×• ×¢×œ×™×”.
             const string listSql = @"
 SELECT rq.question_id, rq.time_limit_sec, rq.started_at,
        COALESCE(a.answers_count, 0) AS answers_count
@@ -726,7 +730,7 @@ ORDER BY rq.question_order ASC;";
 
                 if (candidateStartedAt.HasValue)
                 {
-                    // מדלגים על שאלות שפג להן הזמן או שכבר נענו במלואן.
+                    // ×ž×“×œ×’×™× ×¢×œ ×©××œ×•×ª ×©×¤×’ ×œ×”×Ÿ ×”×–×ž×Ÿ ××• ×©×›×‘×¨ × ×¢× ×• ×‘×ž×œ×•××Ÿ.
                     var expiresAt = candidateStartedAt.Value.AddSeconds(candidateTimeLimit);
                     if (DateTime.Now > expiresAt)
                         continue;
@@ -736,7 +740,7 @@ ORDER BY rq.question_order ASC;";
                     return (candidateQid, candidateTimeLimit, candidateStartedAt);
                 }
 
-                // בפעם הראשונה שרואים שאלה, מסמנים started_at ומחזירים אותה כשאלה פעילה.
+                // ×‘×¤×¢× ×”×¨××©×•× ×” ×©×¨×•××™× ×©××œ×”, ×ž×¡×ž× ×™× started_at ×•×ž×—×–×™×¨×™× ××•×ª×” ×›×©××œ×” ×¤×¢×™×œ×”.
                 await reader.CloseAsync();
                 await MarkQuestionStartedAsync(conn, roomId, candidateQid);
                 return (candidateQid, candidateTimeLimit, DateTime.Now);
@@ -745,7 +749,7 @@ ORDER BY rq.question_order ASC;";
             return null;
         }
 
-        // מסמנים שאלה כהתחילה רק פעם אחת.
+        // ×ž×¡×ž× ×™× ×©××œ×” ×›×”×ª×—×™×œ×” ×¨×§ ×¤×¢× ××—×ª.
         private static async Task MarkQuestionStartedAsync(MySqlConnection conn, int roomId, int questionId)
         {
             const string startSql = @"
@@ -758,10 +762,10 @@ WHERE room_id = @room_id AND question_id = @qid AND started_at IS NULL;";
             await startCmd.ExecuteNonQueryAsync();
         }
 
-        // טוענים את גוף השאלה בלי אפשרויות התשובה.
+        // ×˜×•×¢× ×™× ××ª ×’×•×£ ×”×©××œ×” ×‘×œ×™ ××¤×©×¨×•×™×•×ª ×”×ª×©×•×‘×”.
         private static async Task<Question?> LoadQuestionAsync(MySqlConnection conn, int questionId, int timeLimitSec, DateTime? startedAt)
         {
-            // קוראים את שדות השאלה המרכזיים מטבלת questions.
+            // ×§×•×¨××™× ××ª ×©×“×•×ª ×”×©××œ×” ×”×ž×¨×›×–×™×™× ×ž×˜×‘×œ×ª questions.
             const string qSql = @"
 SELECT question_id, question_text, question_type_id, difficulty, created_by
 FROM questions
@@ -788,10 +792,10 @@ LIMIT 1;";
             };
         }
 
-        // טוענים את כל אפשרויות התשובה של שאלה.
+        // ×˜×•×¢× ×™× ××ª ×›×œ ××¤×©×¨×•×™×•×ª ×”×ª×©×•×‘×” ×©×œ ×©××œ×”.
         private static async Task<List<QuestionOption>> LoadQuestionOptionsAsync(MySqlConnection conn, int questionId)
         {
-            // סדר התשובות מעורבל כדי שהתשובה הנכונה לא תופיע תמיד באותו מקום.
+            // ×¡×“×¨ ×”×ª×©×•×‘×•×ª ×ž×¢×•×¨×‘×œ ×›×“×™ ×©×”×ª×©×•×‘×” ×”× ×›×•× ×” ×œ× ×ª×•×¤×™×¢ ×ª×ž×™×“ ×‘××•×ª×• ×ž×§×•×.
             const string optSql = @"
 SELECT option_id, question_id, option_text, is_correct
 FROM question_options
@@ -819,3 +823,4 @@ ORDER BY RAND();";
 
     }
 }
+
