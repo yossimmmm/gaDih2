@@ -48,7 +48,7 @@
                                 <td><input @bind="row.Username" /></td>
                                 <td><input @bind="row.FullName" /></td>
                                 <td>
-                                    <select @bind="row.Role">
+                                    <select value="@row.Role" @onchange="args => ChangeRoleAsync(row, args)">
                                         <option value="@UserRole.User">User</option>
                                         <option value="@UserRole.Admin">Admin</option>
                                     </select>
@@ -56,8 +56,11 @@
                                 <td>
                                     <div class="actions">
                                         <button class="save-btn" @onclick="() => SaveUserAsync(row)" disabled="@Busy">Save profile</button>
-                                        <button class="role-btn" @onclick="() => SaveRoleAsync(row)" disabled="@Busy">Save role</button>
-                                        <button class="delete-btn" @onclick="() => DeleteUserAsync(row)" disabled="@Busy || row.UserID == Session.CurrentUserId">Delete</button>
+                                        <button class="delete-btn"
+                                                @onclick="() => DeleteUserAsync(row)"
+                                                disabled="@(Busy || row.UserID == Session.CurrentUserId)">
+                                            Delete
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -160,12 +163,21 @@
         }
     }
 
-    // שינוי role הוא פעולה עצמאית: אימייל ישן ולא תקין לא אמור לחסום שינוי הרשאה.
-    private async Task SaveRoleAsync(AdminUserRow row)
+    // שינוי role נשמר מיד בבחירה, בלי לעבור דרך בדיקת האימייל של שמירת הפרופיל.
+    private async Task ChangeRoleAsync(AdminUserRow row, ChangeEventArgs args)
     {
         if (!IsAllowed)
             return;
 
+        if (!Enum.TryParse<UserRole>(args.Value?.ToString(), true, out var selectedRole))
+        {
+            IsError = true;
+            Status = $"Invalid role for user {row.UserID}.";
+            return;
+        }
+
+        var previousRole = row.Role;
+        row.Role = selectedRole;
         Busy = true;
         Status = "";
         IsError = false;
@@ -176,9 +188,13 @@
             Status = ok
                 ? $"Role for user {row.UserID} changed to {row.Role}."
                 : $"Failed to change role for user {row.UserID}.";
+
+            if (!ok)
+                row.Role = previousRole;
         }
         catch (Exception ex)
         {
+            row.Role = previousRole;
             IsError = true;
             Status = $"Role update failed for user {row.UserID}: {ex.Message}";
         }
@@ -278,7 +294,7 @@
         line-height: 1.1;
     }
 
-    .reload-btn, .save-btn, .role-btn, .delete-btn {
+    .reload-btn, .save-btn, .delete-btn {
         border-radius: 10px;
         border: 2px solid #2b2f3a;
         background: #ffffff;
@@ -290,7 +306,7 @@
         transition: 140ms ease;
     }
 
-    .reload-btn:hover, .save-btn:hover, .role-btn:hover {
+    .reload-btn:hover, .save-btn:hover {
         background: #f0e8f8;
     }
 
@@ -303,7 +319,7 @@
         background: #ffe5ef;
     }
 
-    .reload-btn:disabled, .save-btn:disabled, .role-btn:disabled, .delete-btn:disabled {
+    .reload-btn:disabled, .save-btn:disabled, .delete-btn:disabled {
         opacity: .45;
         cursor: not-allowed;
     }
