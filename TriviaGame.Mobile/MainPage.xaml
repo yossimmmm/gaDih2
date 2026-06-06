@@ -148,6 +148,9 @@
             <Border Stroke="#D0D0D0" Padding="10" StrokeShape="RoundRectangle 8">
                 <VerticalStackLayout Spacing="8">
                     <Label Text="Game" FontAttributes="Bold" />
+                    <Label x:Name="ActiveRoomLabel"
+                           Text="Active room: none"
+                           LineBreakMode="WordWrap" />
                     <Entry x:Name="QuestionCountEntry" Placeholder="Question count (default 10)" Keyboard="Numeric" />
 
                     <!-- התחלת משחק או טעינת השאלה הנוכחית. -->
@@ -158,6 +161,9 @@
 
                     <!-- הטקסט המלא של השאלה הנוכחית. -->
                     <Label x:Name="QuestionTextLabel" Text="Question: -" />
+                    <Label x:Name="GameStatusLabel"
+                           Text="Game: create or join a room first."
+                           LineBreakMode="WordWrap" />
 
                     <!-- רשימת אפשרויות התשובה לבחירה. -->
                     <CollectionView x:Name="OptionsView"
@@ -166,7 +172,12 @@
                                     SelectionChanged="OnOptionSelected">
                         <CollectionView.ItemTemplate>
                             <DataTemplate>
-                                <Label Text="{Binding OptionText}" Padding="6" />
+                                <Border Stroke="#666666"
+                                        Padding="10"
+                                        Margin="0,3"
+                                        StrokeShape="RoundRectangle 6">
+                                    <Label Text="{Binding OptionText}" />
+                                </Border>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                     </CollectionView>

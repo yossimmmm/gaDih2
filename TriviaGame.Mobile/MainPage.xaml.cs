@@ -281,6 +281,7 @@ public partial class MainPage : ContentPage
 
             // מציגים מיד את קוד החדר שהשרת יצר כדי שאפשר יהיה להצטרף ולהתחיל משחק.
             RoomCodeEntry.Text = result.Data.Room.RoomCode;
+            ActiveRoomLabel.Text = $"Active room: {result.Data.Room.RoomCode}";
             var joinResult = await api.JoinRoomAsync(
                 currentUser.UserId,
                 result.Data.Room.RoomCode,
@@ -367,6 +368,7 @@ public partial class MainPage : ContentPage
             }
 
             RoomCodeEntry.Text = roomCode;
+            ActiveRoomLabel.Text = $"Active room: {roomCode}";
             currentRoomPlayerId = result.Data.Player?.RoomPlayerID ?? 0;
             RoomStatusLabel.Text = $"Rooms: joined {roomCode} as playerId={currentRoomPlayerId}.";
             StatusLabel.Text = $"Status: joined room {roomCode} as playerId={currentRoomPlayerId}.";
@@ -418,11 +420,27 @@ public partial class MainPage : ContentPage
             }
 
             var roomCode = (RoomCodeEntry.Text ?? "").Trim().ToUpperInvariant();
+            if (string.IsNullOrWhiteSpace(roomCode))
+            {
+                GameStatusLabel.Text = "Game: create or join a room first.";
+                StatusLabel.Text = "Status: room code is required.";
+                return;
+            }
+
             var questionCount = int.TryParse(QuestionCountEntry.Text, out var parsed) ? parsed : 10;
             var result = await api.StartGameAsync(currentUser.UserId, roomCode, questionCount);
-            StatusLabel.Text = result.Success
-                ? $"Status: start game request succeeded - {result.Data?.Message}"
-                : $"Status: start game failed - {result.Message}";
+            if (!result.Success || result.Data?.Ok != true)
+            {
+                var error = result.Data?.Message ?? result.Message;
+                GameStatusLabel.Text = $"Game: start failed - {error}";
+                StatusLabel.Text = $"Status: start game failed - {error}";
+                return;
+            }
+
+            ActiveRoomLabel.Text = $"Active room: {roomCode}";
+            GameStatusLabel.Text = "Game: started. Loading first question...";
+            StatusLabel.Text = $"Status: {result.Data.Message}";
+            await LoadCurrentQuestionAsync(roomCode);
         });
     }
 
@@ -432,36 +450,58 @@ public partial class MainPage : ContentPage
         await RunUiActionAsync("load current question", async () =>
         {
             var roomCode = (RoomCodeEntry.Text ?? "").Trim().ToUpperInvariant();
-            var result = await api.GetCurrentQuestionAsync(roomCode);
-            if (!result.Success || result.Data is null)
-            {
-                StatusLabel.Text = $"Status: failed loading question - {result.Message}";
-                return;
-            }
-
-            if (result.Data.Finished || result.Data.Question is null)
-            {
-                currentQuestion = null;
-                selectedOption = null;
-                OptionsView.ItemsSource = null;
-                QuestionTextLabel.Text = "Question: game finished or no active question.";
-                StatusLabel.Text = "Status: no active question.";
-                return;
-            }
-
-            currentQuestion = result.Data.Question;
-            selectedOption = null;
-            QuestionTextLabel.Text = $"Question: {currentQuestion.QuestionText}";
-            OptionsView.ItemsSource = null;
-            OptionsView.ItemsSource = currentQuestion.Options;
-            StatusLabel.Text = $"Status: question loaded (id={currentQuestion.QuestionID}).";
+            await LoadCurrentQuestionAsync(roomCode);
         });
+    }
+
+    private async Task LoadCurrentQuestionAsync(string roomCode)
+    {
+        if (string.IsNullOrWhiteSpace(roomCode))
+        {
+            GameStatusLabel.Text = "Game: create or join a room first.";
+            StatusLabel.Text = "Status: room code is required.";
+            return;
+        }
+
+        var result = await api.GetCurrentQuestionAsync(roomCode);
+        if (!result.Success || result.Data is null)
+        {
+            GameStatusLabel.Text = $"Game: question load failed - {result.Message}";
+            StatusLabel.Text = $"Status: failed loading question - {result.Message}";
+            return;
+        }
+
+        if (result.Data.Finished || result.Data.Question is null)
+        {
+            currentQuestion = null;
+            selectedOption = null;
+            OptionsView.SelectedItem = null;
+            OptionsView.ItemsSource = null;
+            QuestionTextLabel.Text = "Question: game finished.";
+            GameStatusLabel.Text = "Game: finished. Load the scoreboard.";
+            StatusLabel.Text = "Status: no active question.";
+            return;
+        }
+
+        currentQuestion = result.Data.Question;
+        selectedOption = null;
+        OptionsView.SelectedItem = null;
+        QuestionTextLabel.Text = $"Question: {currentQuestion.QuestionText}";
+        OptionsView.ItemsSource = null;
+        OptionsView.ItemsSource = currentQuestion.Options;
+        ActiveRoomLabel.Text = $"Active room: {roomCode}";
+        GameStatusLabel.Text =
+            $"Game: question #{currentQuestion.QuestionID}, {currentQuestion.TimeLimitSec} seconds.";
+        StatusLabel.Text = $"Status: question loaded (id={currentQuestion.QuestionID}).";
     }
 
     // שומר איזה option נבחרה.
     private void OnOptionSelected(object? sender, SelectionChangedEventArgs e)
     {
         selectedOption = e.CurrentSelection.FirstOrDefault() as QuestionOptionRow;
+        GameStatusLabel.Text = selectedOption is null
+            ? "Game: select an answer."
+            : $"Game: selected \"{selectedOption.OptionText}\".";
     }
 
     // שולח את התשובה שנבחרה לשרת.
@@ -471,12 +511,14 @@ public partial class MainPage : ContentPage
         {
             if (currentQuestion is null || selectedOption is null)
             {
+                GameStatusLabel.Text = "Game: load a question and select an answer.";
                 StatusLabel.Text = "Status: load question and select an option first.";
                 return;
             }
 
             if (currentRoomPlayerId <= 0)
             {
+                GameStatusLabel.Text = "Game: join the room before answering.";
                 StatusLabel.Text = "Status: roomPlayerId missing. Join room and load players first.";
                 return;
             }
@@ -488,9 +530,17 @@ public partial class MainPage : ContentPage
                 currentQuestion.QuestionID,
                 selectedOption.OptionID);
 
-            StatusLabel.Text = result.Success
-                ? $"Status: answer submitted - {result.Data?.Message}"
-                : $"Status: submit answer failed - {result.Message}";
+            if (!result.Success || result.Data?.Ok != true)
+            {
+                var error = result.Data?.Message ?? result.Message;
+                GameStatusLabel.Text = $"Game: answer failed - {error}";
+                StatusLabel.Text = $"Status: submit answer failed - {error}";
+                return;
+            }
+
+            GameStatusLabel.Text = "Game: answer submitted. Loading next question...";
+            StatusLabel.Text = $"Status: answer submitted - {result.Data.Message}";
+            await LoadCurrentQuestionAsync(roomCode);
         });
     }
 
@@ -511,6 +561,7 @@ public partial class MainPage : ContentPage
                 ? "no rows"
                 : string.Join(" | ", result.Data.Rows.Select(r => $"{r.Nickname}:{r.CorrectCount}/{r.AnsweredCount}"));
             ScoreboardLabel.Text = $"Scoreboard: {text}";
+            GameStatusLabel.Text = $"Game: scoreboard loaded ({result.Data.Rows.Count} players).";
             StatusLabel.Text = "Status: scoreboard loaded.";
         });
     }
