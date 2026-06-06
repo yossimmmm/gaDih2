@@ -4,8 +4,8 @@ using TriviaGame.Api.Services;
 
 namespace TriviaGame.Api.Controllers;
 
-// × ×§×•×“×•×ª ×§×¦×” ×©×œ ×”×ž×©×—×§:
-// ×”×ª×—×œ×ª ×ž×©×—×§, ×©××œ×” × ×•×›×—×™×ª, ×ª×©×•×‘×”, ×©×ž×™×¨×ª ×ª×•×¦××•×ª, scoreboard ×•-top players.
+// נקודות קצה של המשחק:
+// התחלת משחק, שאלה נוכחית, תשובה, שמירת תוצאות, scoreboard ו-top players.
 [ApiController]
 [Route("api/game")]
 public sealed class GameController : ControllerBase
@@ -15,105 +15,105 @@ public sealed class GameController : ControllerBase
 
     public GameController(RoomsDomainService roomsDomainService, GameDomainService gameDomainService)
     {
-        // ×©×™×¨×•×ª ×”×—×“×¨ ×‘×•×“×§ ××ª ×ž×¦×‘ ×”×—×“×¨; ×©×™×¨×•×ª ×”×ž×©×—×§ ×ž×˜×¤×œ ×‘×œ×•×’×™×§×” ×¢×¦×ž×”.
+        // שירות החדר בודק את מצב החדר; שירות המשחק מטפל בלוגיקה עצמה.
         this.roomsDomainService = roomsDomainService;
         this.gameDomainService = gameDomainService;
     }
 
-    // ×ž×ª×—×™×œ ×¡×™×‘×•×‘ ×ž×©×—×§ ×—×“×© ×‘×—×“×¨.
+    // מתחיל סיבוב משחק חדש בחדר.
     [HttpPost("{roomCode}/start")]
     public async Task<IActionResult> StartGame(string roomCode, [FromBody] StartGameRequest request)
     {
-        // ×ž××ª×¨×™× ××ª ×”×—×“×¨ ×œ×¤×™ roomCode ×›×™ ×”×œ×§×•×— ×¢×•×‘×“ ×¢× ×§×•×“ ×§×¨×™× ×•×œ× ×¢× roomId ×¤× ×™×ž×™.
+        // מאתרים את החדר לפי roomCode כי הלקוח עובד עם קוד קריא ולא עם roomId פנימי.
         var room = await roomsDomainService.GetRoomByCodeAsync(roomCode);
         if (room is null || !room.IsActive)
             return NotFound(new { ok = false, message = "Room not found or inactive." });
 
-        // ×¨×§ ×”×ž×©×ª×ž×© ×©×™×¦×¨ ××ª ×”×—×“×¨ ×¨×©××™ ×œ×”×ª×—×™×œ ××ª ×”×ž×©×—×§.
+        // רק המשתמש שיצר את החדר רשאי להתחיל את המשחק.
         if (room.HostID != request.UserId)
             return BadRequest(new { ok = false, message = "Only host can start the game." });
 
-        // ×ž×’×‘×™×œ×™× ××ª ×ž×¡×¤×¨ ×”×©××œ×•×ª ×›×“×™ ×œ×ž× ×•×¢ ×¢×•×ž×¡.
+        // מגבילים את מספר השאלות כדי למנוע עומס.
         var count = request.QuestionCount <= 0 ? 10 : Math.Min(request.QuestionCount, 50);
 
-        // ×”×©×™×¨×•×ª ×‘×•×—×¨ ×©××œ×•×ª ××§×¨××™×•×ª ×•×©×•×ž×¨ ××•×ª×Ÿ ×‘×˜×‘×œ×ª room_questions.
+        // השירות בוחר שאלות אקראיות ושומר אותן בטבלת room_questions.
         var (ok, message, inserted) = await gameDomainService.StartGameAsync(room.RoomID, count);
         return ok
             ? Ok(new { ok = true, message, inserted })
             : BadRequest(new { ok = false, message });
     }
 
-    // ×ž×—×–×™×¨ ××ª ×”×©××œ×” ×”× ×•×›×—×™×ª ××• ×ž×¡×ž×Ÿ ×©×”×ž×©×—×§ ×”×¡×ª×™×™×.
+    // מחזיר את השאלה הנוכחית או מסמן שהמשחק הסתיים.
     [HttpGet("{roomCode}/current-question")]
     public async Task<IActionResult> GetCurrentQuestion(string roomCode)
     {
-        // ×‘×•×“×§×™× ×©×”×—×“×¨ ×§×™×™× ×•×¤×¢×™×œ ×œ×¤× ×™ ×©×ž×—×–×™×¨×™× ×©××œ×”.
+        // בודקים שהחדר קיים ופעיל לפני שמחזירים שאלה.
         var room = await roomsDomainService.GetRoomByCodeAsync(roomCode);
         if (room is null || !room.IsActive)
             return NotFound(new { ok = false, message = "Room not found or inactive." });
 
-        // ×”×©×™×¨×•×ª ×ž×—×–×™×¨ ××ª ×”×©××œ×” ×”×¤×¢×™×œ×” ××• null ×× ××™×Ÿ ×™×•×ª×¨ ×©××œ×•×ª.
+        // השירות מחזיר את השאלה הפעילה או null אם אין יותר שאלות.
         var q = await gameDomainService.GetCurrentQuestionAsync(room.RoomID);
         if (q is null)
         {
-            // finished=true ××•×ž×¨ ×œ×œ×§×•×— ×œ×¢×‘×•×¨ ×œ×ž×¦×‘ ×¡×™×•×/×ª×•×¦××•×ª.
+            // finished=true אומר ללקוח לעבור למצב סיום/תוצאות.
             return Ok(new { ok = true, finished = true });
         }
 
-        // ×× ×™×© ×©××œ×”, ×ž×—×–×™×¨×™× ××•×ª×” ×¢× ×”××¤×©×¨×•×™×•×ª ×©×œ×”.
+        // אם יש שאלה, מחזירים אותה עם האפשרויות שלה.
         return Ok(new { ok = true, finished = false, question = q });
     }
 
-    // ×©×•×ž×¨ ×ª×©×•×‘×” ×©×œ ×©×—×§×Ÿ ×•×ž×¨×¢× ×Ÿ ××ª ×ª×•×¦××•×ª ×”×—×“×¨.
+    // שומר תשובה של שחקן ומרענן את תוצאות החדר.
     [HttpPost("{roomCode}/answer")]
     public async Task<IActionResult> SubmitAnswer(string roomCode, [FromBody] SubmitAnswerRequest request)
     {
-        // ×ž×•×•×“××™× ×©×”×ª×©×•×‘×” × ×©×œ×—×ª ×œ×—×“×¨ ×§×™×™× ×•×¤×¢×™×œ.
+        // מוודאים שהתשובה נשלחת לחדר קיים ופעיל.
         var room = await roomsDomainService.GetRoomByCodeAsync(roomCode);
         if (room is null || !room.IsActive)
             return NotFound(new { ok = false, message = "Room not found or inactive." });
 
-        // ×”×©×™×¨×•×ª ×‘×•×“×§ ×©×”××¤×©×¨×•×ª ×©×™×™×›×ª ×œ×©××œ×” ×•×©×•×ž×¨ ××ª ×”×ª×©×•×‘×”.
+        // השירות בודק שהאפשרות שייכת לשאלה ושומר את התשובה.
         var (ok, message) = await gameDomainService.SubmitAnswerAsync(request);
         if (!ok)
             return BadRequest(new { ok = false, message });
 
-        // ××—×¨×™ ×›×œ ×ª×©×•×‘×” ×ž×¢×“×›× ×™× ××ª ×ª×•×¦××•×ª ×”×—×“×¨ ×›×“×™ ×©×”-scoreboard ×™×”×™×” ×¢×“×›× ×™.
+        // אחרי כל תשובה מעדכנים את תוצאות החדר כדי שה-scoreboard יהיה עדכני.
         // שומרים את התוצאות הסופיות בטבלת game_results כדי שהסטטיסטיקות יישארו זמינות גם אחרי שהחדר נסגר.
         await gameDomainService.SaveRoomResultsAsync(room.RoomID);
         return Ok(new { ok = true, message });
     }
 
-    // ×ž××©×¨ ×©×ž×™×¨×” ×ž×œ××” ×©×œ ×ª×•×¦××•×ª ×”×—×“×¨.
+    // מאשר שמירה מלאה של תוצאות החדר.
     [HttpPost("{roomCode}/save-results")]
     public async Task<IActionResult> SaveResults(string roomCode)
     {
-        // endpoint ×™×“× ×™ ×œ×©×ž×™×¨×ª ×ª×•×¦××•×ª, ×œ×ž×§×¨×” ×©×”×œ×§×•×— ×¨×•×¦×” ×œ×•×•×“× ×©×”×¡×™×›×•× × ×©×ž×¨.
+        // endpoint ידני לשמירת תוצאות, למקרה שהלקוח רוצה לוודא שהסיכום נשמר.
         var room = await roomsDomainService.GetRoomByCodeAsync(roomCode);
         if (room is null)
             return NotFound(new { ok = false, message = "Room not found." });
 
-        // ×”×©×ž×™×¨×” ×ž×©×ª×ž×©×ª ×‘-scoreboard ×”× ×•×›×—×™ ×•×ž×›× ×™×¡×”/×ž×¢×“×›× ×ª game_results.
+        // השמירה משתמשת ב-scoreboard הנוכחי ומכניסה/מעדכנת game_results.
         // שומרים את התוצאות הסופיות בטבלת game_results כדי שהסטטיסטיקות יישארו זמינות גם אחרי שהחדר נסגר.
         await gameDomainService.SaveRoomResultsAsync(room.RoomID);
         return Ok(new { ok = true });
     }
 
-    // ×ž×—×–×™×¨ ××ª ×œ×•×— ×”× ×™×§×•×“ ×©×œ ×”×—×“×¨.
+    // מחזיר את לוח הניקוד של החדר.
     [HttpGet("{roomCode}/scoreboard")]
     public async Task<IActionResult> Scoreboard(string roomCode)
     {
-        // ×§×•×“× ×ž×–×”×™× ××ª ×”×—×“×¨ ×›×“×™ ×œ×¢×‘×•×“ ×¢× roomId ××ž×™×ª×™ ×‘×ž×¡×“.
+        // קודם מזהים את החדר כדי לעבוד עם roomId אמיתי במסד.
         var room = await roomsDomainService.GetRoomByCodeAsync(roomCode);
         if (room is null)
             return NotFound(new { ok = false, message = "Room not found." });
 
-        // rows ×”×Ÿ ×©×•×¨×•×ª ×”× ×™×§×•×“ ×©×œ ×”×©×—×§× ×™× ×‘×—×“×¨.
+        // rows הן שורות הניקוד של השחקנים בחדר.
         var rows = await gameDomainService.GetScoreboardAsync(room.RoomID);
-        // totalQuestions ×¢×•×–×¨ ×œ×œ×§×•×— ×œ×”×¦×™×’ ×›×ž×” ×©××œ×•×ª ×”×™×• ×‘×ž×©×—×§.
+        // totalQuestions עוזר ללקוח להציג כמה שאלות היו במשחק.
         var totalQuestions = await gameDomainService.GetRoomQuestionCountAsync(room.RoomID);
 
-        // ×ž×—×–×™×¨×™× ×ž×¢×˜×¤×ª ×¢× ×¤×¨×˜×™ ×”×—×“×¨, ×›×ž×•×ª ×©××œ×•×ª ×•×©×•×¨×•×ª ×”× ×™×§×•×“.
+        // מחזירים מעטפת עם פרטי החדר, כמות שאלות ושורות הניקוד.
         return Ok(new
         {
             roomId = room.RoomID,
@@ -123,13 +123,13 @@ public sealed class GameController : ControllerBase
         });
     }
 
-    // ×ž×—×–×™×¨ ××ª ×˜×‘×œ×ª ×”×ž×•×‘×™×œ×™× ×©×œ ×”×ž×©×—×§.
+    // מחזיר את טבלת המובילים של המשחק.
     [HttpGet("top-players")]
     public async Task<IActionResult> TopPlayers([FromQuery] int limit = 10)
     {
-        // ×ž×’×‘×™×œ×™× ××ª limit ×›×“×™ ×©×ž×©×ª×ž×© ×œ× ×™×‘×§×© ×›×ž×•×ª ×¢× ×§×™×ª ×©×œ ×©×•×¨×•×ª.
+        // מגבילים את limit כדי שמשתמש לא יבקש כמות ענקית של שורות.
         limit = Math.Clamp(limit, 1, 100);
-        // ×”×©×™×¨×•×ª ×ž×—×–×™×¨ leaderboard ×’×œ×•×‘×œ×™ ×ž×›×œ ×ª×•×¦××•×ª ×”×ž×©×—×§×™×.
+        // השירות מחזיר leaderboard גלובלי מכל תוצאות המשחקים.
         var rows = await gameDomainService.GetTopPlayersAsync(limit);
         return Ok(rows);
     }
