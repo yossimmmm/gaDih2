@@ -4,11 +4,12 @@ using MimeKit;
 
 namespace TriviaGame.Services;
 
+// שירות ששולח מיילים דרך SMTP, בעיקר לאיפוס סיסמה.
 public sealed class EmailService
 {
-    // הגדרות שרת המייל
+    // הגדרות שרת ה-SMTP.
     private readonly SmtpSettings _settings;
-    // לוג פנימי למעקב תקלות/שליחות
+    // לוג פנימי למעקב אחרי שליחות ותקלות.
     private readonly ILogger<EmailService> _logger;
 
     public EmailService(SmtpSettings settings, ILogger<EmailService> logger)
@@ -19,10 +20,11 @@ public sealed class EmailService
 
     public async Task SendPasswordResetAsync(string toEmail, string resetLink)
     {
-        // אם אין כתובת יעד לא שולחים כלום
+        // אם אין כתובת יעד, אין טעם לשלוח מייל.
         if (string.IsNullOrWhiteSpace(toEmail))
             return;
 
+        // בונים את מבנה המייל עצמו.
         var message = new MimeMessage();
         message.From.Add(MailboxAddress.Parse(_settings.From));
         message.To.Add(MailboxAddress.Parse(toEmail.Trim()));
@@ -35,11 +37,12 @@ public sealed class EmailService
         using var client = new SmtpClient();
         client.Timeout = 15000;
 
-        // פורט 465 דורש לרוב SSL מיידי; פורטים אחרים לרוב STARTTLS
+        // פורט 465 בדרך כלל משתמש ב-SSL ישיר; אחרת אפשר להשתמש ב-STARTTLS.
         var secureMode = _settings.Port == 465
             ? SecureSocketOptions.SslOnConnect
             : (_settings.Secure ? SecureSocketOptions.StartTls : SecureSocketOptions.None);
 
+        // מתחברים, מזדהים מול ה-SMTP, שולחים את המייל ומתנתקים.
         await client.ConnectAsync(_settings.Host, _settings.Port, secureMode);
         await client.AuthenticateAsync(_settings.User, _settings.Pass);
         await client.SendAsync(message);

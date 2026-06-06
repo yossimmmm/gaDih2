@@ -5,23 +5,29 @@
 @rendermode InteractiveServer
 
 <div class="admin-users-page">
+    <!-- מעטפת המסך: מרכזת את תוכן הניהול על רקע מלא. -->
     <div class="admin-users-card">
+        <!-- כותרת עליונה וכפתור טעינה מחדש. -->
         <div class="admin-users-header">
             <h1>Admin Users</h1>
             <button class="reload-btn" @onclick="LoadUsersAsync" disabled="@Busy">Reload</button>
         </div>
 
+        <!-- אם המשתמש לא אדמין, לא מציגים את הטבלה בכלל. -->
         @if (!IsAllowed)
         {
             <p class="status error">Only admins can open this page.</p>
         }
+        @* בזמן טעינה ראשונית ורשימה ריקה, מציגים הודעת המתנה. *@
         else if (Busy && Users.Count == 0)
         {
             <p class="status">Loading users...</p>
         }
+        @* אחרת מציגים את טבלת העריכה של המשתמשים. *@
         else
         {
             <div class="table-wrap">
+                <!-- טבלה לעריכה ישירה של פרטי משתמשים. -->
                 <table>
                     <thead>
                         <tr>
@@ -60,6 +66,7 @@
             </div>
         }
 
+        <!-- הודעת הצלחה או שגיאה אחרי פעולה של אדמין. -->
         @if (!string.IsNullOrWhiteSpace(Status))
         {
             <p class="status @(IsError ? "error" : "ok")">@Status</p>
@@ -68,18 +75,26 @@
 </div>
 
 @code {
+    // שכבת הגישה לנתוני משתמשים דרך ה-DB.
     private readonly UserDB userDb = new();
+    // הרשימה שנערכה על המסך לצורך עריכה מהירה.
     private List<AdminUserRow> Users = new();
+    // הודעת מצב שמוצגת למנהל אחרי פעולה.
     private string Status = "";
+    // מציין אם הפעולה האחרונה נכשלה.
     private bool IsError;
+    // מונע לחיצות כפולות בזמן טעינה או שמירה.
     private bool Busy;
+    // רק אדמין יכול לעבוד עם המסך הזה.
     private bool IsAllowed => Session.CurrentRole == UserRole.Admin;
 
+    // ברגע שהמשתמש עבר אימות, טוענים את רשימת המשתמשים.
     protected override async Task OnAuthedAsync()
     {
         await LoadUsersAsync();
     }
 
+    // טוען את כל המשתמשים מהמסד וממפה אותם למבנה שמתאים לעריכה בטבלה.
     private async Task LoadUsersAsync()
     {
         if (!IsAllowed)
@@ -110,11 +125,13 @@
         }
     }
 
+    // שומר שורה אחת אחרי שהאדמין ערך אותה בטבלה.
     private async Task SaveUserAsync(AdminUserRow row)
     {
         if (!IsAllowed)
             return;
 
+        // בודקים שהאימייל עדיין חוקי לפני ששולחים עדכון למסד.
         if (string.IsNullOrWhiteSpace(row.Email) || !ValidationHelper.IsValidEmail(row.Email))
         {
             IsError = true;
@@ -142,11 +159,13 @@
         }
     }
 
+    // מוחק משתמש מהמערכת, אבל לא מאפשר למחוק את עצמך.
     private async Task DeleteUserAsync(AdminUserRow row)
     {
         if (!IsAllowed)
             return;
 
+        // הגנה בסיסית: אדמין לא מוחק את החשבון של עצמו.
         if (row.UserID == Session.CurrentUserId)
         {
             IsError = true;
@@ -181,12 +200,18 @@
         }
     }
 
+    // DTO פנימי שמחזיק את הנתונים של שורת הטבלה.
     private sealed class AdminUserRow
     {
+        // מזהה המשתמש במסד.
         public int UserID { get; set; }
+        // כתובת המייל לעריכה.
         public string Email { get; set; } = "";
+        // שם המשתמש.
         public string Username { get; set; } = "";
+        // השם המלא.
         public string FullName { get; set; } = "";
+        // התפקיד שניתן לעריכה ישירה מהטבלה.
         public UserRole Role { get; set; } = UserRole.User;
     }
 }

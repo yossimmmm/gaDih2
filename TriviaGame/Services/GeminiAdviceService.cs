@@ -12,6 +12,8 @@ using System.Threading.Tasks;
 
 namespace TriviaGame.Services
 {
+    // שירות שעוטף את ה-API של Gemini ומכין לו prompt לפי הצורך.
+    // ?????? ??? ???? ??? ????? ?????/?????? ???? Gemini ??? prompt ?????.
     public sealed class GeminiAdviceService
     {
         // כתובת ברירת מחדל ל-API של Gemini
@@ -36,12 +38,15 @@ namespace TriviaGame.Services
             this.logger = logger;
         }
 
+        // יוצר hint קצר לשאלה הנוכחית בלי לחשוף את התשובה המלאה.
         public async Task<GeminiAdviceResult> GetAdviceAsync(Question question, CancellationToken cancellationToken = default)
         {
             // ולידציה בסיסית לקלט
+            // ??? ???? ????? ?? ??? ??????? ??? ????? ?? ?? ?????.
             if (question is null || question.Options.Count == 0)
                 return GeminiAdviceResult.Fail("No active question to advise on.");
 
+            // ?? ??? ???? API, ?????? ???? ??????? ???? ??? ??????.
             var apiKey = GetGeminiApiKey();
             if (string.IsNullOrWhiteSpace(apiKey))
                 return GeminiAdviceResult.Fail("Gemini API key is missing. Set Gemini:ApiKey or GEMINI_API_KEY.");
@@ -50,6 +55,7 @@ namespace TriviaGame.Services
             var model = GetGeminiModel();
 
             // בניית טקסט אופציות לפורמט קריא למודל
+            // ???????? ?????? ????? ????? ??? ?????? ???? ?????? ??????.
             var optionsText = string.Join(
                 Environment.NewLine,
                 question.Options.Select((o, index) => $"{(char)('A' + index)}. {o.OptionText}"));
@@ -67,6 +73,7 @@ Options:
 {optionsText}
 """;
 
+            // ?-payload ??? ?-JSON ?-Gemini ???? ????.
             var payload = new
             {
                 contents = new[]
@@ -88,6 +95,8 @@ Options:
 
             try
             {
+                // ???? ?? ????? ?????? ????? ?? ?-request ?????.
+                // ?????? ???? ?????? ??? helper ??? ??? ???? ????? ??????? ?-parsing.
                 var url = BuildGenerateContentUrl(endpoint, model, apiKey);
                 var text = await GenerateTextAsync(url, payload, "advice", cancellationToken);
                 return string.IsNullOrWhiteSpace(text)
@@ -105,6 +114,7 @@ Options:
             }
         }
 
+        // מייצר תשובה אישית למשתמש לפי היסטוריה וסטטיסטיקות.
         public async Task<GeminiAssistantReply> GetPersonalAssistantReplyAsync(
             int userId,
             string userMessage,
@@ -112,6 +122,7 @@ Options:
             CancellationToken cancellationToken = default)
         {
             // ולידציה בסיסית לקלט
+            // assistant ???? ???? ?? ?????? ?????.
             if (userId <= 0)
                 return GeminiAssistantReply.Fail("You must be logged in.");
             if (string.IsNullOrWhiteSpace(userMessage))
@@ -125,6 +136,7 @@ Options:
             var model = GetGeminiModel();
 
             // שליפת נתוני משתמש וסטטיסטיקות
+            // ?????? ????? ????? ??????????? ??? ?????? ???? ????? ?-prompt.
             var userDb = new UserDB();
             var gameDb = new GameDB();
 
@@ -135,11 +147,13 @@ Options:
             var stats = await gameDb.GetUserStatsAsync(userId);
             var recentGames = await gameDb.GetRecentUserResultsAsync(userId, 10);
 
+            // ?? ??????? ???????? ?????? ?????, ??? ?????? ???? ????? ??????.
             var recentGamesText = recentGames.Count == 0
                 ? "No recent games."
                 : string.Join(Environment.NewLine, recentGames.Select((g, idx) =>
                     $"{idx + 1}. {g.CreatedAt:yyyy-MM-dd HH:mm} | {g.RoomName} | Correct {g.CorrectCount}/{g.AnsweredCount} | Winner: {(g.IsWinner ? "Yes" : "No")}"));
 
+            // ?? ????? ?????? ?????? ????? ??? ????? ?? continuity.
             var historyText = (chatHistory is null || chatHistory.Count == 0)
                 ? "No previous chat history."
                 : string.Join(Environment.NewLine, chatHistory.TakeLast(12).Select(h =>
@@ -151,6 +165,7 @@ Options:
             var winningPercent = winningCoefficient * 100.0;
 
             // תשובת fallback דטרמיניסטית לשאלות win rate/coefficient
+            // ??? ??????? ???? ????? ????? ?????? ??? ????? ???? ?-Gemini.
             var normalizedMessage = userMessage.Trim().ToLowerInvariant();
             var asksWinningCoefficient =
                 normalizedMessage.Contains("cooficent") ||
@@ -170,6 +185,7 @@ Options:
                     $"Your winning coefficient is {winningCoefficient:F2} ({winningPercent:F1}%), based on {stats.Wins} wins out of {stats.GamesPlayed} games.");
             }
 
+            // ?-prompt ????? ?????? ??????: ????? ?? ??? ??????? ????????.
             var prompt = $"""
 You are a personal trivia assistant for a single authenticated player.
 Only answer based on the user data below.
@@ -240,8 +256,10 @@ Current user message:
         }
 
         // שליפת מפתח Gemini מהגדרות או משתנה סביבה
+        // שולף את מפתח ה-API מקונפיגורציה או ממשתני סביבה.
         private string? GetGeminiApiKey()
         {
+            // ???? ?????? ????????????, ??? ??? - ?????? ?-env var.
             var apiKey = configuration["Gemini:ApiKey"];
             if (string.IsNullOrWhiteSpace(apiKey))
                 apiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY");
@@ -249,29 +267,37 @@ Current user message:
         }
 
         // שליפת endpoint עם ברירת מחדל
+        // שולף את כתובת ה-endpoint של Gemini או ברירת מחדל.
         private string GetGeminiEndpoint()
         {
+            // endpoint ????? ???? ???? ??? ??? ?? ????? ?? ???? ?? ??? ?????.
             var endpoint = configuration["Gemini:Endpoint"];
             return string.IsNullOrWhiteSpace(endpoint) ? DefaultEndpoint : endpoint;
         }
 
         // שליפת model עם ברירת מחדל
+        // שולף את שם המודל או ערך ברירת מחדל.
         private string GetGeminiModel()
         {
+            // ????? ???? ?????? ??? ????? ???.
             var model = configuration["Gemini:Model"];
             return string.IsNullOrWhiteSpace(model) ? DefaultModel : model;
         }
 
         // בניית URL של קריאת generateContent
+        // בונה את כתובת הקריאה ל-generateContent.
         private static string BuildGenerateContentUrl(string endpoint, string model, string apiKey) =>
             $"{endpoint.TrimEnd('/')}/models/{Uri.EscapeDataString(model)}:generateContent?key={Uri.EscapeDataString(apiKey)}";
 
         // קריאה אחידה ל-Gemini והחזרת טקסט
+        // שולח את ה-HTTP request ל-Gemini ומחזיר את הטקסט שחולץ מהתגובה.
         private async Task<string?> GenerateTextAsync(string url, object payload, string scope, CancellationToken cancellationToken)
         {
+            // HttpClient ???? ??-factory ??? ?? ????? sockets ??? ????? ???? ??? ??? ?????.
             using var client = httpClientFactory.CreateClient();
             using var response = await client.PostAsJsonAsync(url, payload, cancellationToken);
 
+            // ?? Gemini ????? ????? ?? ????, ?????? ?? ???? ??????? ????.
             if (!response.IsSuccessStatusCode)
             {
                 var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -279,14 +305,17 @@ Current user message:
                 throw new GeminiHttpException();
             }
 
+            // ?-JSON ???? ?? Gemini ???? parsing ??? ????? ????? ??????.
             await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
             using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
             return TryExtractCandidateText(doc);
         }
 
         // חילוץ טקסט בטוח מתשובת Gemini
+        // מחלץ טקסט מתוך מבנה ה-JSON של Gemini בצורה בטוחה.
         private static string? TryExtractCandidateText(JsonDocument doc)
         {
+            // ?? ??? candidates, ??? ????? ??????.
             if (!doc.RootElement.TryGetProperty("candidates", out var candidates) ||
                 candidates.ValueKind != JsonValueKind.Array ||
                 candidates.GetArrayLength() == 0)
@@ -294,6 +323,7 @@ Current user message:
                 return null;
             }
 
+            // ?????? ?? candidate ?????? ?? ???? ??? ??? ?????? ???????.
             var first = candidates[0];
             if (!first.TryGetProperty("content", out var content) ||
                 !content.TryGetProperty("parts", out var parts) ||
@@ -303,6 +333,7 @@ Current user message:
                 return null;
             }
 
+            // ??????? ?? ???? text ?? ????.
             return parts[0].TryGetProperty("text", out var textNode)
                 ? textNode.GetString()
                 : null;
