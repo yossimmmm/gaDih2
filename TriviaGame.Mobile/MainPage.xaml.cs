@@ -632,12 +632,13 @@ public partial class MainPage : ContentPage
             var result = await api.AskAssistantAsync(currentUser.UserId, prompt);
             if (!result.Success || result.Data is null)
             {
-                AssistantResponseLabel.Text = "Assistant: request failed.";
+                AssistantResponseLabel.Text = $"Assistant: {result.Message}";
                 StatusLabel.Text = $"Status: assistant failed - {result.Message}";
                 return;
             }
 
-            AssistantResponseLabel.Text = $"Assistant: {(!string.IsNullOrWhiteSpace(result.Data.Text) ? result.Data.Text : result.Data.Message)}";
+            AssistantResponseLabel.Text =
+                $"Assistant: {(!string.IsNullOrWhiteSpace(result.Data.Text) ? result.Data.Text : result.Data.Message)}";
             StatusLabel.Text = "Status: assistant reply received.";
         });
     }
