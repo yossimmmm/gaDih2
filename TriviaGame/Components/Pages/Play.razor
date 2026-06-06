@@ -11,7 +11,7 @@
 @rendermode InteractiveServer
 @inject GeminiAdviceService GeminiAdvice
 
-@* KEYWORDS: play, question, answer, solo game, room, scoreboard, results, next question *@
+@* #play #question #answer #solo-game #room #scoreboard #results #next-question *@
 @* דף המשחק עצמו: כאן רואים שאלה נוכחית, בוחרים תשובה, ומתקדמים לשאלה הבאה או לתוצאות. *@
 
 <style>
@@ -429,6 +429,7 @@ else
     private bool _disposing = false;
 
     // נקודת כניסה אחרי אימות משתמש
+    // #play: entry point for loading a room and starting the live game flow.
     protected override async Task OnAuthedAsync()
     {
         // אם כבר אתחלנו, לא מאתחלים שוב
@@ -526,6 +527,7 @@ else
     }
 
     // טעינת השאלה הנוכחית למסך
+    // #question: loads the current question and prepares answer state.
     private async Task LoadCurrentQuestionAsync()
     {
         // איפוס סטטוס ותצוגות עזר לפני טעינה חדשה
@@ -648,6 +650,7 @@ else
     }
 
     // בחירת אופציה על ידי המשתמש
+    // #question #answer: handles the player's click on an option and stores the answer.
     private async Task PickOptionAsync(int optionId)
     {
         // מניעת שליחה במצבים לא תקינים
@@ -698,6 +701,7 @@ else
     }
 
     // בקשת עצת Gemini לשאלה הנוכחית
+    // #question: asks Gemini for advice on the current question.
     private async Task AskGeminiAdviceAsync()
     {
         // מונעים קריאה אם אין שאלה/בתהליך/כבר ענה/נגמר זמן
@@ -738,6 +742,7 @@ else
     }
 
     // חזרה ללובי (עם אישור יציאה אם צריך)
+    // #groups #lobby: returns the player to the lobby screen.
     private async Task GoToLobbyAsync()
     {
         if (!await ConfirmExitIfInProgressAsync())
@@ -747,6 +752,7 @@ else
     }
 
     // יציאה למסך מתאים בהתאם לסוג המשחק
+    // #results #menu: leaves the active game flow and returns to the main menu.
     private async Task ExitToMenuAsync()
     {
         if (!await ConfirmExitIfInProgressAsync())

@@ -4,7 +4,7 @@
 @using DBL
 @rendermode InteractiveServer
 
-@* KEYWORDS: statistics, stats, my stats, games played, wins, correct answers *@
+@* #statistics #stats #my-stats #games-played #wins #correct-answers *@
 @* מסך הסטטיסטיקות האישיות: כאן רואים נתונים מצטברים על המשתמש לאורך זמן. *@
 
 <style>
@@ -68,6 +68,7 @@ else
     private bool Loaded = false; // מניעת טעינה כפולה
 
     // נטען אחרי אימות משתמש ומביא את הסטטיסטיקות פעם אחת.
+    // #statistics: loads the current user's cumulative stats from the database.
     protected override async Task OnAuthedAsync()
     {
         if (Loaded)

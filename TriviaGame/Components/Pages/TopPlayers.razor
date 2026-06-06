@@ -4,7 +4,7 @@
 @using DBL
 @rendermode InteractiveServer
 
-@* KEYWORDS: top players, leaderboard, ranking, statistics, wins, correct answers *@
+@* #top-players #leaderboard #ranking #statistics #wins #correct-answers *@
 @* מסך טבלת המובילים: כאן רואים את הדירוג הכללי של כל השחקנים באתר. *@
 
 <style>
@@ -61,6 +61,7 @@ else
     private bool Loaded = false; // מניעת טעינה כפולה
 
     // טעינת טבלת מובילים לאחר אימות משתמש.
+    // #leaderboard: loads the global top-player table.
     protected override async Task OnAuthedAsync()
     {
         if (Loaded)

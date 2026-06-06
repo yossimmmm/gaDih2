@@ -4,7 +4,7 @@
 @using DBL
 @rendermode InteractiveServer
 
-@* KEYWORDS: menu, play, create room, rooms, results, statistics, top players *@
+@* #menu #play #create-room #rooms #results #statistics #top-players *@
 @* מסך התפריט המרכזי: ממנו נכנסים לזרימת המשחק, לחדרים, לסטטיסטיקות ולדירוג. *@
 
 <style>
@@ -111,6 +111,7 @@ else
     private int? SelectedTopicId;
     private bool IsAdmin => Session.CurrentRole == UserRole.Admin;
 
+    // #solo-game #play: creates a private room, picks questions, and starts the solo flow.
     private async Task StartSinglePlayer()
     {
         if (Session.CurrentUserId is null || IsStarting)
@@ -137,6 +138,7 @@ else
         }
     }
 
+    // #logout #cookie: signs the user out and clears the session.
     private async Task Logout()
     {
         Session.CurrentUserId = null;
@@ -145,6 +147,7 @@ else
         Nav.NavigateTo("/login", true);
     }
 
+    // #menu: loads question topics and prepares the main navigation screen.
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();

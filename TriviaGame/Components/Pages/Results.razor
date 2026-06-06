@@ -5,7 +5,7 @@
 @using System.Linq
 @rendermode InteractiveServer
 
-@* KEYWORDS: results, scoreboard, winner, ranking, play, game over, statistics *@
+@* #results #scoreboard #winner #ranking #play #game-over #statistics *@
 @* מסך התוצאות: כאן רואים את הניקוד הסופי, המנצח, והדירוג של כל השחקנים בחדר. *@
 
 <style>
@@ -81,6 +81,7 @@ else
     private bool Loaded = false; // מניעת טעינה כפולה
 
     // טעינת נתוני תוצאות אחרי אימות משתמש.
+    // #results: loads the scoreboard and decides which players won.
     protected override async Task OnAuthedAsync()
     {
         if (Loaded)
@@ -102,6 +103,7 @@ else
     }
 
     // קובע איזה טקסט מנצח יוצג לפי הנתונים.
+    // #results #winner: turns the raw scoreboard into the visible winner message.
     private void UpdateWinnerText()
     {
         if (Rows.Count == 0)

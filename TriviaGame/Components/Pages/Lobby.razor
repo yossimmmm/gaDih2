@@ -7,7 +7,7 @@
 @using Microsoft.JSInterop
 @rendermode InteractiveServer
 
-@* KEYWORDS: lobby, groups, room waiting, start game, ready, players, play *@
+@* #lobby #groups #room-waiting #start-game #players #play *@
 @* מסך הלובי: כאן מחכים לשחקנים, רואים מי בפנים, ומתחילים את המשחק כשמוכן. *@
 
 <style>
@@ -315,6 +315,7 @@ else
     private bool _disposing = false;
 
     // אתחול ראשי לאחר אימות משתמש.
+    // #lobby: loads room data, players, and connects the live SignalR updates.
     protected override async Task OnAuthedAsync()
     {
         // הגנה: אל תריץ אתחול פעמיים.
@@ -395,12 +396,14 @@ else
     }
 
     // טוען רשימת שחקנים עדכנית מהמסד.
+    // #groups: refreshes the current player list in the lobby.
     private async Task LoadPlayersAsync()
     {
         Players = await roomDB.GetPlayersAsync(RoomId);
     }
 
     // מופעל בלחיצה על Start Game (למארח בלבד).
+    // #start-game #question: host-only action that picks questions and starts the game.
     private async Task StartGameAsync()
     {
         // מאפסים סטטוס קודם.

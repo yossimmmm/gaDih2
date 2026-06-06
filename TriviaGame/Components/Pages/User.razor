@@ -4,7 +4,7 @@
 @using DBL
 @rendermode InteractiveServer
 
-@* KEYWORDS: user, profile, stats, password, account, logout *@
+@* #user #profile #stats #password #account #logout *@
 @* מסך המשתמש: כאן רואים פרטי חשבון, מידע אישי, ולעיתים נתוני פרופיל וסטטוס. *@
 
 <style>
@@ -300,6 +300,7 @@ else
     private bool Loaded = false;
 
     // נטען פעם אחת אחרי אימות משתמש ומביא את נתוני החשבון למסך.
+    // #profile #password: loads the current user's profile and password state.
     protected override async Task OnAuthedAsync()
     {
         // אם כבר טענו בעבר - יוצאים ולא טוענים שוב.
@@ -346,6 +347,7 @@ else
     }
 
     // שומר את נתוני הפרופיל אחרי בדיקות תקינות וכפילויות.
+    // #profile: saves display-name and account changes.
     private async Task SaveProfileAsync()
     {
         // איפוס שגיאות ישנות בתחילת פעולה.
@@ -447,6 +449,7 @@ else
     }
 
     // מבצע החלפת סיסמה אחרי בדיקות ולידציה ואימות סיסמה נוכחית.
+    // #password: updates the current user's password.
     private async Task ChangePasswordAsync()
     {
         // איפוס שגיאות ישנות בתחילת פעולה.

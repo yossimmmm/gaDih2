@@ -88,7 +88,7 @@ app.Use(async (context, next) =>
     if (protectedPrefixes.Any(p => path.StartsWith(p, StringComparison.OrdinalIgnoreCase)))
     {
         // ×× ××™×Ÿ ×˜×•×§×Ÿ ×¡×©×Ÿ - ×ž×¢×‘×™×¨×™× ×œ×œ×•×’×™×Ÿ
-        // KEYWORDS: cookie, session_token, login, auth
+        // #cookie #session_token #login #auth
         if (!context.Request.Cookies.TryGetValue("session_token", out var token) || string.IsNullOrWhiteSpace(token))
         {
             context.Response.Redirect("/login");
@@ -130,7 +130,7 @@ app.MapPost("/api/auth/login", async (HttpContext http, LoginRequest req, AuthAu
     var sessionDb = new SessionDB();
     var token = await sessionDb.CreateSessionAsync(user.UserID, TimeSpan.FromDays(7));
 
-    // KEYWORDS: cookie, session_token, login
+    // #cookie #session_token #login
     http.Response.Cookies.Append("session_token", token, new CookieOptions
     {
         HttpOnly = true,
@@ -144,7 +144,7 @@ app.MapPost("/api/auth/login", async (HttpContext http, LoginRequest req, AuthAu
 });
 
 // endpoint ×”×ª× ×ª×§×•×ª: ×ž×—×™×§×ª ×¡×©×Ÿ ×ž×”×©×¨×ª ×•×ž×”×¢×•×’×™×•×ª
-// KEYWORDS: logout, cookie, session_token, sign out
+// #logout #cookie #session_token #sign-out
 app.MapPost("/api/auth/logout", async (HttpContext http) =>
 {
     if (http.Request.Cookies.TryGetValue("session_token", out var token) && !string.IsNullOrWhiteSpace(token))
@@ -158,7 +158,7 @@ app.MapPost("/api/auth/logout", async (HttpContext http) =>
 });
 
 // endpoint ×–×™×”×•×™ ×ž×©×ª×ž×© ×ž×—×•×‘×¨ ×œ×¤×™ session cookie
-// KEYWORDS: cookie, session_token, auth me, current user
+// #cookie #session_token #auth-me #current-user
 app.MapGet("/api/auth/me", async (HttpContext http) =>
 {
     if (!http.Request.Cookies.TryGetValue("session_token", out var token) || string.IsNullOrWhiteSpace(token))
@@ -175,7 +175,7 @@ app.MapGet("/api/auth/me", async (HttpContext http) =>
 });
 
 // endpoint ×©×›×—×ª×™ ×¡×™×¡×ž×”: ×™×¦×™×¨×ª ×˜×•×§×Ÿ ××™×¤×•×¡ ×•×©×œ×™×—×ª ×ž×™×™×œ
-// KEYWORDS: forgot password, email, reset token, reset link
+// #forgot-password #email #reset-token #reset-link
 app.MapPost("/api/auth/forgot-password", async (HttpContext http, ForgotPasswordRequest req, EmailService emailService, AuthAuditDispatcher audit) =>
 {
     // ×•×œ×™×“×¦×™×” ×‘×¡×™×¡×™×ª ×œ×§×œ×˜
@@ -231,7 +231,7 @@ app.MapPost("/api/auth/forgot-password", async (HttpContext http, ForgotPassword
 });
 
 // endpoint ××™×¤×•×¡ ×¡×™×¡×ž×” ×‘×¤×•×¢×œ ×œ×¤×™ ×˜×•×§×Ÿ
-// KEYWORDS: reset password, token, email
+// #reset-password #token #email
 app.MapPost("/api/auth/reset-password", async (ResetPasswordRequest req, AuthAuditDispatcher audit) =>
 {
     // ×‘×“×™×§×•×ª ×‘×¡×™×¡ ×œ×§×œ×˜

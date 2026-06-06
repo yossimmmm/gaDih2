@@ -4,7 +4,7 @@ using MimeKit;
 
 namespace TriviaGame.Services;
 
-// KEYWORDS: email, send reset email, smtp, forgot password
+// #email #send-reset-email #smtp #forgot-password
 // שירות ששולח מיילים דרך SMTP, בעיקר לאיפוס סיסמה.
 public sealed class EmailService
 {

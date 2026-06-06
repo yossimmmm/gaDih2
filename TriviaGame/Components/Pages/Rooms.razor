@@ -5,7 +5,7 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @rendermode InteractiveServer
 
-@* KEYWORDS: rooms, public rooms, join room, groups, room code, play *@
+@* #rooms #public-rooms #join-room #groups #room-code #play *@
 @* הדף הזה מציג חדרים ציבוריים ומאפשר הצטרפות לפי קוד או לפי רשימה. *@
 
 <style>
@@ -130,6 +130,7 @@ else
 
     // אתחול עמוד: טעינת חדרים ציבוריים + האזנה לעדכונים בזמן אמת.
     // טוענים רשימה ראשונית ואז מחברים את ה-hub.
+    // #rooms #groups: loads the public room list and connects live updates.
     protected override async Task OnInitializedAsync()
     {
         await LoadPublicRoomsAsync();
@@ -159,6 +160,7 @@ else
 
     // לחיצה על Join Room: מצטרפים לפי הקוד שהוזן ידנית.
     // מנסה להצטרף לחדר לפי קוד ידני שהמשתמש הקליד.
+    // #join-room #room-code #groups: joins the room entered by code.
     private async Task JoinAsync()
     {
         Status = "";
@@ -190,6 +192,7 @@ else
 
     // לחיצה על Join בחדר ציבורי: ממלא קוד ואז משתמש באותה לוגיקת JoinAsync.
     // קיצור דרך להצטרפות לחדר שנבחר מהרשימה הציבורית.
+    // #public-rooms #join-room: joins one of the visible public rooms.
     private async Task JoinPublicAsync(string roomCode)
     {
         RoomCode = roomCode;
@@ -198,6 +201,7 @@ else
 
     // טעינת רשימת חדרים ציבוריים מהמסד.
     // מושכת מחדש את רשימת החדרים הציבוריים מהמסד.
+    // #public-rooms: refreshes the list of rooms shown on screen.
     private async Task LoadPublicRoomsAsync()
     {
         PublicRooms = await roomDB.GetPublicRoomsAsync();

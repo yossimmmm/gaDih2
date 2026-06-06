@@ -5,7 +5,7 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @rendermode InteractiveServer
 
-@* KEYWORDS: create room, solo game, groups, room code, public room, private room, play *@
+@* #create-room #solo-game #groups #room-code #public-room #private-room #play *@
 @* מסך יצירת החדר: כאן בוחרים איך לפתוח משחק, לבד או כקבוצה, ומייצרים קוד חדר. *@
 
 <style>
@@ -278,6 +278,7 @@ else
     private HubConnection? hub;
 
     // אתחול עמוד: טוען נושאים ופותח חיבור Hub לעדכונים חיים.
+    // #create-room: loads topics and opens the SignalR connection used by the room creator.
     protected override async Task OnInitializedAsync()
     {
         // קריאת כל הנושאים מהמסד כדי לאפשר בחירה ב-select.
@@ -292,6 +293,7 @@ else
     }
 
     // פעולה ראשית של כפתור Create.
+    // #create-room #solo-game #groups: creates the room, saves it, and moves the host into lobby/play flow.
     private async Task CreateRoomAsync()
     {
         // מאפסים שגיאה קודמת כדי להתחיל ניסיון חדש נקי.
@@ -355,6 +357,7 @@ else
     }
 
     // ניסיון שחזור אימות משתמש דרך פונקציית JS auth.me (מחזירה userId מה-cookie/session).
+    // #cookie #login #create-room: re-checks auth from the browser if the session cache is empty.
     private async Task EnsureAuthAsync()
     {
         // אם כבר יש משתמש בסשן, לא צריך פעולה נוספת.
