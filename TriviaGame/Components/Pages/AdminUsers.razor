@@ -55,7 +55,8 @@
                                 </td>
                                 <td>
                                     <div class="actions">
-                                        <button class="save-btn" @onclick="() => SaveUserAsync(row)" disabled="@Busy">Save</button>
+                                        <button class="save-btn" @onclick="() => SaveUserAsync(row)" disabled="@Busy">Save profile</button>
+                                        <button class="role-btn" @onclick="() => SaveRoleAsync(row)" disabled="@Busy">Save role</button>
                                         <button class="delete-btn" @onclick="() => DeleteUserAsync(row)" disabled="@Busy || row.UserID == Session.CurrentUserId">Delete</button>
                                     </div>
                                 </td>
@@ -159,6 +160,34 @@
         }
     }
 
+    // שינוי role הוא פעולה עצמאית: אימייל ישן ולא תקין לא אמור לחסום שינוי הרשאה.
+    private async Task SaveRoleAsync(AdminUserRow row)
+    {
+        if (!IsAllowed)
+            return;
+
+        Busy = true;
+        Status = "";
+        IsError = false;
+        try
+        {
+            var ok = await userDb.UpdateUserRoleAsync(row.UserID, row.Role);
+            IsError = !ok;
+            Status = ok
+                ? $"Role for user {row.UserID} changed to {row.Role}."
+                : $"Failed to change role for user {row.UserID}.";
+        }
+        catch (Exception ex)
+        {
+            IsError = true;
+            Status = $"Role update failed for user {row.UserID}: {ex.Message}";
+        }
+        finally
+        {
+            Busy = false;
+        }
+    }
+
     // מוחק משתמש מהמערכת, אבל לא מאפשר למחוק את עצמך.
     private async Task DeleteUserAsync(AdminUserRow row)
     {
@@ -189,10 +218,10 @@
             Users.Remove(row);
             Status = $"User {row.UserID} deleted.";
         }
-        catch
+        catch (Exception ex)
         {
             IsError = true;
-            Status = $"Delete failed for user {row.UserID}.";
+            Status = $"Delete failed for user {row.UserID}: {ex.Message}";
         }
         finally
         {
@@ -249,7 +278,7 @@
         line-height: 1.1;
     }
 
-    .reload-btn, .save-btn, .delete-btn {
+    .reload-btn, .save-btn, .role-btn, .delete-btn {
         border-radius: 10px;
         border: 2px solid #2b2f3a;
         background: #ffffff;
@@ -261,7 +290,7 @@
         transition: 140ms ease;
     }
 
-    .reload-btn:hover, .save-btn:hover {
+    .reload-btn:hover, .save-btn:hover, .role-btn:hover {
         background: #f0e8f8;
     }
 
@@ -274,7 +303,7 @@
         background: #ffe5ef;
     }
 
-    .reload-btn:disabled, .save-btn:disabled, .delete-btn:disabled {
+    .reload-btn:disabled, .save-btn:disabled, .role-btn:disabled, .delete-btn:disabled {
         opacity: .45;
         cursor: not-allowed;
     }

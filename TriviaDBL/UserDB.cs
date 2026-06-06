@@ -135,44 +135,74 @@ namespace DBL
 
         public async Task<bool> DeleteUserAsync(int userId)
         {
-            // מחיקת משתמש חייבת לנקות גם טוקני איפוס וסשנים, לכן עוטפים הכול בטרנזקציה.
+            // מחיקה מלאה מנקה גם נתוני משחק שתלויים במשתמש.
             if (userId <= 0) return false;
 
             await using var conn = new MySqlConnection(ConnStr);
             await conn.OpenAsync();
             await using var tx = await conn.BeginTransactionAsync();
 
-            // מוחקים קודם טוקני איפוס סיסמה כדי שלא יישאר טוקן ישן אחרי המחיקה.
-            const string deleteResetsSql = @"DELETE FROM password_reset_tokens WHERE user_id = @user_id;";
-            await using (var deleteResets = new MySqlCommand(deleteResetsSql, conn, (MySqlTransaction)tx))
-            {
-                deleteResets.Parameters.AddWithValue("@user_id", userId);
-                await deleteResets.ExecuteNonQueryAsync();
-            }
+            // תשובות נמחקות ראשונות כי הן תלויות בשחקנים, חדרים ושאלות.
+            await ExecuteDeleteAsync(conn, tx, @"
+                DELETE pa
+                FROM player_answers pa
+                LEFT JOIN room_players rp ON rp.room_player_id = pa.room_player_id
+                LEFT JOIN rooms r ON r.room_id = pa.room_id
+                LEFT JOIN questions q ON q.question_id = pa.question_id
+                WHERE rp.user_id = @user_id
+                   OR r.host_id = @user_id
+                   OR q.created_by = @user_id;", userId);
 
-            // אחר כך מוחקים סשנים פעילים כדי שהחשבון המחוק לא ימשיך להשתמש במצב התחברות ישן.
-            const string deleteSessionsSql = @"DELETE FROM user_sessions WHERE user_id = @user_id;";
-            await using (var deleteSessions = new MySqlCommand(deleteSessionsSql, conn, (MySqlTransaction)tx))
-            {
-                deleteSessions.Parameters.AddWithValue("@user_id", userId);
-                await deleteSessions.ExecuteNonQueryAsync();
-            }
+            // מנקים את כל הרשומות שתלויות בחדרים שאותם המשתמש אירח.
+            await ExecuteDeleteAsync(conn, tx, @"
+                DELETE FROM game_results
+                WHERE user_id = @user_id
+                   OR room_id IN (SELECT room_id FROM rooms WHERE host_id = @user_id);", userId);
+            await ExecuteDeleteAsync(conn, tx, @"
+                DELETE FROM room_questions
+                WHERE room_id IN (SELECT room_id FROM rooms WHERE host_id = @user_id)
+                   OR question_id IN (SELECT question_id FROM questions WHERE created_by = @user_id);", userId);
+            await ExecuteDeleteAsync(conn, tx, @"
+                DELETE FROM room_players
+                WHERE user_id = @user_id
+                   OR room_id IN (SELECT room_id FROM rooms WHERE host_id = @user_id);", userId);
+            await ExecuteDeleteAsync(conn, tx,
+                "DELETE FROM rooms WHERE host_id = @user_id;", userId);
 
-            // בסוף מוחקים את שורת המשתמש עצמה.
-            const string deleteUserSql = @"DELETE FROM users WHERE user_id = @user_id;";
-            await using var deleteUser = new MySqlCommand(deleteUserSql, conn, (MySqlTransaction)tx);
-            deleteUser.Parameters.AddWithValue("@user_id", userId);
+            // אפשרויות חייבות להימחק לפני שאלות שהמשתמש יצר.
+            await ExecuteDeleteAsync(conn, tx, @"
+                DELETE FROM question_options
+                WHERE question_id IN (SELECT question_id FROM questions WHERE created_by = @user_id);", userId);
+            await ExecuteDeleteAsync(conn, tx,
+                "DELETE FROM questions WHERE created_by = @user_id;", userId);
 
-            var rows = await deleteUser.ExecuteNonQueryAsync();
+            await ExecuteDeleteAsync(conn, tx,
+                "DELETE FROM password_reset_tokens WHERE user_id = @user_id;", userId);
+            await ExecuteDeleteAsync(conn, tx,
+                "DELETE FROM user_sessions WHERE user_id = @user_id;", userId);
+
+            var rows = await ExecuteDeleteAsync(conn, tx,
+                "DELETE FROM users WHERE user_id = @user_id;", userId);
             if (rows != 1)
             {
-                // אם המחיקה המרכזית נכשלת, מחזירים rollback לכל פעולות הניקוי.
                 await tx.RollbackAsync();
                 return false;
             }
 
             await tx.CommitAsync();
             return true;
+        }
+
+        // כל פקודות המחיקה משתמשות באותה טרנזקציה, כך שכישלון מחזיר את כולן לאחור.
+        private static async Task<int> ExecuteDeleteAsync(
+            MySqlConnection conn,
+            DbTransaction tx,
+            string sql,
+            int userId)
+        {
+            await using var command = new MySqlCommand(sql, conn, (MySqlTransaction)tx);
+            command.Parameters.AddWithValue("@user_id", userId);
+            return await command.ExecuteNonQueryAsync();
         }
 
         public async Task<bool> UpdatePasswordAsync(int userId, string passwordHash)
