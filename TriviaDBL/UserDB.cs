@@ -41,6 +41,7 @@ namespace DBL
         public async Task<List<User>> GetAllUsersAsync()
         {
             // זו שאילתה בסגנון אדמין: היא מחזירה את כל המשתמשים בטבלה.
+            // #userdb #admin-list #sensitive-data
             var users = new List<User>();
             await using var conn = new MySqlConnection(ConnStr);
             await conn.OpenAsync();
@@ -63,6 +64,7 @@ namespace DBL
         public async Task<bool> UpdateProfileAsync(int userId, string username, string fullName, string email)
         {
             // אפשר לעדכן רק אם userId תקין.
+            // #userdb #delete #transaction #sessions
             if (userId <= 0) return false;
 
             await using var conn = new MySqlConnection(ConnStr);
@@ -192,6 +194,7 @@ namespace DBL
         public async Task<User?> InsertUserAsync(User u)
         {
             // ההכנסה למסד דורשת את השדות החשובים.
+            // #userdb #insert #password-hash
             if (u == null) throw new ArgumentNullException(nameof(u));
             if (string.IsNullOrWhiteSpace(u.Email)) throw new ArgumentException("Email is required", nameof(u));
             if (string.IsNullOrWhiteSpace(u.PasswordHash)) throw new ArgumentException("Password hash is required", nameof(u));
@@ -218,6 +221,7 @@ namespace DBL
         public async Task<string> CreatePasswordResetTokenAsync(int userId, TimeSpan ttl)
         {
             // קישור האיפוס מכיל טוקן גולמי, אבל במסד נשמר רק ה־hash שלו.
+            // #userdb #reset-token #email
             if (userId <= 0) throw new ArgumentException("Invalid user id.", nameof(userId));
 
             var rawToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
@@ -257,6 +261,7 @@ namespace DBL
         public async Task<bool> ResetPasswordByTokenAsync(string token, string newPasswordHash)
         {
             // הטוקן חייב להתקיים, עדיין לא להיות בשימוש, ועדיין להיות בתוך חלון התפוגה שלו.
+            // #userdb #forgot-password #security
             if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(newPasswordHash)) return false;
 
             var tokenHash = Sha256Hex(token.Trim());

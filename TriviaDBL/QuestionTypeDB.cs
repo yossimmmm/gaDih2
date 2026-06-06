@@ -17,6 +17,8 @@ namespace DBL
         // מחזירה את כל סוגי השאלות, ממוינים לפי שם.
         public async Task<List<QuestionType>> GetAllAsync()
         {
+            // #questiontype #create-room #topics
+            // שאילתה לקריאה בלבד: אין כאן כתיבה למסד.
             var result = new List<QuestionType>();
 
             try

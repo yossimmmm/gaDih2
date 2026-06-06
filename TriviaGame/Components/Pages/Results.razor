@@ -84,21 +84,29 @@ else
     // #results: loads the scoreboard and decides which players won.
     protected override async Task OnAuthedAsync()
     {
+        // מונעים טעינה כפולה אם Blazor קורא ל-hook הזה שוב.
         if (Loaded)
             return;
         Loaded = true;
 
+        // #results: מאתרים את החדר לפי קוד החדר מה-URL.
         var room = await roomDB.GetRoomByCodeAsync(RoomCode.Trim().ToUpperInvariant());
         if (room is null)
         {
+            // אם החדר לא נמצא, אין למה להישאר במסך הזה.
             Nav.NavigateTo("/menu", true);
             return;
         }
 
+        // שומרים את מזהה החדר הפנימי כדי לקרוא ל-DB עם מזהה מספרי.
         RoomId = room.RoomID;
+        // #scoreboard: טוענים את כל שורות הניקוד של השחקנים בחדר.
         Rows = await gameDB.GetScoreboardAsync(RoomId);
+        // כמות השאלות משמשת כדי להחליט אם יש מנצח אמיתי במשחק יחיד.
         TotalQuestions = await gameDB.GetRoomQuestionCountAsync(RoomId);
+        // #winner: בונים את טקסט המנצח על בסיס הנתונים שנשלפו.
         UpdateWinnerText();
+        // שומרים את התוצאות כדי שאפשר יהיה להציג אותן שוב בהמשך.
         await gameDB.SaveRoomResultsAsync(RoomId);
     }
 
@@ -106,12 +114,14 @@ else
     // #results #winner: turns the raw scoreboard into the visible winner message.
     private void UpdateWinnerText()
     {
+        // אם אין שורות בכלל, אין תוצאות להציג.
         if (Rows.Count == 0)
         {
             WinnerText = "";
             return;
         }
 
+        // במצב של שחקן יחיד בודקים אם הוא פתר את הכול נכון.
         if (Rows.Count == 1)
         {
             var r = Rows[0];
@@ -122,7 +132,9 @@ else
             return;
         }
 
+        // במצב מרובה שחקנים מחפשים את מספר התשובות הנכונות הגבוה ביותר.
         var maxCorrect = Rows.Max(r => r.CorrectCount);
+        // אם כמה שחקנים הגיעו לאותו ניקוד, הם מנצחים משותפים.
         var winners = Rows.Where(r => r.CorrectCount == maxCorrect).Select(r => r.Nickname).ToList();
         WinnerText = winners.Count == 1
             ? $"Winner: {winners[0]}"

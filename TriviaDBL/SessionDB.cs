@@ -17,6 +17,8 @@ namespace DBL
         // זהו המנגנון שמחליף session-cookies: השרת שומר רשומה, והלקוח שומר את הטוקן.
         public async Task<string> CreateSessionAsync(int userId, TimeSpan lifetime)
         {
+            // #sessiondb #cookie #login
+            // ה-DB שומר את ה-session כדי שאפשר יהיה לבטל אותו גם אם השרת רץ מחדש.
             if (userId <= 0)
                 throw new ArgumentException("Invalid user id", nameof(userId));
 
@@ -30,6 +32,7 @@ namespace DBL
 
             // user_sessions שומרת את הקשר בין טוקן למשתמש.
             // last_seen מתעדכן כשמזהים שהסשן עדיין בשימוש.
+            // בלי הטבלה הזו היינו תלויים רק בזיכרון של השרת, וזה לא היה שורד restart.
             const string sql = @"
 INSERT INTO user_sessions (session_token, user_id, expires_at, last_seen)
 VALUES (@token, @user_id, @expires_at, NOW());";
@@ -48,6 +51,7 @@ VALUES (@token, @user_id, @expires_at, NOW());";
         // אם הטוקן לא קיים, ריק, או פג תוקף, מחזירים null.
         public async Task<int?> GetUserIdByTokenAsync(string token)
         {
+            // #sessiondb #auth-me #session_token
             if (string.IsNullOrWhiteSpace(token))
                 return null;
 
@@ -55,6 +59,7 @@ VALUES (@token, @user_id, @expires_at, NOW());";
             await conn.OpenAsync();
 
             // בודקים רק טוקנים קיימים שעדיין לא עברו את זמן התפוגה שלהם.
+            // זהו המסנן המרכזי של כל בדיקת auth בצד השרת.
             const string sql = @"
 SELECT user_id
 FROM user_sessions
@@ -84,6 +89,7 @@ LIMIT 1;";
         // אחרי המחיקה הטוקן כבר לא יכול לשמש לאימות.
         public async Task DeleteSessionAsync(string token)
         {
+            // #sessiondb #logout #cookie
             if (string.IsNullOrWhiteSpace(token))
                 return;
 
@@ -91,6 +97,7 @@ LIMIT 1;";
             await conn.OpenAsync();
 
             // מוחקים את הרשומה של הטוקן מהטבלה.
+            // אחרי המחיקה token ישן לא יוכל לעבור auth me.
             const string sql = "DELETE FROM user_sessions WHERE session_token = @token;";
             await using var cmd = new MySqlCommand(sql, conn);
             cmd.Parameters.AddWithValue("@token", token);

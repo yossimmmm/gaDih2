@@ -21,6 +21,7 @@ namespace DBL
         public async Task<int> PickQuestionsForRoomAsync(int roomId, int count)
         {
             // ולידציה בסיסית לקלט
+            // #gamedb #question-pick #start-game
             if (roomId <= 0 || count <= 0) 
                 return 0;
 
@@ -54,6 +55,7 @@ namespace DBL
                     }
 
                     // קוראים את סוג השאלות המועדף של החדר, אם המארח הגדיר כזה.
+                    // #gamedb #question-type #room-settings
                     int? questionTypeId = null;
                     {
                         const string roomSql = @"SELECT question_type_id FROM rooms WHERE room_id = @room_id LIMIT 1;";
@@ -131,6 +133,7 @@ VALUES (@room_id, @qid, @ord, 15);";
 
         // מחזירה את השאלה החיה הנוכחית של החדר.
         // השאלה הראשונה שעדיין לא נענתה מופעלת לפי הצורך ומקבלת זמן התחלה.
+        // #gamedb #play #question
         public async Task<Question?> GetCurrentQuestionAsync(int roomId)
         {
             // ולידציה בסיסית למזהה חדר
@@ -170,6 +173,7 @@ VALUES (@room_id, @qid, @ord, 15);";
 
         // שומרת תשובה של שחקן אחד לשאלה אחת.
         // המתודה מחליפה כל תשובה קודמת של אותו שחקן לאותה שאלה.
+        // #gamedb #answer #scoreboard
         public async Task<bool> SubmitAnswerAsync(int roomPlayerId, int questionId, int optionId)
         {
             // ולידציה בסיסית לקלט תשובה
@@ -275,6 +279,7 @@ VALUES (@room_id, @rpid, @qid, @oid, @isc, NOW());";
 
         // בונה את ה־scoreboard הנוכחי של החדר.
         // השאילתה סופרת תשובות נכונות וסך תשובות לכל שחקן.
+        // #gamedb #results #scoreboard
         public async Task<List<ScoreRow>> GetScoreboardAsync(int roomId)
         {
             // יצירת אוסף תוצאות להחזרה
@@ -371,6 +376,7 @@ LIMIT 1;";
         }
 
         // סופרת כמה שאלות משויכות לחדר.
+        // #gamedb #results #game-over
         public async Task<int> GetRoomQuestionCountAsync(int roomId)
         {
             if (roomId <= 0)
@@ -403,6 +409,7 @@ WHERE room_id = @room_id;";
         }
 
         // סופרת כמה תשובות שחקן אחד הגיש בחדר.
+        // #gamedb #stats #progress
         public async Task<int> GetPlayerAnswerCountAsync(int roomId, int roomPlayerId)
         {
             if (roomId <= 0 || roomPlayerId <= 0)

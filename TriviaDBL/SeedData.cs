@@ -35,6 +35,7 @@ namespace DBL
             }
         }
 
+        // #seeddata #bootstrap #schema
         public static async Task EnsureSeedQuestionsAsync()
         {
             // פתיחת חיבור וטרנזקציה עבור כל פעולות bootstrap
@@ -57,10 +58,13 @@ namespace DBL
                 await EnsureUsersRoleColumnAsync(conn, (MySqlTransaction)tx);
                 // שלב 2: הכנסת נתוני בסיס למערכת
                 // הבטחת נתוני קטגוריות בסיסיים
+                // #seeddata #question-types
                 await EnsureQuestionTypesAsync(conn, (MySqlTransaction)tx);
                 // יצירת משתמש seed אם אין משתמשים
+                // #seeddata #seed-user
                 var userId = await GetOrCreateSeedUserAsync(conn, (MySqlTransaction)tx);
                 // הזרעת שאלות התחלתיות למערכת
+                // #seeddata #questions
                 await InsertQuestionsAsync(conn, (MySqlTransaction)tx, userId);
 
                 // אישור סופי לכל פעולות האתחול

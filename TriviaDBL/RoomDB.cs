@@ -15,6 +15,7 @@ namespace DBL
         public async Task<Room?> GetRoomByCodeAsync(string roomCode)
         {
             // קוד חדר ריק או null לא יכול לזהות חדר.
+            // #roomdb #room-code #search
             if (string.IsNullOrWhiteSpace(roomCode))
                 return null;
 
@@ -66,6 +67,7 @@ LIMIT 1;";
         public async Task<RoomPlayer?> JoinRoomAsync(int roomId, int userId, string nickname)
         {
             // משתמש צריך גם חדר תקין וגם חשבון תקין לפני הצטרפות.
+            // #roomdb #join-room #groups
             if (roomId <= 0 || userId <= 0)
                 return null;
 
@@ -206,6 +208,7 @@ ORDER BY joined_at ASC;";
         public async Task<Room?> CreateRoomAsync(string roomName, int hostId, bool isPublic, int? questionTypeId)
         {
             // מנקים את שם החדר לפני כתיבה למסד.
+            // #roomdb #create-room #public-room #private-room
             roomName = (roomName ?? "").Trim();
             if (roomName.Length == 0 || hostId <= 0)
                 return null;
@@ -286,6 +289,7 @@ WHERE created_at < (NOW() - INTERVAL 3 HOUR);";
         public async Task<List<Room>> GetPublicRoomsAsync()
         {
             // רק חדרים ציבוריים פעילים עם לפחות שחקן אחד עדכני מוצגים בלובי.
+            // #roomdb #public-rooms #lobby
             var result = new List<Room>();
 
             try

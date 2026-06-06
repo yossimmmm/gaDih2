@@ -16,5 +16,7 @@ namespace DBL
         protected MySqlConnection? conn;
         protected MySqlCommand? cmd;
         protected MySqlDataReader? reader;
+        // #db #connection #command #reader
+        // דפוס השימוש כאן הוא ברמת SQL גולמית: חיבור, פקודה, וקורא תוצאות.
     }
 }
