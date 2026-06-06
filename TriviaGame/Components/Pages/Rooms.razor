@@ -63,15 +63,19 @@ else
 {
     <div class="wrap">
         <div class="card">
+            @* הכותרת הראשית: אפשר להצטרף לחדר קיים או להיכנס דרך הרשימה הציבורית *@
             <div class="title">Quick Play</div>
             <div class="sub">Join a room by code.</div>
 
             @* קלט קוד חדר ידני *@
+            @* זהו הנתיב הידני: המשתמש מקליד קוד חדר ומצטרף ישירות *@
             <input class="in" @bind="RoomCode" placeholder="Room code (e.g., ABC123)" />
             @* קלט Nickname שמוצג בלובי לשחקנים אחרים *@
+            @* הכינוי נשמר עבור הלובי והמשחק כדי לזהות את השחקן במסך המשותף *@
             <input class="in" @bind="Nickname" placeholder="Nickname (display name)" />
 
             @* כפתור Join Room: מצטרף לפי הקוד שהוזן *@
+            @* הכפתור מפעיל את אותו תהליך גם אם ההצטרפות היא מרשימת חדרים ציבוריים *@
             <button class="btn" @onclick="JoinAsync">Join Room</button>
             @* חזרה לתפריט הראשי *@
             <button class="btn2" @onclick="@(() => Nav.NavigateTo("/menu", true))">Back to Menu</button>
@@ -92,6 +96,7 @@ else
                 else
                 {
                     @* עבור כל חדר ציבורי מציגים שם/קוד וכפתור Join ישיר *@
+                    @* כל שורה ברשימה היא חדר חי שנמשך מהמסד ומרוענן בזמן אמת *@
                     @foreach (var room in PublicRooms)
                     {
                         <div style="display:flex; justify-content:space-between; align-items:center; margin:10px 0; padding:12px 16px; border-radius:15px; background: rgba(255,255,255,0.8); border:2px solid rgba(255,182,193,0.4);">
@@ -133,21 +138,26 @@ else
     // #rooms #groups: loads the public room list and connects live updates.
     protected override async Task OnInitializedAsync()
     {
+        // קודם טוענים את המידע הראשוני כדי שלא יופיע מסך ריק.
         await LoadPublicRoomsAsync();
 
+        // SignalR נותן עדכונים מידיים כשחדרים ציבוריים משתנים.
         hub = new HubConnectionBuilder()
             .WithUrl(Nav.ToAbsoluteUri("/hubs/game"))
             .WithAutomaticReconnect()
             .Build();
 
+        // כל שינוי בחדרים הציבוריים מפעיל רענון של הרשימה.
         hub.On("PublicRoomChanged", async () =>
         {
             await LoadPublicRoomsAsync();
             await InvokeAsync(StateHasChanged);
         });
 
+        // מפעילים את החיבור אחרי שהאירועים מוכנים.
         await hub.StartAsync();
 
+        // fallback תקופתי למקרה שהחיבור בזמן אמת התנתק או לא הגיע בזמן.
         refreshTimer = new System.Threading.Timer(async _ =>
         {
             await InvokeAsync(async () =>
@@ -163,16 +173,19 @@ else
     // #join-room #room-code #groups: joins the room entered by code.
     private async Task JoinAsync()
     {
+        // מנקים הודעת מצב קודמת לפני ניסיון הצטרפות חדש.
         Status = "";
         var code = (RoomCode ?? "").Trim().ToUpperInvariant();
         var nick = (Nickname ?? "").Trim();
 
+        // בלי קוד אין לאן להצטרף.
         if (code.Length == 0)
         {
             Status = "Room code is required.";
             return;
         }
 
+        // בודקים שהחדר באמת קיים ופעיל לפני שמצטרפים.
         var room = await roomDB.GetRoomByCodeAsync(code);
         if (room is null || !room.IsActive)
         {
@@ -180,6 +193,7 @@ else
             return;
         }
 
+        // JoinRoomAsync יוצר או מעדכן רשומת player-room במסד.
         var joined = await roomDB.JoinRoomAsync(room.RoomID, Session.CurrentUserId.Value, nick);
         if (joined is null)
         {
@@ -187,6 +201,7 @@ else
             return;
         }
 
+        // אחרי הצטרפות מוצלחת עוברים ללובי של אותו חדר.
         Nav.NavigateTo($"/lobby/{code}", true);
     }
 
@@ -195,6 +210,7 @@ else
     // #public-rooms #join-room: joins one of the visible public rooms.
     private async Task JoinPublicAsync(string roomCode)
     {
+        // ממלאים את הקוד שנבחר מהרשימה ומשתמשים באותה לוגיקת הצטרפות.
         RoomCode = roomCode;
         await JoinAsync();
     }
@@ -204,6 +220,7 @@ else
     // #public-rooms: refreshes the list of rooms shown on screen.
     private async Task LoadPublicRoomsAsync()
     {
+        // כל רענון קורא שוב למסד כדי להציג את המצב הנוכחי.
         PublicRooms = await roomDB.GetPublicRoomsAsync();
     }
 
@@ -211,9 +228,11 @@ else
     // סוגרים את הרענון ואת ה-hub כשעוזבים את הדף.
     public async ValueTask DisposeAsync()
     {
+        // טיימר background חייב להיסגר כדי שלא יישאר לרוץ אחרי הניווט.
         refreshTimer?.Dispose();
         if (hub is not null)
         {
+            // סוגרים את החיבור בזמן אמת בצורה מסודרת, גם אם יש שגיאה.
             try { await hub.StopAsync(); } catch { }
             await hub.DisposeAsync();
         }
