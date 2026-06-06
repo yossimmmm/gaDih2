@@ -11,6 +11,20 @@
                    FontSize="22"
                    FontAttributes="Bold" />
 
+            <!-- סטטוס הפעולה מוצג בראש המסך כדי שכל לחיצה תיתן משוב מידי. -->
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                <ActivityIndicator x:Name="BusyIndicator"
+                                   Grid.Column="0"
+                                   IsRunning="False"
+                                   IsVisible="False"
+                                   VerticalOptions="Center" />
+                <Label x:Name="StatusLabel"
+                       Grid.Column="1"
+                       Text="Status: ready"
+                       VerticalOptions="Center"
+                       LineBreakMode="WordWrap" />
+            </Grid>
+
             <!-- אזור הגדרות API:
                  כאן בוחרים סביבה, כתובת למכשיר פיזי, או override ידני לשרת. -->
             <Border Stroke="#D0D0D0" Padding="10" StrokeShape="RoundRectangle 8">
@@ -91,6 +105,11 @@
                         <Button Text="Create Room" Clicked="OnCreateRoomClicked" />
                     </HorizontalStackLayout>
 
+                    <!-- תוצאה מקומית לפעולות החדר, כולל קוד החדר שנוצר. -->
+                    <Label x:Name="RoomStatusLabel"
+                           Text="Rooms: ready"
+                           LineBreakMode="WordWrap" />
+
                     <!-- קוד חדר וכינוי להצטרפות. -->
                     <Entry x:Name="RoomCodeEntry" Placeholder="Room code (e.g. ABC123)" />
                     <Entry x:Name="NicknameEntry" Placeholder="Nickname for room" />
@@ -101,6 +120,11 @@
                         <Button Text="Join Room" Clicked="OnJoinRoomClicked" />
                         <Button Text="Load Players" Clicked="OnLoadPlayersClicked" />
                     </HorizontalStackLayout>
+
+                    <!-- שמות השחקנים שהשרת החזיר עבור החדר הנוכחי. -->
+                    <Label x:Name="PlayersLabel"
+                           Text="Players: -"
+                           LineBreakMode="WordWrap" />
 
                     <!-- רשימת החדרים הציבוריים שהגיעה מהשרת. -->
                     <CollectionView x:Name="PublicRoomsView"
@@ -185,8 +209,6 @@
             </Border>
 
             <!-- אינדיקטור טעינה והודעת סטטוס כללית לכל המסך. -->
-            <ActivityIndicator x:Name="BusyIndicator" IsRunning="False" IsVisible="False" />
-            <Label x:Name="StatusLabel" Text="Status: ready" />
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

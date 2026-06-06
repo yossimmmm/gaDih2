@@ -142,6 +142,14 @@ public sealed class ApiSimpleResponse
     public string Text { get; set; } = "";
 }
 
+// תשובת יצירת חדר כוללת את פרטי החדר וקוד ההצטרפות שיצר השרת.
+public sealed class CreateRoomResponse
+{
+    public bool Ok { get; set; }
+    public string Message { get; set; } = "";
+    public RoomRow? Room { get; set; }
+}
+
 // תשובת join room, כולל החדר והשחקן שנוצרו/נמצאו.
 public sealed class JoinRoomResponse
 {

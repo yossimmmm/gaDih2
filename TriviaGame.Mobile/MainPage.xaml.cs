@@ -271,10 +271,47 @@ public partial class MainPage : ContentPage
                 IsPublicSwitch.IsToggled,
                 selectedQuestionTypeId);
 
-            StatusLabel.Text = result.Success
-                ? $"Status: room created - {result.Data?.Message}"
-                : $"Status: create room failed - {result.Message}";
+            if (!result.Success || result.Data is null || !result.Data.Ok || result.Data.Room is null)
+            {
+                var error = result.Data?.Message ?? result.Message;
+                RoomStatusLabel.Text = $"Rooms: create failed - {error}";
+                StatusLabel.Text = $"Status: create room failed - {error}";
+                return;
+            }
+
+            // מציגים מיד את קוד החדר שהשרת יצר כדי שאפשר יהיה להצטרף ולהתחיל משחק.
+            RoomCodeEntry.Text = result.Data.Room.RoomCode;
+            var joinResult = await api.JoinRoomAsync(
+                currentUser.UserId,
+                result.Data.Room.RoomCode,
+                currentUser.Username);
+
+            if (joinResult.Success && joinResult.Data?.Ok == true)
+                currentRoomPlayerId = joinResult.Data.Player?.RoomPlayerID ?? 0;
+
+            RoomStatusLabel.Text = currentRoomPlayerId > 0
+                ? $"Rooms: created and joined {result.Data.Room.RoomName} ({result.Data.Room.RoomCode})."
+                : $"Rooms: created {result.Data.Room.RoomName} ({result.Data.Room.RoomCode}); join failed.";
+            StatusLabel.Text = currentRoomPlayerId > 0
+                ? $"Status: {result.Data.Message} Host joined as playerId={currentRoomPlayerId}."
+                : $"Status: room created, but host join failed - {joinResult.Message}";
+
+            // חדר ציבורי חדש אמור להופיע מיד ברשימה בלי לחיצה נוספת.
+            if (result.Data.Room.IsPublic)
+                await RefreshPublicRoomsAsync();
         });
+    }
+
+    private async Task RefreshPublicRoomsAsync()
+    {
+        var result = await api.GetPublicRoomsAsync();
+        if (!result.Success || result.Data is null)
+            return;
+
+        publicRooms.Clear();
+        publicRooms.AddRange(result.Data);
+        PublicRoomsView.ItemsSource = null;
+        PublicRoomsView.ItemsSource = publicRooms;
     }
 
     // טוען חדרים ציבוריים למסך.
@@ -293,6 +330,7 @@ public partial class MainPage : ContentPage
             publicRooms.AddRange(result.Data);
             PublicRoomsView.ItemsSource = null;
             PublicRoomsView.ItemsSource = publicRooms;
+            RoomStatusLabel.Text = $"Rooms: loaded {publicRooms.Count} public rooms.";
             StatusLabel.Text = $"Status: loaded {publicRooms.Count} public rooms.";
         });
     }
@@ -301,7 +339,10 @@ public partial class MainPage : ContentPage
     private void OnPublicRoomSelected(object? sender, SelectionChangedEventArgs e)
     {
         if (e.CurrentSelection.FirstOrDefault() is RoomRow room)
+        {
             RoomCodeEntry.Text = room.RoomCode;
+            RoomStatusLabel.Text = $"Rooms: selected {room.RoomName} ({room.RoomCode}).";
+        }
     }
 
     // הצטרפות לחדר: שולח userId, roomCode ו־nickname לשרת.
@@ -319,12 +360,15 @@ public partial class MainPage : ContentPage
             var result = await api.JoinRoomAsync(currentUser.UserId, roomCode, NicknameEntry.Text ?? "");
             if (!result.Success || result.Data is null || !result.Data.Ok)
             {
-                StatusLabel.Text = $"Status: join failed - {result.Message}";
+                var error = result.Data?.Message ?? result.Message;
+                RoomStatusLabel.Text = $"Rooms: join failed - {error}";
+                StatusLabel.Text = $"Status: join failed - {error}";
                 return;
             }
 
             RoomCodeEntry.Text = roomCode;
             currentRoomPlayerId = result.Data.Player?.RoomPlayerID ?? 0;
+            RoomStatusLabel.Text = $"Rooms: joined {roomCode} as playerId={currentRoomPlayerId}.";
             StatusLabel.Text = $"Status: joined room {roomCode} as playerId={currentRoomPlayerId}.";
         });
     }
@@ -338,6 +382,7 @@ public partial class MainPage : ContentPage
             var result = await api.GetRoomPlayersAsync(roomCode);
             if (!result.Success || result.Data is null)
             {
+                RoomStatusLabel.Text = $"Rooms: failed loading players - {result.Message}";
                 StatusLabel.Text = $"Status: failed loading players - {result.Message}";
                 return;
             }
@@ -353,6 +398,10 @@ public partial class MainPage : ContentPage
                     currentRoomPlayerId = meInRoom.RoomPlayerID;
             }
 
+            PlayersLabel.Text = currentPlayers.Count == 0
+                ? "Players: none"
+                : $"Players: {string.Join(", ", currentPlayers.Select(p => p.Nickname))}";
+            RoomStatusLabel.Text = $"Rooms: players loaded ({currentPlayers.Count}).";
             StatusLabel.Text = $"Status: players loaded ({currentPlayers.Count}). My roomPlayerId={currentRoomPlayerId}.";
         });
     }

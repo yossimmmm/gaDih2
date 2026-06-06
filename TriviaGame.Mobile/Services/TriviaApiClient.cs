@@ -45,8 +45,8 @@ public sealed class TriviaApiClient
         apiClient.GetAsync<List<QuestionTypeRow>>("/api/rooms/question-types", cancellationToken);
 
     // יוצר חדר חדש.
-    public Task<ApiResult<ApiSimpleResponse>> CreateRoomAsync(int userId, string roomName, bool isPublic, int? questionTypeId, CancellationToken cancellationToken = default) =>
-        apiClient.PostAsync<object, ApiSimpleResponse>(
+    public Task<ApiResult<CreateRoomResponse>> CreateRoomAsync(int userId, string roomName, bool isPublic, int? questionTypeId, CancellationToken cancellationToken = default) =>
+        apiClient.PostAsync<object, CreateRoomResponse>(
             // יצירת חדר היא POST כי היא מוסיפה רשומה חדשה במסד.
             "/api/rooms",
             new { userId, roomName, isPublic, questionTypeId },
