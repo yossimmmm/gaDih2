@@ -5,6 +5,7 @@
 @rendermode InteractiveServer
 
 @* #menu #play #create-room #rooms #results #statistics #top-players *@
+@* זהו מסך הניווט הראשי: ממנו נכנסים למשחק, לחדרים, לסטטיסטיקות ולחשבון. *@
 @* מסך התפריט המרכזי: ממנו נכנסים לזרימת המשחק, לחדרים, לסטטיסטיקות ולדירוג. *@
 
 <style>
@@ -65,6 +66,7 @@ else
 
             <div class="panel">
                 <div class="panel-title">Games</div>
+                @* כאן בוחרים אם לשחק לבד, להצטרף לחדר קיים או ליצור חדר חדש. *@
                 <select class="menu-btn alt" @bind="SelectedTopicId">
                     <option value="">All topics</option>
                     @foreach (var t in Topics)
@@ -76,24 +78,33 @@ else
                     @(IsStarting ? "Starting..." : "Play Alone")
                 </button>
                 <div class="section-grid">
+                    @* מעבר למסך החדרים הציבוריים. *@
                     <button class="menu-btn" @onclick="@(() => Nav.NavigateTo("/rooms"))">Join a Room</button>
+                    @* יצירת חדר חדש לפני תחילת המשחק. *@
                     <button class="menu-btn" @onclick="@(() => Nav.NavigateTo("/create-room"))">Create Room</button>
                 </div>
             </div>
 
             <div class="panel">
                 <div class="panel-title">Account</div>
+                @* קיצורי הדרך לכל מה שקשור לחשבון, סטטיסטיקות וניהול. *@
                 <div class="section-grid">
+                    @* המסך של העוזר החכם האישי. *@
                     <button class="menu-btn" @onclick="@(() => Nav.NavigateTo("/assistant"))">My AI Assistant</button>
+                    @* פירוט המשחקים והביצועים של המשתמש. *@
                     <button class="menu-btn" @onclick="@(() => Nav.NavigateTo("/stats"))">My Stats</button>
+                    @* טבלת השחקנים המובילים במערכת. *@
                     <button class="menu-btn" @onclick="@(() => Nav.NavigateTo("/top-players"))">Top Players</button>
+                    @* כרטיס המשתמש והפרטים שלו. *@
                     <button class="menu-btn" @onclick="@(() => Nav.NavigateTo("/user"))">My Account</button>
                 </div>
                 <div class="section-grid">
                     @if (IsAdmin)
                     {
+                        @* מסך ניהול משתמשים זמין רק לאדמין. *@
                         <button class="menu-btn" @onclick="@(() => Nav.NavigateTo("/admin-users"))">Admin Users</button>
                     }
+                    @* יציאה מהמערכת ומחיקת הסשן. *@
                     <button class="menu-btn alt" @onclick="Logout">Logout</button>
                 </div>
             </div>
@@ -109,6 +120,7 @@ else
     private bool IsStarting;
     private List<QuestionType> Topics = new();
     private int? SelectedTopicId;
+    // רק אדמין רואה את מסך הניהול.
     private bool IsAdmin => Session.CurrentRole == UserRole.Admin;
 
     // #solo-game #play: creates a private room, picks questions, and starts the solo flow.
@@ -121,11 +133,15 @@ else
         Status = "Creating single player game...";
         try
         {
+            // יוצרים חדר פרטי למשחק יחיד, עם נושא אופציונלי אם המשתמש בחר סינון.
             var room = await roomDB.CreateRoomAsync($"Single Player - {DateTime.Now:HH:mm}", Session.CurrentUserId.Value, false, SelectedTopicId);
             if (room is null) { Status = "Failed to create room."; return; }
+            // השחקן עדיין נרשם לחדר כמו כל שחקן אחר כדי לקבל RoomPlayerId ותשתית משחק.
             await roomDB.JoinRoomAsync(room.RoomID, Session.CurrentUserId.Value, "You");
+            // טוענים שאלות לחדר כדי שהמסך הבא יוכל להתחיל מיד.
             var count = await gameDB.PickQuestionsForRoomAsync(room.RoomID, 10);
             if (count == 0) { Status = "No questions available."; return; }
+            // מעבר למסך המשחק עצמו.
             Nav.NavigateTo($"/play/{room.RoomCode}", true);
         }
         catch (Exception ex)
@@ -141,9 +157,12 @@ else
     // #logout #cookie: signs the user out and clears the session.
     private async Task Logout()
     {
+        // מאפסים את מצב המשתמש המקומי לפני מחיקת הקוקי.
         Session.CurrentUserId = null;
         Session.CurrentRole = UserRole.User;
+        // ה-JS מוחק את ה-session cookie בצד הדפדפן.
         await JS.InvokeVoidAsync("auth.logout");
+        // אחרי היציאה חוזרים למסך הכניסה.
         Nav.NavigateTo("/login", true);
     }
 
@@ -151,6 +170,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+        // טוענים את סוגי השאלות כדי לאפשר סינון למשחק לבד.
         Topics = await questionTypeDB.GetAllAsync();
     }
 }
