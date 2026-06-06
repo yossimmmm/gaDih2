@@ -18,6 +18,27 @@ public sealed class ApiEndpointResolver
     {
         // configuration נטען מ-appsettings של הלקוח.
         this.configuration = configuration;
+        MigrateLegacyPorts();
+    }
+
+    // אם נשמרו בעבר כתובות על פורט ישן, מעדכנים אותן אוטומטית לפורט הנוכחי.
+    private static void MigrateLegacyPorts()
+    {
+        MigratePreference(OverrideUrlKey);
+        MigratePreference(DeviceUrlKey);
+    }
+
+    private static void MigratePreference(string key)
+    {
+        var current = Preferences.Default.Get(key, "");
+        if (!TryNormalizeHttpUrl(current, out var normalized))
+            return;
+
+        if (normalized.Contains(":5040", StringComparison.Ordinal))
+        {
+            var migrated = normalized.Replace(":5040", ":5297", StringComparison.Ordinal);
+            Preferences.Default.Set(key, migrated);
+        }
     }
 
     // מחזירה את כתובת ה־base הנוכחית.
@@ -35,15 +56,15 @@ public sealed class ApiEndpointResolver
         var envPath = $"Api:{env}";
 
         // על desktop בדרך כלל משתמשים ב־localhost.
-        var desktopUrl = configuration[$"{envPath}:DesktopBaseUrl"] ?? "http://localhost:5040";
+        var desktopUrl = configuration[$"{envPath}:DesktopBaseUrl"] ?? "http://localhost:5297";
 
         // ב־Android emulator צריך להשתמש ב־10.0.2.2 כדי להגיע למחשב המארח.
-        var emulatorUrl = configuration[$"{envPath}:AndroidEmulatorBaseUrl"] ?? "http://10.0.2.2:5040";
+        var emulatorUrl = configuration[$"{envPath}:AndroidEmulatorBaseUrl"] ?? "http://10.0.2.2:5297";
 
         // במכשיר אמיתי משתמשים בכתובת LAN של המחשב המקומי.
         var configuredDeviceUrl = Preferences.Default.Get(
             DeviceUrlKey,
-            configuration[$"{envPath}:DeviceBaseUrl"] ?? "http://192.168.1.23:5040");
+            configuration[$"{envPath}:DeviceBaseUrl"] ?? "http://192.168.1.23:5297");
 
         var isAndroid = DeviceInfo.Platform == DevicePlatform.Android;
         var isVirtualDevice = DeviceInfo.DeviceType == DeviceType.Virtual;
@@ -57,7 +78,7 @@ public sealed class ApiEndpointResolver
         // אם הכתובת שנבחרה לא תקינה, חוזרים ל-localhost כברירת מחדל בטוחה לפיתוח.
         return TryNormalizeHttpUrl(selected, out var normalizedSelected)
             ? normalizedSelected
-            : "http://localhost:5040";
+            : "http://localhost:5297";
     }
 
     // מחזירה את שם הסביבה שנבחרה כרגע.
@@ -74,7 +95,7 @@ public sealed class ApiEndpointResolver
 
     // מחזירה את כתובת ה־LAN השמורה עבור device אמיתי.
     public string GetDeviceBaseUrl() =>
-        Preferences.Default.Get(DeviceUrlKey, configuration["Api:Development:DeviceBaseUrl"] ?? "http://192.168.1.23:5040");
+        Preferences.Default.Get(DeviceUrlKey, configuration["Api:Development:DeviceBaseUrl"] ?? "http://192.168.1.23:5297");
 
     // שומרת כתובת device רק אם היא URL תקין.
     public void SetDeviceBaseUrl(string value)
@@ -124,7 +145,7 @@ public sealed class ApiEndpointResolver
         if (string.IsNullOrWhiteSpace(input))
             return false;
 
-        // חייב להיות URL מלא כמו http://localhost:5040 ולא רק localhost.
+        // חייב להיות URL מלא כמו http://localhost:5297 ולא רק localhost.
         if (!Uri.TryCreate(input.Trim(), UriKind.Absolute, out var uri))
             return false;
 

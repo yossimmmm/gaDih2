@@ -1,4 +1,4 @@
-@TriviaGame.Api_HostAddress = http://localhost:5040
+﻿@TriviaGame.Api_HostAddress = http://localhost:5297
 @AppCode = TRIVIA-DEV-123
 
 ### בדיקת health
@@ -8,3 +8,4 @@ X-App-Code: {{AppCode}}
 Accept: application/json
 
 ###
+
