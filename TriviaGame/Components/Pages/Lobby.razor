@@ -323,6 +323,13 @@ else
             return;
         Loaded = true;
 
+        // שומרים את המזהה במשתנה רגיל רק אחרי שווידאנו שה-session עדיין תקין.
+        if (Session.CurrentUserId is not int userId)
+        {
+            SafeNavigateTo("/login", true);
+            return;
+        }
+
         // מביאים חדר לפי RoomCode מה-URL.
         var room = await roomDB.GetRoomByCodeAsync(RoomCode.Trim().ToUpperInvariant());
         if (room is null)
@@ -378,7 +385,7 @@ else
         // פתיחת החיבור בפועל.
         await hub.StartAsync();
         // הצטרפות לקבוצת SignalR של החדר כדי לקבל רק אירועי חדר זה.
-        await hub.InvokeAsync("JoinRoomGroup", RoomCode, Session.CurrentUserId.Value);
+        await hub.InvokeAsync("JoinRoomGroup", RoomCode, userId);
 
         // heartbeat כל 10 שניות לשמירת פעילות החדר.
         heartbeatTimer = new System.Threading.Timer(async _ =>

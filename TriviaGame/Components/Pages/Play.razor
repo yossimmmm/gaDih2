@@ -437,6 +437,13 @@ else
             return;
         Loaded = true;
 
+        // המשחק דורש משתמש מחובר; מכאן והלאה משתמשים במזהה שכבר נבדק ואינו nullable.
+        if (Session.CurrentUserId is not int userId)
+        {
+            SafeNavigateTo("/login", true);
+            return;
+        }
+
         // שליפת חדר לפי קוד מה-URL
         var room = await roomDB.GetRoomByCodeAsync(RoomCode.Trim().ToUpperInvariant());
         if (room is null)
@@ -448,7 +455,7 @@ else
         RoomId = room.RoomID;
 
         // הצטרפות המשתמש לחדר (או החזרת הרשומה אם כבר בפנים)
-        var joined = await roomDB.JoinRoomAsync(RoomId, Session.CurrentUserId.Value, $"Player{Session.CurrentUserId.Value}");
+        var joined = await roomDB.JoinRoomAsync(RoomId, userId, $"Player{userId}");
         if (joined is null)
         {
             Status = "Failed to join room.";
@@ -496,7 +503,7 @@ else
         // פתיחת החיבור בפועל
         await hub.StartAsync();
         // שיוך החיבור לקבוצת החדר
-        await hub.InvokeAsync("JoinRoomGroup", RoomCode, Session.CurrentUserId.Value);
+        await hub.InvokeAsync("JoinRoomGroup", RoomCode, userId);
 
         // heartbeat כל 10 שניות כדי לשמור חדר פעיל
         heartbeatTimer = new System.Threading.Timer(async _ =>

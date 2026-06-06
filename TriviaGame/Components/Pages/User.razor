@@ -310,8 +310,15 @@ else
         // מסמנים שטעינה בוצעה.
         Loaded = true;
 
+        // מעתיקים את מזהה המשתמש רק לאחר בדיקה כדי לא להעביר ערך nullable לשכבת ה-DB.
+        if (Session.CurrentUserId is not int userId)
+        {
+            Nav.NavigateTo("/login", true);
+            return;
+        }
+
         // מביאים את המשתמש הנוכחי לפי מזהה סשן.
-        var user = await userDB.GetByIdAsync(Session.CurrentUserId.Value);
+        var user = await userDB.GetByIdAsync(userId);
         // אם לא נמצא משתמש - מחזירים למסך התחברות.
         if (user is null)
         {

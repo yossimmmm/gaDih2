@@ -178,6 +178,13 @@ else
         var code = (RoomCode ?? "").Trim().ToUpperInvariant();
         var nick = (Nickname ?? "").Trim();
 
+        // פעולת הצטרפות מותרת רק למשתמש שמזהה ה-session שלו נטען בהצלחה.
+        if (Session.CurrentUserId is not int userId)
+        {
+            Nav.NavigateTo("/login", true);
+            return;
+        }
+
         // בלי קוד אין לאן להצטרף.
         if (code.Length == 0)
         {
@@ -194,7 +201,7 @@ else
         }
 
         // JoinRoomAsync יוצר או מעדכן רשומת player-room במסד.
-        var joined = await roomDB.JoinRoomAsync(room.RoomID, Session.CurrentUserId.Value, nick);
+        var joined = await roomDB.JoinRoomAsync(room.RoomID, userId, nick);
         if (joined is null)
         {
             Status = "Failed to join room.";

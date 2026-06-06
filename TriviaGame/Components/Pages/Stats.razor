@@ -75,7 +75,14 @@ else
             return;
         Loaded = true;
 
-        var stats = await gameDB.GetUserStatsAsync(Session.CurrentUserId.Value);
+        // אין טעם לפנות למסד בלי מזהה משתמש תקין, גם אם מצב ההתחברות השתנה באמצע הטעינה.
+        if (Session.CurrentUserId is not int userId)
+        {
+            Nav.NavigateTo("/login", true);
+            return;
+        }
+
+        var stats = await gameDB.GetUserStatsAsync(userId);
         GamesPlayed = stats.GamesPlayed;
         Wins = stats.Wins;
         CorrectAnswers = stats.Correct;
