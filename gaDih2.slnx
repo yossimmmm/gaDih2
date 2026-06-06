@@ -3,4 +3,5 @@
   <Project Path="TriviaDBL/TriviaDBL.csproj" />
   <Project Path="TriviaGame.Api/TriviaGame.Api.csproj" />
   <Project Path="TriviaGame.Mobile/TriviaGame.Mobile.csproj" />
+  <Project Path="TriviaGame/TriviaGame.csproj" />
 </Solution>

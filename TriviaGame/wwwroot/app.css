@@ -1,0 +1,153 @@
+﻿html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 25%, #fecfef 50%, #fad0c4 75%, #ffd1ff 100%);
+    background-attachment: fixed;
+    font-family: 'Comic Neue', cursive;
+    overflow-x: hidden;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes wiggle {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-3deg); }
+    75% { transform: rotate(3deg); }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-15px); }
+}
+
+@keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(255, 182, 193, 0.6); }
+    50% { box-shadow: 0 0 40px rgba(255, 182, 193, 1), 0 0 60px rgba(255, 105, 180, 0.8); }
+}
+
+
+a, .btn-link {
+    color: #ff6b9d;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+a:hover, .btn-link:hover {
+    color: #ff1493;
+    text-shadow: 2px 2px 4px rgba(255, 20, 147, 0.5);
+    transform: scale(1.05);
+}
+
+.btn-primary {
+    color: #fff;
+    background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
+    border: 3px solid #ff1493;
+    border-radius: 20px !important;
+    font-family: 'Fredoka One', cursive;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 5px 15px rgba(255, 20, 147, 0.4);
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(255, 20, 147, 0.6);
+    animation: bounce 0.6s ease;
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.2rem rgba(255, 182, 193, 0.5), 0 0 0 0.4rem rgba(255, 105, 180, 0.3), 0 0 20px rgba(255, 20, 147, 0.5);
+  outline: none;
+  border-color: #ff1493;
+}
+
+.content {
+    padding-top: 1.1rem;
+}
+
+h1:focus {
+    outline: none;
+}
+
+.valid.modified:not([type=checkbox]) {
+    outline: 1px solid #26b050;
+}
+
+.invalid {
+    outline: 3px solid #ff4757 !important;
+    border-radius: 15px !important;
+    box-shadow: 0 0 15px rgba(255, 71, 87, 0.6) !important;
+    animation: wiggle 0.5s ease;
+}
+
+.validation-message {
+    color: #ff4757;
+    font-weight: 700;
+    font-size: 1.1em;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.blazor-error-boundary {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    border: 4px solid #ff4757;
+    border-radius: 25px;
+    padding: 1.5rem 1.5rem 1.5rem 4rem;
+    color: white;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.2em;
+    box-shadow: 0 8px 25px rgba(255, 71, 87, 0.5);
+    animation: wiggle 0.5s ease;
+    position: relative;
+}
+
+    .blazor-error-boundary::after {
+        content: "🎭 Oops! An error has occurred! 🎭"
+    }
+    
+    .blazor-error-boundary::before {
+        content: "⚠️";
+        position: absolute;
+        left: 1rem;
+        font-size: 2em;
+        animation: bounce 1s infinite;
+    }
+
+.darker-border-checkbox.form-check-input {
+    border: 3px solid #ffb6c1;
+    border-radius: 8px !important;
+    width: 25px !important;
+    height: 25px !important;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.darker-border-checkbox.form-check-input:checked {
+    background-color: #ff69b4;
+    border-color: #ff1493;
+    box-shadow: 0 0 15px rgba(255, 20, 147, 0.6);
+    transform: scale(1.1);
+}
+
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+    color: rgba(255, 182, 193, 0.8);
+    text-align: end;
+    font-family: 'Comic Neue', cursive;
+    font-weight: 700;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+    text-align: start;
+    color: rgba(255, 105, 180, 0.6);
+}
+
+.page {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
