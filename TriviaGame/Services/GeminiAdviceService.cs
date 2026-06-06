@@ -259,10 +259,10 @@ Current user message:
         // שולף את מפתח ה-API מקונפיגורציה או ממשתני סביבה.
         private string? GetGeminiApiKey()
         {
-            // ???? ?????? ????????????, ??? ??? - ?????? ?-env var.
-            var apiKey = configuration["Gemini:ApiKey"];
+            // קודם בודקים משתנה סביבה, ואז נופלים חזרה ל-appsettings.
+            var apiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY");
             if (string.IsNullOrWhiteSpace(apiKey))
-                apiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY");
+                apiKey = configuration["Gemini:ApiKey"];
             return apiKey;
         }
 

@@ -246,11 +246,11 @@ Current user message:
     // קורא את מפתח ה־API של Gemini קודם מהקונפיגורציה ואז מה־environment כגיבוי.
     private string? GetGeminiApiKey()
     {
-        // קודם appsettings, אחר כך משתנה סביבה.
+        // קודם משתנה סביבה, ואז appsettings כגיבוי.
         // זה מאפשר להחזיק מפתח סודי מחוץ לקוד בפריסה אמיתית.
-        var apiKey = configuration["Gemini:ApiKey"];
+        var apiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY");
         if (string.IsNullOrWhiteSpace(apiKey))
-            apiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY");
+            apiKey = configuration["Gemini:ApiKey"];
         return apiKey;
     }
 
