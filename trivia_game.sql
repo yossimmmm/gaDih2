@@ -206,7 +206,7 @@ DROP TABLE IF EXISTS `game_results`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `game_results` (
   `game_result_id` int NOT NULL AUTO_INCREMENT,
-  `room_id` int NOT NULL,
+  `room_id` int NULL,
   `user_id` int NOT NULL,
   `correct_count` int NOT NULL,
   `answered_count` int NOT NULL,
@@ -215,7 +215,7 @@ CREATE TABLE `game_results` (
   PRIMARY KEY (`game_result_id`),
   UNIQUE KEY `uq_game_results_room_user` (`room_id`,`user_id`),
   KEY `ix_game_results_user` (`user_id`),
-  CONSTRAINT `fk_game_results_room` FOREIGN KEY (`room_id`) REFERENCES `rooms` (`room_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_game_results_room` FOREIGN KEY (`room_id`) REFERENCES `rooms` (`room_id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `fk_game_results_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;

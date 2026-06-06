@@ -237,7 +237,7 @@ ADD COLUMN last_seen DATETIME NULL;";
             const string sql = @"
 CREATE TABLE IF NOT EXISTS game_results (
   game_result_id INT NOT NULL AUTO_INCREMENT,
-  room_id INT NOT NULL,
+  room_id INT NULL,
   user_id INT NOT NULL,
   correct_count INT NOT NULL,
   answered_count INT NOT NULL,
@@ -246,11 +246,74 @@ CREATE TABLE IF NOT EXISTS game_results (
   PRIMARY KEY (game_result_id),
   UNIQUE KEY uq_game_results_room_user (room_id, user_id),
   KEY ix_game_results_user (user_id),
-  CONSTRAINT fk_game_results_room FOREIGN KEY (room_id) REFERENCES rooms (room_id) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_game_results_room FOREIGN KEY (room_id) REFERENCES rooms (room_id) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT fk_game_results_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE ON UPDATE CASCADE
 );";
             await using var cmd = new MySqlCommand(sql, conn, tx);
             await cmd.ExecuteNonQueryAsync();
+
+            await EnsureGameResultsRoomIdNullableAsync(conn, tx);
+            await EnsureGameResultsRoomForeignKeyAsync(conn, tx);
+        }
+
+        private static async Task EnsureGameResultsRoomIdNullableAsync(MySqlConnection conn, MySqlTransaction tx)
+        {
+            const string checkSql = @"
+SELECT IS_NULLABLE
+FROM information_schema.COLUMNS
+WHERE TABLE_SCHEMA = DATABASE()
+  AND TABLE_NAME = 'game_results'
+  AND COLUMN_NAME = 'room_id'
+LIMIT 1;";
+
+            await using var checkCmd = new MySqlCommand(checkSql, conn, tx);
+            var nullable = Convert.ToString(await checkCmd.ExecuteScalarAsync());
+            if (string.Equals(nullable, "YES", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            const string alterSql = @"
+ALTER TABLE game_results
+MODIFY COLUMN room_id INT NULL;";
+            await using var alterCmd = new MySqlCommand(alterSql, conn, tx);
+            await alterCmd.ExecuteNonQueryAsync();
+        }
+
+        private static async Task EnsureGameResultsRoomForeignKeyAsync(MySqlConnection conn, MySqlTransaction tx)
+        {
+            const string checkSql = @"
+SELECT DELETE_RULE
+FROM information_schema.REFERENTIAL_CONSTRAINTS
+WHERE CONSTRAINT_SCHEMA = DATABASE()
+  AND TABLE_NAME = 'game_results'
+  AND CONSTRAINT_NAME = 'fk_game_results_room'
+LIMIT 1;";
+
+            await using var checkCmd = new MySqlCommand(checkSql, conn, tx);
+            var deleteRule = Convert.ToString(await checkCmd.ExecuteScalarAsync());
+            if (string.Equals(deleteRule, "SET NULL", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            const string dropSql = @"
+ALTER TABLE game_results
+DROP FOREIGN KEY fk_game_results_room;";
+            try
+            {
+                await using var dropCmd = new MySqlCommand(dropSql, conn, tx);
+                await dropCmd.ExecuteNonQueryAsync();
+            }
+            catch (MySqlException ex) when (ex.Number == 1091)
+            {
+                // כבר לא קיים, ממשיכים ליצירה מחדש.
+            }
+
+            const string addSql = @"
+ALTER TABLE game_results
+ADD CONSTRAINT fk_game_results_room
+FOREIGN KEY (room_id) REFERENCES rooms (room_id)
+ON DELETE SET NULL
+ON UPDATE CASCADE;";
+            await using var addCmd = new MySqlCommand(addSql, conn, tx);
+            await addCmd.ExecuteNonQueryAsync();
         }
 
         private static async Task EnsureUserSessionsTableAsync(MySqlConnection conn, MySqlTransaction tx)
