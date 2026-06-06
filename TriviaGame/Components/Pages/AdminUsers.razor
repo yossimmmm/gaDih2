@@ -135,14 +135,8 @@
         if (!IsAllowed)
             return;
 
-        // בודקים שהאימייל עדיין חוקי לפני ששולחים עדכון למסד.
-        if (string.IsNullOrWhiteSpace(row.Email) || !ValidationHelper.IsValidEmail(row.Email))
-        {
-            IsError = true;
-            Status = $"Invalid email for user {row.UserID}.";
-            return;
-        }
-
+        // במסד קיימים גם חשבונות ישנים עם אימייל לא תקין.
+        // אדמין רשאי לשמור את הפרופיל כדי שיוכל לתקן אותם במקום להיחסם לפני העדכון.
         Busy = true;
         Status = "";
         IsError = false;
