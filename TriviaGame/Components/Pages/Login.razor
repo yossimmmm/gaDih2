@@ -1,10 +1,13 @@
-@page "/login"
+﻿@page "/login"
 @using Models
 @using DBL
 @inject NavigationManager Nav
 @inject UserSessionState Session
 @inject IJSRuntime JS
 @rendermode InteractiveServer
+
+@* KEYWORDS: login, cookie, forgot password, logout *@
+@* דף ההתחברות הוא נקודת הכניסה העיקרית של המשתמשים לאתר. *@
 <style>
     .auth-wrap {
         display: flex;
@@ -279,19 +282,26 @@
     // הסבר עמוד: התחברות משתמש קיים עם ולידציה מקומית וקריאת API.
 
     // ערך האימייל מהטופס.
+    // ערכי הטופס נשמרים כאן עד שליחת הבקשה.
     private string Email = "";
     // ערך הסיסמה מהטופס.
+    // סיסמה נשמרת רק בזיכרון של הדף, לא בשום מקום קבוע.
     private string Password = "";
     // הודעת סטטוס להצגה למשתמש.
+    // הודעת סטטוס אחת שמציגה גם שגיאות וגם הצלחות.
     private string Status = "";
     // דגל טעינה לנעילת הכפתור/שדות בזמן שליחה.
+    // דגל טעינה שמונע שליחה כפולה בזמן שהבקשה רצה.
     private bool IsLoading = false;
     // דגל שגיאה חזותי לשדה אימייל.
+    // מציין אם שדה המייל לא עבר ולידציה.
     private bool EmailInvalid = false;
     // דגל שגיאה חזותי לשדה סיסמה.
+    // מציין אם שדה הסיסמה לא עבר ולידציה.
     private bool PasswordInvalid = false;
 
     // ולידציה מקומית לפני יציאה לשרת.
+    // בדיקת קלט מקומית לפני כל קריאת רשת.
     private void ValidateInputs()
     {
         // איפוס דגלים והודעה מניסיון קודם.
@@ -325,6 +335,7 @@
     }
 
     // פונקציה מרכזית של התחברות (כפתור Sign In).
+    // הפעולה שמבצעת את ההתחברות בפועל.
     private async Task SignIn()
     {
         // איפוס תצוגה לפני ניסיון חדש.

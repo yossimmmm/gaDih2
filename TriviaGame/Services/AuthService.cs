@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 namespace TriviaGame.Services
 {
+    // KEYWORDS: cookie, session_token, auth state, login
     // שירות קטן שמרכז את קריאת מצב האימות מתוך ה-HttpContext.
     public sealed class AuthService
     {

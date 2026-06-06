@@ -6,11 +6,11 @@ using Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// רישום שירותי UI אינטראקטיבי (Razor + SignalR)
+// ×¨×™×©×•× ×©×™×¨×•×ª×™ UI ××™× ×˜×¨××§×˜×™×‘×™ (Razor + SignalR)
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// שירותי תשתית כלליים לאפליקציה
+// ×©×™×¨×•×ª×™ ×ª×©×ª×™×ª ×›×œ×œ×™×™× ×œ××¤×œ×™×§×¦×™×”
 builder.Services.AddSignalR();
 builder.Services.AddHttpClient();
 builder.Services.AddHttpContextAccessor();
@@ -34,7 +34,7 @@ authAudit.OnAuditAsync += async auditEvent =>
     await Task.CompletedTask;
 };
 
-// זריעת נתוני שאלות התחלתיים בזמן עליית האפליקציה
+// ×–×¨×™×¢×ª × ×ª×•× ×™ ×©××œ×•×ª ×”×ª×—×œ×ª×™×™× ×‘×–×ž×Ÿ ×¢×œ×™×™×ª ×”××¤×œ×™×§×¦×™×”
 try
 {
     await SeedData.EnsureSeedQuestionsAsync();
@@ -44,7 +44,7 @@ catch (Exception ex)
     app.Logger.LogError(ex, "Failed to seed trivia questions.");
 }
 
-// קונפיגורציית middleware בהתאם לסביבה
+// ×§×•× ×¤×™×’×•×¨×¦×™×™×ª middleware ×‘×”×ª×× ×œ×¡×‘×™×‘×”
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
@@ -58,7 +58,7 @@ if (!app.Environment.IsDevelopment())
 }
 app.UseAntiforgery();
 
-// רשימת נתיבים שדורשים משתמש מחובר
+// ×¨×©×™×ž×ª × ×ª×™×‘×™× ×©×“×•×¨×©×™× ×ž×©×ª×ž×© ×ž×—×•×‘×¨
 var protectedPrefixes = new[]
 {
     "/menu",
@@ -78,7 +78,7 @@ app.Use(async (context, next) =>
 {
     var path = context.Request.Path.Value ?? "";
 
-    // דילוג על בדיקת התחברות עבור נתיבים ציבוריים
+    // ×“×™×œ×•×’ ×¢×œ ×‘×“×™×§×ª ×”×ª×—×‘×¨×•×ª ×¢×‘×•×¨ × ×ª×™×‘×™× ×¦×™×‘×•×¨×™×™×
     if (IsPublicPath(path))
     {
         await next();
@@ -87,14 +87,15 @@ app.Use(async (context, next) =>
 
     if (protectedPrefixes.Any(p => path.StartsWith(p, StringComparison.OrdinalIgnoreCase)))
     {
-        // אם אין טוקן סשן - מעבירים ללוגין
+        // ×× ××™×Ÿ ×˜×•×§×Ÿ ×¡×©×Ÿ - ×ž×¢×‘×™×¨×™× ×œ×œ×•×’×™×Ÿ
+        // KEYWORDS: cookie, session_token, login, auth
         if (!context.Request.Cookies.TryGetValue("session_token", out var token) || string.IsNullOrWhiteSpace(token))
         {
             context.Response.Redirect("/login");
             return;
         }
 
-        // בדיקה שהטוקן אכן קיים במסד ושייך למשתמש תקף
+        // ×‘×“×™×§×” ×©×”×˜×•×§×Ÿ ××›×Ÿ ×§×™×™× ×‘×ž×¡×“ ×•×©×™×™×š ×œ×ž×©×ª×ž×© ×ª×§×£
         var sessionDb = new SessionDB();
         var userId = await sessionDb.GetUserIdByTokenAsync(token);
         if (userId is null)
@@ -112,7 +113,7 @@ app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-// endpoint התחברות: אימות פרטי משתמש ויצירת סשן
+// endpoint ×”×ª×—×‘×¨×•×ª: ××™×ž×•×ª ×¤×¨×˜×™ ×ž×©×ª×ž×© ×•×™×¦×™×¨×ª ×¡×©×Ÿ
 app.MapPost("/api/auth/login", async (HttpContext http, LoginRequest req, AuthAuditDispatcher audit) =>
 {
     if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
@@ -129,6 +130,7 @@ app.MapPost("/api/auth/login", async (HttpContext http, LoginRequest req, AuthAu
     var sessionDb = new SessionDB();
     var token = await sessionDb.CreateSessionAsync(user.UserID, TimeSpan.FromDays(7));
 
+    // KEYWORDS: cookie, session_token, login
     http.Response.Cookies.Append("session_token", token, new CookieOptions
     {
         HttpOnly = true,
@@ -141,7 +143,8 @@ app.MapPost("/api/auth/login", async (HttpContext http, LoginRequest req, AuthAu
     return Results.Ok(new { ok = true, userId = user.UserID, username = user.Username, role = user.Role.ToString() });
 });
 
-// endpoint התנתקות: מחיקת סשן מהשרת ומהעוגיות
+// endpoint ×”×ª× ×ª×§×•×ª: ×ž×—×™×§×ª ×¡×©×Ÿ ×ž×”×©×¨×ª ×•×ž×”×¢×•×’×™×•×ª
+// KEYWORDS: logout, cookie, session_token, sign out
 app.MapPost("/api/auth/logout", async (HttpContext http) =>
 {
     if (http.Request.Cookies.TryGetValue("session_token", out var token) && !string.IsNullOrWhiteSpace(token))
@@ -154,7 +157,8 @@ app.MapPost("/api/auth/logout", async (HttpContext http) =>
     return Results.Ok(new { ok = true });
 });
 
-// endpoint זיהוי משתמש מחובר לפי session cookie
+// endpoint ×–×™×”×•×™ ×ž×©×ª×ž×© ×ž×—×•×‘×¨ ×œ×¤×™ session cookie
+// KEYWORDS: cookie, session_token, auth me, current user
 app.MapGet("/api/auth/me", async (HttpContext http) =>
 {
     if (!http.Request.Cookies.TryGetValue("session_token", out var token) || string.IsNullOrWhiteSpace(token))
@@ -170,10 +174,11 @@ app.MapGet("/api/auth/me", async (HttpContext http) =>
     return Results.Ok(new { userId = userId.Value, role = (user?.Role ?? UserRole.User).ToString() });
 });
 
-// endpoint שכחתי סיסמה: יצירת טוקן איפוס ושליחת מייל
+// endpoint ×©×›×—×ª×™ ×¡×™×¡×ž×”: ×™×¦×™×¨×ª ×˜×•×§×Ÿ ××™×¤×•×¡ ×•×©×œ×™×—×ª ×ž×™×™×œ
+// KEYWORDS: forgot password, email, reset token, reset link
 app.MapPost("/api/auth/forgot-password", async (HttpContext http, ForgotPasswordRequest req, EmailService emailService, AuthAuditDispatcher audit) =>
 {
-    // ולידציה בסיסית לקלט
+    // ×•×œ×™×“×¦×™×” ×‘×¡×™×¡×™×ª ×œ×§×œ×˜
     if (string.IsNullOrWhiteSpace(req.Email))
         return Results.BadRequest(new { ok = false, message = "Email is required." });
 
@@ -189,7 +194,7 @@ app.MapPost("/api/auth/forgot-password", async (HttpContext http, ForgotPassword
         return Results.BadRequest(new { ok = false, message = "No account found for this email." });
     }
 
-    // בדיקת קונפיג SMTP לפני שליחה
+    // ×‘×“×™×§×ª ×§×•× ×¤×™×’ SMTP ×œ×¤× ×™ ×©×œ×™×—×”
     var smtpFrom = Environment.GetEnvironmentVariable("SMTP_FROM") ?? builder.Configuration["Smtp:From"];
     var smtpHost = Environment.GetEnvironmentVariable("SMTP_HOST") ?? builder.Configuration["Smtp:Host"];
     var smtpUser = Environment.GetEnvironmentVariable("SMTP_USER") ?? builder.Configuration["Smtp:User"];
@@ -203,9 +208,11 @@ app.MapPost("/api/auth/forgot-password", async (HttpContext http, ForgotPassword
         return Results.Json(new { ok = false, message = "SMTP is not configured correctly on the server." }, statusCode: 500);
     }
 
-    // יצירת טוקן מאובטח וקישור איפוס עם query token
+    // ×§×•×“× ×™×•×¦×¨×™× ×˜×•×§×Ÿ ×—×“-×¤×¢×ž×™ ×‘×ª×•×§×£ ×§×¦×¨ ×•×©×•×ž×¨×™× ×‘×ž×¡×“ ×¨×§ ××ª ×”-hash ×©×œ×•.
     var token = await userDb.CreatePasswordResetTokenAsync(user.UserID, TimeSpan.FromMinutes(30));
+    // ××ª ×”×˜×•×§×Ÿ ×”×’×•×œ×ž×™ ×ž×§×•×“×“×™× ×œ-URL ×›×“×™ ×©×œ× ×™×©×‘×•×¨ ××ª ×”-link ×× ×™×© ×ª×•×•×™× ×ž×™×•×—×“×™×.
     var encodedToken = Uri.EscapeDataString(token);
+    // ×›××Ÿ × ×‘× ×” ×§×™×©×•×¨ ×”××™×¤×•×¡ ×”×ž×œ× ×©× ×©×œ×— ×‘×ž×™×™×œ ×œ×ž×©×ª×ž×©.
     var link = $"{http.Request.Scheme}://{http.Request.Host}/reset-password?token={encodedToken}";
 
     try
@@ -223,19 +230,20 @@ app.MapPost("/api/auth/forgot-password", async (HttpContext http, ForgotPassword
     return Results.Ok(new { ok = true, message = "Reset email was sent successfully." });
 });
 
-// endpoint איפוס סיסמה בפועל לפי טוקן
+// endpoint ××™×¤×•×¡ ×¡×™×¡×ž×” ×‘×¤×•×¢×œ ×œ×¤×™ ×˜×•×§×Ÿ
+// KEYWORDS: reset password, token, email
 app.MapPost("/api/auth/reset-password", async (ResetPasswordRequest req, AuthAuditDispatcher audit) =>
 {
-    // בדיקות בסיס לקלט
+    // ×‘×“×™×§×•×ª ×‘×¡×™×¡ ×œ×§×œ×˜
     if (string.IsNullOrWhiteSpace(req.Token) || string.IsNullOrWhiteSpace(req.NewPassword))
         return Results.BadRequest(new { ok = false, message = "Invalid reset request." });
 
-    // בדיקת מדיניות סיסמה קיימת במערכת
+    // ×‘×“×™×§×ª ×ž×“×™× ×™×•×ª ×¡×™×¡×ž×” ×§×™×™×ž×ª ×‘×ž×¢×¨×›×ª
     var (valid, passwordError) = ValidationHelper.ValidatePassword(req.NewPassword);
     if (!valid)
         return Results.BadRequest(new { ok = false, message = passwordError });
 
-    // עדכון סיסמה לפי טוקן תקף
+    // ×¢×“×›×•×Ÿ ×¡×™×¡×ž×” ×œ×¤×™ ×˜×•×§×Ÿ ×ª×§×£
     var newHash = PasswordHelper.Hash(req.NewPassword.Trim());
     var userDb = new UserDB();
     var ok = await userDb.ResetPasswordByTokenAsync(req.Token.Trim(), newHash);
@@ -334,15 +342,15 @@ app.MapDelete("/api/admin/users/{userId:int}", async (HttpContext http, int user
 
 app.MapHub<GameHub>("/hubs/game");
 
-// הפעלת האפליקציה
+// ×”×¤×¢×œ×ª ×”××¤×œ×™×§×¦×™×”
 app.Run();
 
-// DTO-ים לבקשות auth מהלקוח
+// DTO-×™× ×œ×‘×§×©×•×ª auth ×ž×”×œ×§×•×—
 
-// בניית קונפיג SMTP ממקורות שונים עם ברירות מחדל
+// ×‘× ×™×™×ª ×§×•× ×¤×™×’ SMTP ×ž×ž×§×•×¨×•×ª ×©×•× ×™× ×¢× ×‘×¨×™×¨×•×ª ×ž×—×“×œ
 static SmtpSettings BuildSmtpSettings(IConfiguration cfg)
 {
-    // תמיכה גם במפתח השגוי SMTP_POR למקרה שכבר הוגדר כך בסביבה
+    // ×ª×ž×™×›×” ×’× ×‘×ž×¤×ª×— ×”×©×’×•×™ SMTP_POR ×œ×ž×§×¨×” ×©×›×‘×¨ ×”×•×’×“×¨ ×›×š ×‘×¡×‘×™×‘×”
     var smtpPortRaw = Environment.GetEnvironmentVariable("SMTP_PORT")
         ?? Environment.GetEnvironmentVariable("SMTP_POR")
         ?? cfg["Smtp:Port"]
@@ -366,7 +374,7 @@ static SmtpSettings BuildSmtpSettings(IConfiguration cfg)
     };
 }
 
-// בדיקה האם הנתיב ציבורי ולא דורש session
+// ×‘×“×™×§×” ×”×× ×”× ×ª×™×‘ ×¦×™×‘×•×¨×™ ×•×œ× ×“×•×¨×© session
 static bool IsPublicPath(string path)
 {
     if (path == "/")
@@ -385,7 +393,7 @@ static bool IsPublicPath(string path)
         || path.StartsWith("/reset-password", StringComparison.OrdinalIgnoreCase);
 }
 
-// DTO-ים לבקשות auth מהלקוח
+// DTO-×™× ×œ×‘×§×©×•×ª auth ×ž×”×œ×§×•×—
 static async Task<User?> GetCurrentUserAsync(HttpContext http)
 {
     if (!http.Request.Cookies.TryGetValue("session_token", out var token) || string.IsNullOrWhiteSpace(token))

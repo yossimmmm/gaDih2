@@ -4,6 +4,8 @@ using TriviaGame.Api.Services;
 
 namespace TriviaGame.Api.Controllers;
 
+// KEYWORDS: login, register, me, forgot password, reset password, logout, cookie, email, token
+
 // נקודות קצה של אימות משתמשים:
 // התחברות, הרשמה, me, שכחתי סיסמה, איפוס סיסמה.
 [ApiController]
@@ -71,6 +73,7 @@ public sealed class AuthController : ControllerBase
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
     {
+        // KEYWORDS: forgot password, email, reset token, reset link
         // בונים baseUrl מתוך הבקשה הנוכחית כדי שקישור האיפוס יוביל לאותו שרת.
         var baseUrl = $"{Request.Scheme}://{Request.Host}";
 
@@ -83,6 +86,7 @@ public sealed class AuthController : ControllerBase
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
     {
+        // KEYWORDS: reset password, token, password hash, expiry
         // השירות מאמת את הטוקן ואת הסיסמה החדשה, ואז מעדכן את ה-hash במסד.
         var (ok, message) = await authService.ResetPasswordAsync(request);
         return ok ? Ok(new { ok = true, message }) : BadRequest(new { ok = false, message });

@@ -1,9 +1,12 @@
-@page "/rooms"
+﻿@page "/rooms"
 @inherits AuthPageBase
 @using Models
 @using DBL
 @using Microsoft.AspNetCore.SignalR.Client
 @rendermode InteractiveServer
+
+@* KEYWORDS: rooms, public rooms, join room, groups, room code, play *@
+@* הדף הזה מציג חדרים ציבוריים ומאפשר הצטרפות לפי קוד או לפי רשימה. *@
 
 <style>
     .wrap {
@@ -109,16 +112,24 @@ else
 
 @code {
     // הסבר עמוד: הצטרפות לחדר לפי קוד + הצגת חדרים ציבוריים בלייב.
+    // קוד החדר שמוקלד ידנית או נלקח מרשימת החדרים.
     private string RoomCode = ""; // קוד חדר שהמשתמש מקליד
+    // שם תצוגה שנשלח יחד עם ההצטרפות לחדר.
     private string Nickname = ""; // כינוי להצגה בלובי
+    // הודעת שגיאה או מצב שמוצגת מתחת לטופס.
     private string Status = ""; // הודעת שגיאה/סטטוס
+    // הרשימה שנמשכת מהמסד ומוצגת במסך החדרים הציבוריים.
     private List<Room> PublicRooms = new(); // רשימת חדרים ציבוריים זמינים
 
+    // שכבת הגישה לנתוני חדרים.
     private readonly RoomDB roomDB = new(); // גישת מסד לחדרים
+    // חיבור SignalR שמאזין לשינויים בזמן אמת.
     private HubConnection? hub; // חיבור SignalR לעדכוני חדרים
+    // ריענון תקופתי כגיבוי למקרה שה-SignalR מתנתק.
     private System.Threading.Timer? refreshTimer; // רענון fallback תקופתי
 
     // אתחול עמוד: טעינת חדרים ציבוריים + האזנה לעדכונים בזמן אמת.
+    // טוענים רשימה ראשונית ואז מחברים את ה-hub.
     protected override async Task OnInitializedAsync()
     {
         await LoadPublicRoomsAsync();
@@ -147,6 +158,7 @@ else
     }
 
     // לחיצה על Join Room: מצטרפים לפי הקוד שהוזן ידנית.
+    // מנסה להצטרף לחדר לפי קוד ידני שהמשתמש הקליד.
     private async Task JoinAsync()
     {
         Status = "";
@@ -177,6 +189,7 @@ else
     }
 
     // לחיצה על Join בחדר ציבורי: ממלא קוד ואז משתמש באותה לוגיקת JoinAsync.
+    // קיצור דרך להצטרפות לחדר שנבחר מהרשימה הציבורית.
     private async Task JoinPublicAsync(string roomCode)
     {
         RoomCode = roomCode;
@@ -184,12 +197,14 @@ else
     }
 
     // טעינת רשימת חדרים ציבוריים מהמסד.
+    // מושכת מחדש את רשימת החדרים הציבוריים מהמסד.
     private async Task LoadPublicRoomsAsync()
     {
         PublicRooms = await roomDB.GetPublicRoomsAsync();
     }
 
     // ניקוי משאבים ביציאה מהעמוד.
+    // סוגרים את הרענון ואת ה-hub כשעוזבים את הדף.
     public async ValueTask DisposeAsync()
     {
         refreshTimer?.Dispose();

@@ -4,6 +4,8 @@ using TriviaGame.Api.Contracts;
 
 namespace TriviaGame.Api.Services;
 
+// KEYWORDS: login, register, me, forgot password, reset password, email, token, logout, cookie
+
 // השירות הזה מחזיק את כל זרימת האימות:
 // התחברות, הרשמה, שכחתי סיסמה, איפוס סיסמה.
 // הוא לא יוצר sessions או cookies; לקוח ה־MAUI שומר את המידע שה־API מחזיר.
@@ -106,6 +108,7 @@ public sealed class AuthDomainService
     // "שכחתי סיסמה" מייצר טוקן איפוס ושולח קישור במייל.
     public async Task<(bool Ok, string Message)> ForgotPasswordAsync(ForgotPasswordRequest req, string requestBaseUrl)
     {
+        // KEYWORDS: forgot password, email, reset token, reset link
         // בלי אימייל אין למי לשלוח קישור איפוס.
         if (string.IsNullOrWhiteSpace(req.Email))
             return (false, "Email is required.");
@@ -131,6 +134,7 @@ public sealed class AuthDomainService
             // במסד נשמר ה־hash של הטוקן; הטוקן הגולמי נשלח במייל.
             var token = await userDb.CreatePasswordResetTokenAsync(user.UserID, TimeSpan.FromMinutes(30));
 
+            // בונים את כתובת האיפוס הסופית: baseUrl + נתיב reset + token כ-query string.
             // הקישור כולל את הטוקן כ-query string כדי שהלקוח יוכל לשלוח אותו חזרה ל-reset.
             var link = $"{requestBaseUrl.TrimEnd('/')}/reset-password?token={Uri.EscapeDataString(token)}";
             await emailService.SendPasswordResetAsync(user.Email, link);
@@ -146,6 +150,7 @@ public sealed class AuthDomainService
     // איפוס סיסמה מאמת את הסיסמה החדשה ומעביר את הטוקן לשכבת ה-DB.
     public async Task<(bool Ok, string Message)> ResetPasswordAsync(ResetPasswordRequest req)
     {
+        // KEYWORDS: reset password, token, password hash, expiry
         // צריך גם טוקן וגם סיסמה חדשה כדי להשלים איפוס.
         if (string.IsNullOrWhiteSpace(req.Token) || string.IsNullOrWhiteSpace(req.NewPassword))
             return (false, "Invalid reset request.");

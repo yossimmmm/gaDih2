@@ -2,6 +2,7 @@
 window.auth = window.auth || {};
 
 // שולחת בקשת התחברות לשרת ומחזירה מבנה אחיד ללקוח.
+// KEYWORDS: login, cookie, session_token
 window.auth.login = async function (email, password) {
   // Fetch ישיר ל-endpoint של login; ה-cookie חוזר מהשרת כשיש הצלחה.
   const res = await fetch("/api/auth/login", {
@@ -21,6 +22,7 @@ window.auth.login = async function (email, password) {
 };
 
 // בודקת מי המשתמש הנוכחי לפי ה-cookie של session.
+// KEYWORDS: cookie, session_token, auth me
 window.auth.me = async function () {
   try {
     // credentials: include חשוב כדי שהדפדפן ישלח את ה-cookie לשרת.
@@ -38,6 +40,7 @@ window.auth.me = async function () {
 };
 
 // מבצעת logout בצד השרת ומאפשרת לנקות session cookie.
+// KEYWORDS: logout, cookie, session_token, sign out
 window.auth.logout = async function () {
   try {
     // השרת מוחק את ה-session מהמסד וגם מה-cookie.
@@ -48,6 +51,7 @@ window.auth.logout = async function () {
 };
 
 // שולחת בקשה ליצירת reset link למייל של המשתמש.
+// KEYWORDS: forgot password, email, reset link
 window.auth.forgotPassword = async function (email) {
   // timeout מונע מצב שהמסך יישאר "תקוע" אם השרת לא מגיב.
   const controller = new AbortController();
@@ -81,6 +85,7 @@ window.auth.forgotPassword = async function (email) {
 };
 
 // שולחת טוקן + סיסמה חדשה כדי לבצע את האיפוס בפועל.
+// KEYWORDS: reset password, token
 window.auth.resetPassword = async function (token, newPassword) {
   // בקשה ל-endpoint של reset-password.
   const res = await fetch("/api/auth/reset-password", {
