@@ -160,6 +160,93 @@ public partial class MainPage : ContentPage
         });
     }
 
+    // #forgot-password #email
+    // לחיצה על Forgot Password מתחילה את התהליך, אבל עדיין לא משנה את הסיסמה.
+    // היא רק מבקשת מהשרת ליצור token זמני ולשלוח קישור אל האימייל שהוזן.
+    private async void OnForgotPasswordClicked(object? sender, EventArgs e)
+    {
+        await RunUiActionAsync("forgot password", async () =>
+        {
+            // קוראים את האימייל מאותו שדה שמשמש ל-login ול-register.
+            var email = (EmailEntry.Text ?? "").Trim();
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                StatusLabel.Text = "Status: enter an email first.";
+                return;
+            }
+
+            // #forgot-password #api-fetch
+            // מכאן הבקשה עוברת ל-TriviaApiClient ומשם אל POST /api/auth/forgot-password.
+            var result = await api.ForgotPasswordAsync(email);
+
+            // Success מתאר אם התקבלה תשובת HTTP תקינה;
+            // Data.Ok הוא הערך שה-controller החזיר בתוך גוף ה-JSON.
+            StatusLabel.Text = result.Success && result.Data?.Ok == true
+                ? $"Status: {result.Data.Message}"
+                : $"Status: forgot password failed - {result.Data?.Message ?? result.Message}";
+        });
+    }
+
+    // #reset-password #token #new-password
+    // לחיצה על Reset Password משלימה את התהליך בעזרת הטוקן שהגיע במייל.
+    private async void OnResetPasswordClicked(object? sender, EventArgs e)
+    {
+        await RunUiActionAsync("reset password", async () =>
+        {
+            // המשתמש יכול להדביק token בלבד או את כל הקישור שקיבל במייל.
+            // הפונקציה מחלצת את ערך token מה-query string כאשר הודבק קישור מלא.
+            var token = ExtractResetToken(ResetTokenEntry.Text ?? "");
+            // זו הסיסמה החדשה שתעבור validation ו-hash בצד השרת.
+            var newPassword = NewPasswordEntry.Text ?? "";
+
+            if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(newPassword))
+            {
+                StatusLabel.Text = "Status: enter the reset token and a new password.";
+                return;
+            }
+
+            // #reset-password #api-fetch
+            // מכאן נשלחים הטוקן והסיסמה אל POST /api/auth/reset-password.
+            var result = await api.ResetPasswordAsync(token, newPassword);
+            if (!result.Success || result.Data?.Ok != true)
+            {
+                StatusLabel.Text = $"Status: reset password failed - {result.Data?.Message ?? result.Message}";
+                return;
+            }
+
+            // אחרי הצלחה מוחקים מהמסך את המידע הרגיש ולא משאירים token או סיסמה גלויים בזיכרון ה-UI.
+            ResetTokenEntry.Text = "";
+            NewPasswordEntry.Text = "";
+            PasswordEntry.Text = "";
+            StatusLabel.Text = $"Status: {result.Data.Message}";
+        });
+    }
+
+    // #reset-password #token
+    // ממיר את הקלט שבשדה האיפוס לטוקן שה-API מצפה לקבל.
+    private static string ExtractResetToken(string input)
+    {
+        var trimmed = input.Trim();
+
+        // אם זה לא URI תקין, מניחים שהמשתמש כבר הדביק את הטוקן עצמו.
+        if (!Uri.TryCreate(trimmed, UriKind.Absolute, out var resetUri))
+            return trimmed;
+
+        // Query מחזיר טקסט שמתחיל ב-?, לכן מסירים אותו ומחלקים לזוגות key=value.
+        foreach (var pair in resetUri.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var parts = pair.Split('=', 2);
+            if (parts.Length == 2 && string.Equals(parts[0], "token", StringComparison.OrdinalIgnoreCase))
+            {
+                // הטוקן בקישור עבר URL encoding; מחזירים אותו לצורה המקורית לפני השליחה לשרת.
+                return Uri.UnescapeDataString(parts[1]);
+            }
+        }
+
+        // קישור בלי token אינו בקשת איפוס תקינה, ולכן מחזירים מחרוזת ריקה כדי שה-validation יעצור.
+        return "";
+    }
+
     // יציאה רק מנקה את המצב המקומי.
     // אין כאן session בצד שרת, לכן לא צריך לבטל משהו בשרת עצמו.
     private async void OnLogoutClicked(object? sender, EventArgs e)

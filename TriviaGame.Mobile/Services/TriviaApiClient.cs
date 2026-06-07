@@ -35,6 +35,28 @@ public sealed class TriviaApiClient
             new { username, fullName, email, password },
             cancellationToken);
 
+    // #forgot-password #email #reset-token #api-fetch
+    // שולח לשרת את כתובת האימייל שעבורה מבקשים לאפס סיסמה.
+    // השרת מאתר את המשתמש, יוצר token זמני ושולח קישור איפוס במייל.
+    public Task<ApiResult<ApiSimpleResponse>> ForgotPasswordAsync(string email, CancellationToken cancellationToken = default) =>
+        apiClient.PostAsync<object, ApiSimpleResponse>(
+            // זהו אותו endpoint שמוגדר ב-AuthController תחת HttpPost("forgot-password").
+            "/api/auth/forgot-password",
+            // שם השדה חייב להיות email כדי להתאים ל-ForgotPasswordRequest בצד השרת.
+            new { email },
+            cancellationToken);
+
+    // #reset-password #token #new-password #api-fetch
+    // שולח לשרת את הטוקן מהמייל ואת הסיסמה החדשה שהמשתמש בחר.
+    // השרת בודק שהטוקן קיים, לא פג תוקף ולא נוצל לפני שינוי ה-password hash.
+    public Task<ApiResult<ApiSimpleResponse>> ResetPasswordAsync(string token, string newPassword, CancellationToken cancellationToken = default) =>
+        apiClient.PostAsync<object, ApiSimpleResponse>(
+            // זהו אותו endpoint שמוגדר ב-AuthController תחת HttpPost("reset-password").
+            "/api/auth/reset-password",
+            // שמות השדות חייבים להתאים ל-ResetPasswordRequest בצד השרת.
+            new { token, newPassword },
+            cancellationToken);
+
     // מחזירה את הפרופיל הנוכחי לפי userId.
     // אין כאן session, לכן כל קריאה נשענת על המשתמש ששמור באפליקציה.
     // #me #profile #auth #api-fetch - מבקש מה-API את פרטי המשתמש המחובר.

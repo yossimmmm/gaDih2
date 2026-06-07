@@ -56,7 +56,7 @@
             </Border>
 
             <!-- אזור Auth:
-                 login, register, טעינת פרופיל, ועדכון פרופיל. -->
+                 login, register, שכחתי סיסמה, איפוס סיסמה, טעינת פרופיל ועדכון פרופיל. -->
             <Border Stroke="#D0D0D0" Padding="10" StrokeShape="RoundRectangle 8">
                 <VerticalStackLayout Spacing="8">
                     <Label Text="Auth" FontAttributes="Bold" />
@@ -71,6 +71,25 @@
                         <Button Text="Register" Clicked="OnRegisterClicked" />
                         <Button Text="Logout" Clicked="OnLogoutClicked" />
                     </HorizontalStackLayout>
+
+                    <!-- #forgot-password
+                         הכפתור משתמש באימייל שכבר הוזן ב-EmailEntry.
+                         ה-API יוצר token ושולח אותו למשתמש בתוך קישור במייל. -->
+                    <Button Text="Forgot Password"
+                            Clicked="OnForgotPasswordClicked"
+                            HorizontalOptions="Start" />
+
+                    <!-- #reset-password
+                         הטוקן מגיע מקישור האיפוס שנשלח במייל.
+                         הסיסמה החדשה נמצאת בשדה נפרד כדי לא לערבב אותה עם סיסמת ה-login. -->
+                    <Entry x:Name="ResetTokenEntry"
+                           Placeholder="Reset token or full email link" />
+                    <Entry x:Name="NewPasswordEntry"
+                           Placeholder="New password"
+                           IsPassword="True" />
+                    <Button Text="Reset Password"
+                            Clicked="OnResetPasswordClicked"
+                            HorizontalOptions="Start" />
 
                     <!-- פעולות נוספות על פרופיל המשתמש. -->
                     <HorizontalStackLayout Spacing="8">
