@@ -286,6 +286,32 @@ WHERE created_at < (NOW() - INTERVAL 3 HOUR);";
             return await cmd.ExecuteNonQueryAsync();
         }
 
+        public async Task<int> CleanupDisconnectedRoomsAsync()
+        {
+            // #room-cleanup #disconnect #heartbeat #last-seen
+            // זו פעולת ניקוי כללית למצבים שבהם המשתמש נעלם בלי Leave מסודר.
+            // לדוגמה: סגירת דפדפן, נפילת אינטרנט, כיבוי מחשב, או קריסת SignalR.
+            // במקרה כזה OnDisconnectedAsync לא תמיד מספיק, ולכן מסתמכים גם על last_seen.
+            var deleted = 0;
+
+            // קודם מוחקים חדרים ישנים מאוד לפי created_at.
+            // זה תופס חדרים שנשארו במסד יותר מדי זמן גם אם היו בהם פעימות לב בעבר.
+            deleted += await DeleteExpiredRoomsAsync();
+
+            await using var conn = new MySqlConnection(ConnStr);
+            await conn.OpenAsync();
+
+            // אחר כך מוחקים שחקנים שלא שלחו heartbeat בזמן האחרון.
+            // אם משתמש לא שלח RoomHeartbeat יותר משתי דקות, הוא נחשב מנותק.
+            deleted += await DeleteStaleRoomPlayersAsync(conn);
+
+            // אחרי שמחקנו שחקנים מנותקים, ייתכן שנשארו חדרים בלי אף שחקן.
+            // חדר בלי שחקנים הוא חדר מת ולכן מוחקים אותו.
+            deleted += await DeleteEmptyRoomsAsync(conn);
+
+            return deleted;
+        }
+
         public async Task<List<Room>> GetPublicRoomsAsync()
         {
             // רק חדרים ציבוריים פעילים עם לפחות שחקן אחד עדכני מוצגים בלובי.
@@ -294,14 +320,12 @@ WHERE created_at < (NOW() - INTERVAL 3 HOUR);";
 
             try
             {
-                await DeleteExpiredRoomsAsync();
+                // לפני שמציגים חדרים ציבוריים מנקים חדרים/שחקנים שמתו.
+                // אותו ניקוי רץ גם ברקע דרך RoomCleanupService, אבל כאן יש שכבת הגנה נוספת.
+                await CleanupDisconnectedRoomsAsync();
 
                 await using var conn = new MySqlConnection(ConnStr);
                 await conn.OpenAsync();
-
-                // קודם מוחקים שחקני חדר לא פעילים, ואז מוחקים חדרים שהתרוקנו.
-                await DeleteStaleRoomPlayersAsync(conn);
-                await DeleteEmptyRoomsAsync(conn);
 
                 const string sql = @"
 SELECT r.room_id, r.room_code, r.room_name, r.host_id, r.is_active, r.is_public, r.question_type_id, r.created_at

@@ -20,6 +20,10 @@ builder.Services.AddScoped<UserSessionState>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<GeminiAdviceService>();
 builder.Services.AddSingleton<AuthAuditDispatcher>();
+// #room-cleanup #disconnect #heartbeat #last-seen
+// שירות רקע שמנקה חדרים/שחקנים שנשארו בגלל ניתוק לא מסודר.
+// בלי זה חדר יכול להישאר במסד עד שמישהו יפתח שוב את רשימת החדרים הציבוריים.
+builder.Services.AddHostedService<RoomCleanupService>();
 builder.Services.AddScoped(sp =>
 {
     // בונים את הגדרות ה-SMTP מתוך הקונפיגורציה של הסביבה.
