@@ -114,6 +114,7 @@ public partial class MainPage : ContentPage
     {
         await RunUiActionAsync("login", async () =>
         {
+            // #login #auth #api-fetch - מכאן לחיצה על Login עוברת ל-TriviaApiClient.
             var result = await api.LoginAsync(EmailEntry.Text ?? "", PasswordEntry.Text ?? "");
             if (!result.Success || result.Data is null || !result.Data.Ok)
             {
@@ -146,6 +147,7 @@ public partial class MainPage : ContentPage
     {
         await RunUiActionAsync("register", async () =>
         {
+            // #register #auth #api-fetch - מכאן נשלחים שדות ההרשמה ל-API.
             var result = await api.RegisterAsync(
                 UsernameEntry.Text ?? "",
                 FullNameEntry.Text ?? "",
@@ -192,6 +194,7 @@ public partial class MainPage : ContentPage
             return;
         }
 
+        // #me #profile #auth #api-fetch - רענון פרטי המשתמש מהשרת לאחר התחברות או עדכון.
         var me = await api.GetMeAsync(currentUser.UserId);
         if (!me.Success || me.Data is null || !me.Data.Authenticated)
         {
@@ -218,6 +221,7 @@ public partial class MainPage : ContentPage
                 return;
             }
 
+            // #profile #update-profile #api-fetch - לחיצת עדכון הפרופיל שולחת את הערכים הנוכחיים.
             var result = await api.UpdateProfileAsync(
                 currentUser.UserId,
                 UsernameEntry.Text ?? "",
@@ -235,6 +239,7 @@ public partial class MainPage : ContentPage
     {
         await RunUiActionAsync("load question types", async () =>
         {
+            // #question-types #question #rooms #api-fetch - טוען קטגוריות לתיבת הבחירה.
             var result = await api.GetQuestionTypesAsync();
             if (!result.Success || result.Data is null)
             {
@@ -265,6 +270,7 @@ public partial class MainPage : ContentPage
             if (QuestionTypePicker.SelectedIndex >= 0 && QuestionTypePicker.SelectedIndex < questionTypes.Count)
                 selectedQuestionTypeId = questionTypes[QuestionTypePicker.SelectedIndex].QuestionTypeID;
 
+            // #create-room #rooms #api-fetch - יוצר את החדר לפי שם, פרטיות וסוג שאלות.
             var result = await api.CreateRoomAsync(
                 currentUser.UserId,
                 RoomNameEntry.Text ?? "",
@@ -282,6 +288,7 @@ public partial class MainPage : ContentPage
             // מציגים מיד את קוד החדר שהשרת יצר כדי שאפשר יהיה להצטרף ולהתחיל משחק.
             RoomCodeEntry.Text = result.Data.Room.RoomCode;
             ActiveRoomLabel.Text = $"Active room: {result.Data.Room.RoomCode}";
+            // #join-room #create-room #rooms #api-fetch - לאחר יצירה, המארח מצטרף אוטומטית לחדר.
             var joinResult = await api.JoinRoomAsync(
                 currentUser.UserId,
                 result.Data.Room.RoomCode,
@@ -305,6 +312,7 @@ public partial class MainPage : ContentPage
 
     private async Task RefreshPublicRoomsAsync()
     {
+        // #public-rooms #rooms #api-fetch - רענון פנימי של רשימת החדרים הציבוריים.
         var result = await api.GetPublicRoomsAsync();
         if (!result.Success || result.Data is null)
             return;
@@ -320,6 +328,7 @@ public partial class MainPage : ContentPage
     {
         await RunUiActionAsync("load public rooms", async () =>
         {
+            // #public-rooms #rooms #api-fetch - לחיצת הכפתור טוענת חדרים ציבוריים מהשרת.
             var result = await api.GetPublicRoomsAsync();
             if (!result.Success || result.Data is null)
             {
@@ -358,6 +367,7 @@ public partial class MainPage : ContentPage
             }
 
             var roomCode = (RoomCodeEntry.Text ?? "").Trim().ToUpperInvariant();
+            // #join-room #rooms #players #api-fetch - מצרף את המשתמש לחדר לפי הקוד שהוזן.
             var result = await api.JoinRoomAsync(currentUser.UserId, roomCode, NicknameEntry.Text ?? "");
             if (!result.Success || result.Data is null || !result.Data.Ok)
             {
@@ -381,6 +391,7 @@ public partial class MainPage : ContentPage
         await RunUiActionAsync("load room players", async () =>
         {
             var roomCode = (RoomCodeEntry.Text ?? "").Trim().ToUpperInvariant();
+            // #room-players #rooms #players #api-fetch - טוען את רשימת השחקנים בחדר הפעיל.
             var result = await api.GetRoomPlayersAsync(roomCode);
             if (!result.Success || result.Data is null)
             {
@@ -428,6 +439,7 @@ public partial class MainPage : ContentPage
             }
 
             var questionCount = int.TryParse(QuestionCountEntry.Text, out var parsed) ? parsed : 10;
+            // #start-game #game #play #api-fetch - המארח מבקש מהשרת לפתוח משחק בחדר.
             var result = await api.StartGameAsync(currentUser.UserId, roomCode, questionCount);
             if (!result.Success || result.Data?.Ok != true)
             {
@@ -463,6 +475,7 @@ public partial class MainPage : ContentPage
             return;
         }
 
+        // #question #current-question #game #play #api-fetch - טוען את השאלה הפעילה ואת אפשרויות התשובה.
         var result = await api.GetCurrentQuestionAsync(roomCode);
         if (!result.Success || result.Data is null)
         {
@@ -524,6 +537,7 @@ public partial class MainPage : ContentPage
             }
 
             var roomCode = (RoomCodeEntry.Text ?? "").Trim().ToUpperInvariant();
+            // #answer #submit-answer #question #game #play #api-fetch - שולח לשרת את התשובה שנבחרה.
             var result = await api.SubmitAnswerAsync(
                 roomCode,
                 currentRoomPlayerId,
@@ -550,6 +564,7 @@ public partial class MainPage : ContentPage
         await RunUiActionAsync("load scoreboard", async () =>
         {
             var roomCode = (RoomCodeEntry.Text ?? "").Trim().ToUpperInvariant();
+            // #scoreboard #results #game #api-fetch - טוען את תוצאות השחקנים בחדר.
             var result = await api.GetScoreboardAsync(roomCode);
             if (!result.Success || result.Data is null)
             {
@@ -577,6 +592,7 @@ public partial class MainPage : ContentPage
                 return;
             }
 
+            // #stats #statistics #results #api-fetch - טוען סטטיסטיקות היסטוריות של המשתמש.
             var result = await api.GetMyStatsAsync(currentUser.UserId);
             if (!result.Success || result.Data is null)
             {
@@ -596,6 +612,7 @@ public partial class MainPage : ContentPage
     {
         await RunUiActionAsync("load top players", async () =>
         {
+            // #top-players #leaderboard #statistics #api-fetch - טוען את עשרת השחקנים המובילים.
             var result = await api.GetTopPlayersAsync(10);
             if (!result.Success || result.Data is null)
             {
@@ -629,6 +646,7 @@ public partial class MainPage : ContentPage
                 return;
             }
 
+            // #assistant #gemini #advice #api-fetch - שולח את הטקסט לעוזר דרך ה-API.
             var result = await api.AskAssistantAsync(currentUser.UserId, prompt);
             if (!result.Success || result.Data is null)
             {
