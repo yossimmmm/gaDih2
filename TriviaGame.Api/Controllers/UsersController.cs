@@ -20,6 +20,7 @@ public sealed class UsersController : ControllerBase
     }
 
     // מחזיר את הפרופיל של המשתמש לפי userId.
+    // #me #profile #users - endpoint לטעינת פרטי הפרופיל.
     [HttpGet("me")]
     public async Task<IActionResult> GetMe([FromQuery] int userId)
     {
@@ -41,6 +42,7 @@ public sealed class UsersController : ControllerBase
     }
 
     // מעדכן username, full name ואימייל.
+    // #profile #update-profile #users - endpoint לשמירת שינויים בפרופיל.
     [HttpPut("me/profile")]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
     {
@@ -50,6 +52,7 @@ public sealed class UsersController : ControllerBase
     }
 
     // משנה את הסיסמה של המשתמש אחרי בדיקת הסיסמה הישנה.
+    // #password #change-password #profile #users - endpoint להחלפת סיסמה מתוך הפרופיל.
     [HttpPut("me/password")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
     {
@@ -59,6 +62,7 @@ public sealed class UsersController : ControllerBase
     }
 
     // מחזיר סטטיסטיקות מצטברות למשתמש.
+    // #stats #statistics #results #users - endpoint לטעינת הסטטיסטיקות המצטברות.
     [HttpGet("me/stats")]
     public async Task<IActionResult> GetStats([FromQuery] int userId)
     {
@@ -75,6 +79,7 @@ public sealed class UsersController : ControllerBase
     }
 
     // מחזיר את תוצאות המשחק האחרונות של המשתמש.
+    // #recent-results #results #statistics #users - endpoint להיסטוריית המשחקים האחרונים.
     [HttpGet("me/recent-results")]
     public async Task<IActionResult> GetRecentResults([FromQuery] int userId, [FromQuery] int limit = 10)
     {

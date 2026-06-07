@@ -4,8 +4,6 @@ using TriviaGame.Api.Services;
 
 namespace TriviaGame.Api.Controllers;
 
-// #login #register #me #forgot-password #reset-password #logout #cookie #email #token
-
 // נקודות קצה של אימות משתמשים:
 // התחברות, הרשמה, me, שכחתי סיסמה, איפוס סיסמה.
 [ApiController]
@@ -23,6 +21,7 @@ public sealed class AuthController : ControllerBase
     }
 
     // התחברות עם אימייל וסיסמה.
+    // #login #auth - נקודת הכניסה לבקשת ההתחברות מהאתר או מ-MAUI.
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
@@ -35,6 +34,7 @@ public sealed class AuthController : ControllerBase
     }
 
     // הרשמה של משתמש חדש אחרי בדיקת תקינות.
+    // #register #auth - נקודת הכניסה ליצירת משתמש חדש.
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
@@ -46,6 +46,7 @@ public sealed class AuthController : ControllerBase
     }
 
     // מחזיר את המשתמש המחובר לפי userId.
+    // #me #auth #profile - נקודת הכניסה לטעינת פרטי המשתמש הנוכחי.
     [HttpGet("me")]
     public async Task<IActionResult> Me([FromQuery] int userId)
     {
@@ -70,6 +71,7 @@ public sealed class AuthController : ControllerBase
     }
 
     // מתחיל תהליך איפוס סיסמה ושולח מייל עם קישור.
+    // #forgot-password #email #reset-token #reset-link - נקודת הכניסה לבקשת מייל איפוס.
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
     {
@@ -83,6 +85,7 @@ public sealed class AuthController : ControllerBase
     }
 
     // משלים את איפוס הסיסמה בעזרת הטוקן שנשלח במייל.
+    // #reset-password #token #password-hash #expiry - נקודת הכניסה לשמירת הסיסמה החדשה.
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
     {

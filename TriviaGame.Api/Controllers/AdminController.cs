@@ -18,6 +18,7 @@ public sealed class AdminController : ControllerBase
     }
 
     // מחזיר את רשימת המשתמשים עם אפשרות סינון לפי role.
+    // #admin-users #admin #users - endpoint לטעינת רשימת המשתמשים לניהול.
     [HttpGet("users")]
     public async Task<IActionResult> GetUsers([FromQuery] string? role = null)
     {
@@ -40,6 +41,7 @@ public sealed class AdminController : ControllerBase
     }
 
     // משנה את תפקיד המשתמש.
+    // #admin-role #admin #users - endpoint לשינוי תפקיד User או Admin.
     [HttpPost("users/{userId:int}/role")]
     public async Task<IActionResult> UpdateRole(int userId, [FromBody] UpdateRoleRequest request)
     {
@@ -49,6 +51,7 @@ public sealed class AdminController : ControllerBase
     }
 
     // מעדכן משתמש מלא מתוך מסך הניהול.
+    // #admin-update #admin-users #admin - endpoint לעדכון פרטי משתמש בידי מנהל.
     [HttpPut("users/{userId:int}")]
     public async Task<IActionResult> UpdateUser(int userId, [FromBody] AdminUserUpdateRequest request)
     {
@@ -58,6 +61,7 @@ public sealed class AdminController : ControllerBase
     }
 
     // מוחק משתמש.
+    // #admin-delete #admin-users #admin - endpoint למחיקת משתמש.
     [HttpDelete("users/{userId:int}")]
     public async Task<IActionResult> DeleteUser(int userId)
     {

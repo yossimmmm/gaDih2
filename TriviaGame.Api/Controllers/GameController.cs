@@ -21,6 +21,7 @@ public sealed class GameController : ControllerBase
     }
 
     // מתחיל סיבוב משחק חדש בחדר.
+    // #start-game #game #play - endpoint שמתחיל משחק ובוחר שאלות לחדר.
     [HttpPost("{roomCode}/start")]
     public async Task<IActionResult> StartGame(string roomCode, [FromBody] StartGameRequest request)
     {
@@ -44,6 +45,7 @@ public sealed class GameController : ControllerBase
     }
 
     // מחזיר את השאלה הנוכחית או מסמן שהמשחק הסתיים.
+    // #question #current-question #game #play - endpoint שמחזיר את השאלה הפעילה.
     [HttpGet("{roomCode}/current-question")]
     public async Task<IActionResult> GetCurrentQuestion(string roomCode)
     {
@@ -65,6 +67,7 @@ public sealed class GameController : ControllerBase
     }
 
     // שומר תשובה של שחקן ומרענן את תוצאות החדר.
+    // #answer #submit-answer #question #game #play - endpoint ששומר את התשובה שנבחרה.
     [HttpPost("{roomCode}/answer")]
     public async Task<IActionResult> SubmitAnswer(string roomCode, [FromBody] SubmitAnswerRequest request)
     {
@@ -85,6 +88,7 @@ public sealed class GameController : ControllerBase
     }
 
     // מאשר שמירה מלאה של תוצאות החדר.
+    // #save-results #results #stats #game - endpoint ששומר את תוצאות המשחק במסד.
     [HttpPost("{roomCode}/save-results")]
     public async Task<IActionResult> SaveResults(string roomCode)
     {
@@ -100,6 +104,7 @@ public sealed class GameController : ControllerBase
     }
 
     // מחזיר את לוח הניקוד של החדר.
+    // #scoreboard #results #game - endpoint שמחזיר את ניקוד שחקני החדר.
     [HttpGet("{roomCode}/scoreboard")]
     public async Task<IActionResult> Scoreboard(string roomCode)
     {
@@ -124,6 +129,7 @@ public sealed class GameController : ControllerBase
     }
 
     // מחזיר את טבלת המובילים של המשחק.
+    // #top-players #leaderboard #statistics #game - endpoint שמחזיר את השחקנים המובילים.
     [HttpGet("top-players")]
     public async Task<IActionResult> TopPlayers([FromQuery] int limit = 10)
     {

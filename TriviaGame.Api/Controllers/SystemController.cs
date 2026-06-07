@@ -10,6 +10,7 @@ public sealed class SystemController : ControllerBase
 {
     // נקודת health בסיסית לקריאה בלבד.
     // מחזירה ok + זמן UTC נוכחי.
+    // #health #api-health - endpoint לבדיקה מהירה שה-API רץ ומגיב.
     [HttpGet("health")]
     public IActionResult Health()
     {

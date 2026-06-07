@@ -19,6 +19,7 @@ public sealed class RoomsController : ControllerBase
     }
 
     // מחזיר את הקטגוריות הקיימות כדי שהלקוח יוכל להציג מסנן יצירה.
+    // #question-types #question #rooms - endpoint לטעינת סוגי השאלות.
     [HttpGet("question-types")]
     public async Task<IActionResult> GetQuestionTypes()
     {
@@ -28,6 +29,7 @@ public sealed class RoomsController : ControllerBase
     }
 
     // יוצר חדר חדש עבור המשתמש המחובר.
+    // #create-room #rooms - endpoint שיוצר חדר חדש במסד הנתונים.
     [HttpPost]
     public async Task<IActionResult> CreateRoom([FromBody] CreateRoomRequest request)
     {
@@ -41,6 +43,7 @@ public sealed class RoomsController : ControllerBase
     }
 
     // מחזיר את כל החדרים הציבוריים שהמשתמש יכול להצטרף אליהם.
+    // #public-rooms #rooms - endpoint לרשימת החדרים הציבוריים.
     [HttpGet("public")]
     public async Task<IActionResult> GetPublicRooms()
     {
@@ -50,6 +53,7 @@ public sealed class RoomsController : ControllerBase
     }
 
     // מאתר חדר לפי קוד החדר.
+    // #get-room #room-code #rooms - endpoint לטעינת חדר מסוים לפי הקוד שלו.
     [HttpGet("{roomCode}")]
     public async Task<IActionResult> GetRoom(string roomCode)
     {
@@ -59,6 +63,7 @@ public sealed class RoomsController : ControllerBase
     }
 
     // מצרף משתמש לחדר לפי קוד חדר.
+    // #join-room #rooms #players - endpoint שמצרף משתמש לחדר.
     [HttpPost("join")]
     public async Task<IActionResult> Join([FromBody] JoinRoomRequest request)
     {
@@ -72,6 +77,7 @@ public sealed class RoomsController : ControllerBase
     }
 
     // מסיר שחקן מהחדר.
+    // #leave-room #rooms #players - endpoint שמוציא משתמש מחדר.
     [HttpPost("{roomCode}/leave")]
     public async Task<IActionResult> Leave(string roomCode, [FromQuery] int userId)
     {
@@ -86,6 +92,7 @@ public sealed class RoomsController : ControllerBase
     }
 
     // מחזיר את רשימת השחקנים הרשומים בחדר.
+    // #room-players #rooms #players - endpoint לטעינת שחקני החדר.
     [HttpGet("{roomCode}/players")]
     public async Task<IActionResult> Players(string roomCode)
     {

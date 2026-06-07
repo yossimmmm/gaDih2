@@ -18,6 +18,7 @@ public sealed class AssistantController : ControllerBase
     }
 
     // מחזיר רמז קצר לשאלה הפעילה.
+    // #advice #assistant #gemini #question - endpoint לקבלת רמז בזמן שאלה.
     [HttpPost("advice")]
     public async Task<IActionResult> Advice([FromBody] AssistantAdviceRequest request, CancellationToken cancellationToken)
     {
@@ -28,6 +29,7 @@ public sealed class AssistantController : ControllerBase
     }
 
     // מחזיר תשובה אישית על בסיס הנתונים וההיסטוריה של המשתמש.
+    // #assistant #chat #gemini - endpoint לשיחה אישית עם העוזר.
     [HttpPost("chat")]
     public async Task<IActionResult> Chat([FromBody] AssistantChatRequest request, CancellationToken cancellationToken)
     {
