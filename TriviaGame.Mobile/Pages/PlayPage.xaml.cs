@@ -7,26 +7,38 @@ namespace TriviaGame.Mobile.Pages;
 // משתמש ב-roomCode וב-RoomPlayerID שנשמרו ב-MobileSessionState אחרי יצירת/הצטרפות לחדר.
 public partial class PlayPage : ContentPage
 {
+    // השירות שדרכו הדף מתחיל משחק, טוען שאלה, שולח תשובה וטוען scoreboard.
     private readonly TriviaApiClient api;
+
+    // מכיל את המשתמש, החדר, RoomPlayer, השאלה והבחירה הנוכחית.
     private readonly MobileSessionState session;
 
     public PlayPage()
     {
+        // טוען את PlayPage.xaml ויוצר את כל הפקדים בעלי x:Name.
         InitializeComponent();
+
+        // אותם services משותפים שהוגדרו ב-MauiProgram.
         api = PageServiceLocator.Get<TriviaApiClient>();
         session = PageServiceLocator.Get<MobileSessionState>();
+
+        // בתחילת הדרך אין אפשרויות תשובה, לכן מציגים אוסף ריק ולא null.
         OptionsView.ItemsSource = Array.Empty<QuestionOptionRow>();
     }
 
     protected override void OnAppearing()
     {
+        // מופעל בכל פעם שנכנסים למסך, כולל אחרי בחירת חדר ב-RoomsPage.
         base.OnAppearing();
+
+        // קורא את מצב החדר והשאלה מה-session ומעתיק אותו ל-UI.
         UpdateRoomLabel();
         RenderQuestion();
     }
 
     private async Task RunUiActionAsync(string actionName, Func<Task> action)
     {
+        // מרכז loading וחריגות לכל פעולות המשחק.
         BusyIndicator.IsVisible = true;
         BusyIndicator.IsRunning = true;
         StatusLabel.Text = $"Status: {actionName}...";
@@ -53,8 +65,14 @@ public partial class PlayPage : ContentPage
             if (!EnsureCanUseRoom())
                 return;
 
+            // ברירת המחדל היא 10 שאלות.
             var count = 10;
+
+            // TryParse מחזיר false במקום לזרוק חריגה אם המשתמש כתב טקסט שאינו מספר.
+            // _ אומר שאין צורך לשמור את ערך ה-bool שהפונקציה מחזירה.
             _ = int.TryParse(QuestionCountEntry.Text, out count);
+
+            // גם מספר שלילי או אפס מוחלף בברירת המחדל.
             if (count <= 0)
                 count = 10;
 
@@ -62,6 +80,7 @@ public partial class PlayPage : ContentPage
             // StartGame שולח userId של ה-host, roomCode וכמות שאלות.
             // השרת בוחר שאלות ושומר אותן ל-room_questions.
             var result = await api.StartGameAsync(
+                // ! אומר לקומפיילר שכבר בדקנו שהערך אינו null בתוך EnsureCanUseRoom.
                 session.CurrentUser!.UserId,
                 session.CurrentRoom!.RoomCode,
                 count);
@@ -73,12 +92,14 @@ public partial class PlayPage : ContentPage
             }
 
             StatusLabel.Text = "Status: game started.";
+            // אחרי שהשרת יצר room_questions, טוענים מיד את השאלה הראשונה.
             await LoadCurrentQuestionAsync();
         });
     }
 
     private async void OnLoadQuestionClicked(object? sender, EventArgs e)
     {
+        // method group: מעבירים את הפונקציה עצמה ל-RunUiActionAsync.
         await RunUiActionAsync("load question", LoadCurrentQuestionAsync);
     }
 
@@ -89,6 +110,7 @@ public partial class PlayPage : ContentPage
 
         // #question #current-question #game #play #api-fetch
         // מבקשים מהשרת את השאלה הפעילה. אם אין עוד שאלות, השרת מחזיר Finished=true.
+        // roomCode מזהה את המשחק שאת השאלה שלו רוצים לקבל.
         var result = await api.GetCurrentQuestionAsync(session.CurrentRoom!.RoomCode);
         if (!result.Success || result.Data is null)
         {
@@ -98,14 +120,20 @@ public partial class PlayPage : ContentPage
 
         if (result.Data.Finished)
         {
+            // אין עוד שאלה, לכן מוחקים את השאלה והבחירה הישנות מה-session.
             session.CurrentQuestion = null;
             session.SelectedOption = null;
+
+            // מרעננים את הפקדים כך שלא תישאר שאלה ישנה על המסך.
             RenderQuestion();
             StatusLabel.Text = "Status: game finished. Load scoreboard.";
             return;
         }
 
+        // שומרים את השאלה המלאה, כולל Options, כדי ש-Submit יוכל לקרוא QuestionID.
         session.CurrentQuestion = result.Data.Question;
+
+        // כל שאלה חדשה מתחילה בלי תשובה מסומנת.
         session.SelectedOption = null;
         RenderQuestion();
         StatusLabel.Text = "Status: question loaded.";
@@ -116,6 +144,7 @@ public partial class PlayPage : ContentPage
         // #answer #question
         // בחירת תשובה רק שומרת את האופציה בזיכרון.
         // היא לא נשמרת ב-DB עד לחיצה על Submit Answer.
+        // as מחזיר QuestionOptionRow אם הפריט הוא מהסוג הנכון, או null אם אין בחירה.
         session.SelectedOption = e.CurrentSelection.FirstOrDefault() as QuestionOptionRow;
         StatusLabel.Text = session.SelectedOption is null
             ? "Status: no option selected."
@@ -140,9 +169,16 @@ public partial class PlayPage : ContentPage
             // שולחים roomCode, RoomPlayerID, QuestionID ו-OptionID.
             // השרת שומר את התשובה ב-player_answers ומחזיר הודעה.
             var result = await api.SubmitAnswerAsync(
+                // מזהה החדר קובע לאיזה משחק שייכת התשובה.
                 session.CurrentRoom!.RoomCode,
+
+                // RoomPlayerID קובע איזה שחקן בתוך החדר ענה.
                 session.CurrentPlayer!.RoomPlayerID,
+
+                // QuestionID קובע על איזו שאלה ענו.
                 session.CurrentQuestion.QuestionID,
+
+                // OptionID קובע איזו תשובה נבחרה.
                 session.SelectedOption.OptionID);
 
             if (!result.Success || result.Data?.Ok != true)
@@ -152,6 +188,8 @@ public partial class PlayPage : ContentPage
             }
 
             StatusLabel.Text = $"Status: {result.Data.Message}";
+            // אחרי שמירת התשובה מבקשים מהשרת את השאלה הבאה.
+            // אם אין שאלה נוספת, השרת יחזיר Finished=true.
             await LoadCurrentQuestionAsync();
         });
     }
@@ -171,6 +209,7 @@ public partial class PlayPage : ContentPage
 
         // #scoreboard #results #game #api-fetch
         // מבקש מהשרת ניקוד של כל השחקנים בחדר.
+        // scoreboard מחושב בצד השרת לפי התשובות שנשמרו ב-player_answers.
         var result = await api.GetScoreboardAsync(session.CurrentRoom.RoomCode);
         if (!result.Success || result.Data is null)
         {
@@ -178,6 +217,7 @@ public partial class PlayPage : ContentPage
             return;
         }
 
+        // ממירים כל ScoreRow לטקסט nickname: correct/answered.
         ScoreboardLabel.Text = "Scoreboard: " + string.Join(
             " | ",
             result.Data.Rows.Select(r => $"{r.Nickname}: {r.CorrectCount}/{r.AnsweredCount}"));
@@ -205,11 +245,13 @@ public partial class PlayPage : ContentPage
             return false;
         }
 
+        // true אומר ל-event handler שמותר להמשיך לקריאת ה-API.
         return true;
     }
 
     private void UpdateRoomLabel()
     {
+        // ?. מאפשר להציג RoomPlayerID גם אם CurrentPlayer עדיין null בלי לזרוק חריגה.
         RoomLabel.Text = session.CurrentRoom is null
             ? "Room: none"
             : $"Room: {session.CurrentRoom.RoomName} ({session.CurrentRoom.RoomCode}), playerId={session.CurrentPlayer?.RoomPlayerID}";
@@ -217,16 +259,23 @@ public partial class PlayPage : ContentPage
 
     private void RenderQuestion()
     {
+        // שומרים את השאלה במשתנה מקומי כדי לפשט את שאר הקוד.
         var question = session.CurrentQuestion;
+
+        // אם question=null מציגים placeholder; אחרת את הטקסט שהגיע מהשרת.
         QuestionLabel.Text = question is null
             ? "Question: -"
             : $"Question: {question.QuestionText}";
         TimerLabel.Text = question is null
             ? "Time limit: -"
             : $"Time limit: {question.TimeLimitSec} seconds";
+        // מחברים את רשימת האפשרויות ל-CollectionView.
+        // אוסף ריק מונע הצגת אפשרויות של שאלה קודמת.
         OptionsView.ItemsSource = question is null
             ? Array.Empty<QuestionOptionRow>()
             : question.Options;
+
+        // מאפסים סימון ויזואלי של תשובה בכל רינדור.
         OptionsView.SelectedItem = null;
     }
 }
