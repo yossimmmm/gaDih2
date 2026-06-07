@@ -167,11 +167,16 @@ public partial class MainPage : ContentPage
     {
         await RunUiActionAsync("forgot password", async () =>
         {
-            // קוראים את האימייל מאותו שדה שמשמש ל-login ול-register.
-            var email = (EmailEntry.Text ?? "").Trim();
+            // קוראים קודם את האימייל מאזור שחזור הסיסמה.
+            // אם המשתמש כבר מילא את האימייל באזור ה-login, משתמשים בו כ-fallback.
+            var email = (ForgotEmailEntry.Text ?? "").Trim();
+            if (string.IsNullOrWhiteSpace(email))
+                email = (EmailEntry.Text ?? "").Trim();
+
             if (string.IsNullOrWhiteSpace(email))
             {
                 StatusLabel.Text = "Status: enter an email first.";
+                PasswordRecoveryLabel.Text = "Password recovery: enter the account email.";
                 return;
             }
 
@@ -181,9 +186,18 @@ public partial class MainPage : ContentPage
 
             // Success מתאר אם התקבלה תשובת HTTP תקינה;
             // Data.Ok הוא הערך שה-controller החזיר בתוך גוף ה-JSON.
-            StatusLabel.Text = result.Success && result.Data?.Ok == true
-                ? $"Status: {result.Data.Message}"
-                : $"Status: forgot password failed - {result.Data?.Message ?? result.Message}";
+            if (result.Success && result.Data?.Ok == true)
+            {
+                // מעדכנים גם את שדה ה-login כדי שיהיה ברור לאיזה חשבון בוצע reset.
+                EmailEntry.Text = email;
+                PasswordRecoveryLabel.Text = $"Password recovery: {result.Data.Message}";
+                StatusLabel.Text = $"Status: {result.Data.Message}";
+                return;
+            }
+
+            var message = result.Data?.Message ?? result.Message;
+            PasswordRecoveryLabel.Text = $"Password recovery: failed - {message}";
+            StatusLabel.Text = $"Status: forgot password failed - {message}";
         });
     }
 
@@ -202,6 +216,7 @@ public partial class MainPage : ContentPage
             if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(newPassword))
             {
                 StatusLabel.Text = "Status: enter the reset token and a new password.";
+                PasswordRecoveryLabel.Text = "Password recovery: paste the email link/token and enter a new password.";
                 return;
             }
 
@@ -210,7 +225,9 @@ public partial class MainPage : ContentPage
             var result = await api.ResetPasswordAsync(token, newPassword);
             if (!result.Success || result.Data?.Ok != true)
             {
-                StatusLabel.Text = $"Status: reset password failed - {result.Data?.Message ?? result.Message}";
+                var message = result.Data?.Message ?? result.Message;
+                PasswordRecoveryLabel.Text = $"Password recovery: reset failed - {message}";
+                StatusLabel.Text = $"Status: reset password failed - {message}";
                 return;
             }
 
@@ -218,6 +235,7 @@ public partial class MainPage : ContentPage
             ResetTokenEntry.Text = "";
             NewPasswordEntry.Text = "";
             PasswordEntry.Text = "";
+            PasswordRecoveryLabel.Text = $"Password recovery: {result.Data.Message}";
             StatusLabel.Text = $"Status: {result.Data.Message}";
         });
     }
