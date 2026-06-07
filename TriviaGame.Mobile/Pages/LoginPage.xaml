@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TriviaGame.Mobile.Pages.LoginPage"
+             Title="Login">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+            <Label Text="Trivia Mobile"
+                   FontSize="32"
+                   FontAttributes="Bold" />
+
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                <ActivityIndicator x:Name="BusyIndicator"
+                                   IsRunning="False"
+                                   IsVisible="False"
+                                   VerticalOptions="Center" />
+                <Label x:Name="StatusLabel"
+                       Grid.Column="1"
+                       Text="Status: ready"
+                       LineBreakMode="WordWrap"
+                       VerticalOptions="Center" />
+            </Grid>
+
+            <Border Stroke="#8E7CC3" Padding="14" StrokeShape="RoundRectangle 8">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Account" FontSize="20" FontAttributes="Bold" />
+                    <Entry x:Name="EmailEntry" Placeholder="Email" Keyboard="Email" />
+                    <Entry x:Name="PasswordEntry" Placeholder="Password" IsPassword="True" />
+                    <Entry x:Name="UsernameEntry" Placeholder="Username for register/profile" />
+                    <Entry x:Name="FullNameEntry" Placeholder="Full name for register/profile" />
+
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                        <Button Text="Login" Clicked="OnLoginClicked" />
+                        <Button Grid.Column="1" Text="Register" Clicked="OnRegisterClicked" />
+                        <Button Grid.Column="2" Text="Logout" Clicked="OnLogoutClicked" />
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <Button Text="Load Me" Clicked="OnLoadMeClicked" />
+                        <Button Grid.Column="1" Text="Update Profile" Clicked="OnUpdateProfileClicked" />
+                    </Grid>
+
+                    <Label x:Name="AuthStateLabel"
+                           Text="Auth: not loaded"
+                           LineBreakMode="WordWrap" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Stroke="#8E7CC3" Padding="14" StrokeShape="RoundRectangle 8">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Password Recovery" FontSize="20" FontAttributes="Bold" />
+                    <Entry x:Name="ForgotEmailEntry" Placeholder="Email for reset" Keyboard="Email" />
+                    <Button Text="Send Reset Email" Clicked="OnForgotPasswordClicked" HorizontalOptions="Start" />
+                    <Entry x:Name="ResetTokenEntry" Placeholder="Paste reset link or token" />
+                    <Entry x:Name="NewPasswordEntry" Placeholder="New password" IsPassword="True" />
+                    <Button Text="Reset Password" Clicked="OnResetPasswordClicked" HorizontalOptions="Start" />
+                    <Label x:Name="PasswordRecoveryLabel"
+                           Text="Password recovery: ready"
+                           LineBreakMode="WordWrap" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

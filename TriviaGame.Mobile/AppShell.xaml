@@ -3,14 +3,42 @@
     x:Class="TriviaGame.Mobile.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:TriviaGame.Mobile"
+    xmlns:pages="clr-namespace:TriviaGame.Mobile.Pages"
     Title="Trivia Game">
 
-    <!-- ה-Shell הוא הקונטיינר הראשי של האפליקציה.
-         כרגע יש בו רק מסך אחד, אבל המבנה הזה מאפשר להוסיף ניווט בעתיד. -->
-    <ShellContent
-        Title="Game"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+    <!-- Shell הוא הקונטיינר הראשי של האפליקציה.
+         כל ShellContent הוא מסך אמיתי שאפשר לנווט אליו עם route כמו //login או //play. -->
+    <FlyoutItem Title="Account" Route="account">
+        <ShellContent
+            Title="Login"
+            ContentTemplate="{DataTemplate pages:LoginPage}"
+            Route="login" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Game Flow" Route="game-flow">
+        <ShellContent
+            Title="Menu"
+            ContentTemplate="{DataTemplate pages:MenuPage}"
+            Route="menu" />
+        <ShellContent
+            Title="Rooms"
+            ContentTemplate="{DataTemplate pages:RoomsPage}"
+            Route="rooms" />
+        <ShellContent
+            Title="Play"
+            ContentTemplate="{DataTemplate pages:PlayPage}"
+            Route="play" />
+        <ShellContent
+            Title="Stats"
+            ContentTemplate="{DataTemplate pages:StatsPage}"
+            Route="stats" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Settings" Route="settings-group">
+        <ShellContent
+            Title="API Settings"
+            ContentTemplate="{DataTemplate pages:SettingsPage}"
+            Route="settings" />
+    </FlyoutItem>
 
 </Shell>

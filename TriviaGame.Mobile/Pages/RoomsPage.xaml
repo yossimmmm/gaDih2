@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TriviaGame.Mobile.Pages.RoomsPage"
+             Title="Rooms">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+            <Label Text="Rooms" FontSize="32" FontAttributes="Bold" />
+
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                <ActivityIndicator x:Name="BusyIndicator"
+                                   IsRunning="False"
+                                   IsVisible="False"
+                                   VerticalOptions="Center" />
+                <Label x:Name="StatusLabel"
+                       Grid.Column="1"
+                       Text="Status: ready"
+                       LineBreakMode="WordWrap" />
+            </Grid>
+
+            <Border Stroke="#8E7CC3" Padding="14" StrokeShape="RoundRectangle 8">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Create Room" FontSize="20" FontAttributes="Bold" />
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                        <Button Text="Load Types" Clicked="OnLoadQuestionTypesClicked" />
+                        <Picker x:Name="QuestionTypePicker" Grid.Column="1" />
+                    </Grid>
+                    <Entry x:Name="RoomNameEntry" Placeholder="Room name" />
+                    <HorizontalStackLayout Spacing="8">
+                        <Label Text="Public" VerticalOptions="Center" />
+                        <Switch x:Name="IsPublicSwitch" />
+                    </HorizontalStackLayout>
+                    <Button Text="Create Room" Clicked="OnCreateRoomClicked" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Stroke="#8E7CC3" Padding="14" StrokeShape="RoundRectangle 8">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Join Room" FontSize="20" FontAttributes="Bold" />
+                    <Entry x:Name="RoomCodeEntry" Placeholder="Room code" />
+                    <Entry x:Name="NicknameEntry" Placeholder="Nickname in room" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <Button Text="Join Room" Clicked="OnJoinRoomClicked" />
+                        <Button Grid.Column="1" Text="Leave Room" Clicked="OnLeaveRoomClicked" />
+                    </Grid>
+                    <Label x:Name="ActiveRoomLabel" Text="Active room: none" LineBreakMode="WordWrap" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Stroke="#8E7CC3" Padding="14" StrokeShape="RoundRectangle 8">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <Button Text="Load Public Rooms" Clicked="OnLoadPublicRoomsClicked" />
+                        <Button Grid.Column="1" Text="Load Players" Clicked="OnLoadPlayersClicked" />
+                    </Grid>
+                    <Label x:Name="PlayersLabel" Text="Players: -" LineBreakMode="WordWrap" />
+                    <CollectionView x:Name="PublicRoomsView"
+                                    HeightRequest="220"
+                                    SelectionMode="Single"
+                                    SelectionChanged="OnPublicRoomSelected">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Stroke="#5F5A72" Padding="10" Margin="0,4" StrokeShape="RoundRectangle 6">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                        <VerticalStackLayout>
+                                            <Label Text="{Binding RoomName}" FontAttributes="Bold" />
+                                            <Label Text="{Binding RoomCode}" FontSize="12" />
+                                        </VerticalStackLayout>
+                                        <Label Grid.Column="1" Text="{Binding IsActive}" FontSize="12" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                    <Button Text="Go To Play" Clicked="OnGoToPlayClicked" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

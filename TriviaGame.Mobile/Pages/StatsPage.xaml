@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TriviaGame.Mobile.Pages.StatsPage"
+             Title="Stats">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+            <Label Text="Stats + Assistant" FontSize="32" FontAttributes="Bold" />
+
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                <ActivityIndicator x:Name="BusyIndicator"
+                                   IsRunning="False"
+                                   IsVisible="False"
+                                   VerticalOptions="Center" />
+                <Label x:Name="StatusLabel"
+                       Grid.Column="1"
+                       Text="Status: ready"
+                       LineBreakMode="WordWrap" />
+            </Grid>
+
+            <Border Stroke="#8E7CC3" Padding="14" StrokeShape="RoundRectangle 8">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <Button Text="Load My Stats" Clicked="OnLoadStatsClicked" />
+                        <Button Grid.Column="1" Text="Top Players" Clicked="OnLoadTopPlayersClicked" />
+                    </Grid>
+                    <Label x:Name="StatsLabel" Text="Stats: -" LineBreakMode="WordWrap" />
+                    <CollectionView x:Name="TopPlayersView" HeightRequest="220">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="*,Auto" Padding="8">
+                                    <Label Text="{Binding Username}" FontAttributes="Bold" />
+                                    <Label Grid.Column="1" Text="{Binding Wins}" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Stroke="#8E7CC3" Padding="14" StrokeShape="RoundRectangle 8">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Assistant" FontSize="20" FontAttributes="Bold" />
+                    <Entry x:Name="AssistantPromptEntry" Placeholder="Ask for advice..." />
+                    <Button Text="Ask Assistant" Clicked="OnAskAssistantClicked" />
+                    <Label x:Name="AssistantLabel" Text="Assistant: -" LineBreakMode="WordWrap" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

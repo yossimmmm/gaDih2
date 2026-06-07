@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TriviaGame.Mobile.Pages.MenuPage"
+             Title="Menu">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+            <Label Text="Menu" FontSize="32" FontAttributes="Bold" />
+            <Label x:Name="UserLabel" Text="User: not logged in" LineBreakMode="WordWrap" />
+            <Label x:Name="StatusLabel" Text="Status: ready" LineBreakMode="WordWrap" />
+
+            <Border Stroke="#8E7CC3" Padding="14" StrokeShape="RoundRectangle 8">
+                <VerticalStackLayout Spacing="10">
+                    <Button Text="Rooms" Clicked="OnRoomsClicked" />
+                    <Button Text="Play Current Room" Clicked="OnPlayClicked" />
+                    <Button Text="Start Solo Game" Clicked="OnStartSoloClicked" />
+                    <Button Text="Stats + Assistant" Clicked="OnStatsClicked" />
+                    <Button Text="API Settings" Clicked="OnSettingsClicked" />
+                    <Button Text="Logout" Clicked="OnLogoutClicked" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

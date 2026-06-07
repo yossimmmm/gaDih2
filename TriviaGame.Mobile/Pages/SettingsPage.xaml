@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TriviaGame.Mobile.Pages.SettingsPage"
+             Title="API Settings">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+            <Label Text="API Settings" FontSize="32" FontAttributes="Bold" />
+            <Label x:Name="StatusLabel" Text="Status: ready" LineBreakMode="WordWrap" />
+
+            <Border Stroke="#8E7CC3" Padding="14" StrokeShape="RoundRectangle 8">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Environment" FontAttributes="Bold" />
+                    <Picker x:Name="EnvironmentPicker">
+                        <Picker.Items>
+                            <x:String>Development</x:String>
+                            <x:String>Staging</x:String>
+                            <x:String>Production</x:String>
+                        </Picker.Items>
+                    </Picker>
+                    <Entry x:Name="DeviceBaseUrlEntry" Placeholder="Device URL" />
+                    <Entry x:Name="OverrideBaseUrlEntry" Placeholder="Optional override URL" />
+                    <Button Text="Apply API Settings" Clicked="OnApplyClicked" />
+                    <Label x:Name="BaseUrlLabel" Text="Base URL: -" LineBreakMode="WordWrap" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
