@@ -2,12 +2,26 @@ $ErrorActionPreference = "Stop"
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $projectPath = Join-Path $repoRoot "TriviaGame\TriviaGame.csproj"
+$ports = @(5038, 7060)
 
-# תהליך אתר פעיל מחזיק את קובצי ה-DLL פתוחים, ולכן עוצרים אותו לפני בנייה מחדש.
+# עוצר אתר ישן לפי שם.
+# אם האתר כבר רץ, הוא מחזיק DLL פתוחים וגם תופס את הפורט.
 Get-Process -Name "TriviaGame" -ErrorAction SilentlyContinue |
     Stop-Process -Force
 
-Start-Sleep -Milliseconds 300
+# עוצר כל תהליך שעדיין מחזיק את פורטי האתר.
+# בלי זה Kestrel נכשל עם Bind כי localhost:5038 כבר תפוס.
+foreach ($port in $ports) {
+    Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue |
+        ForEach-Object {
+            $owner = Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue
+            if ($owner) {
+                Stop-Process -Id $owner.Id -Force
+            }
+        }
+}
+
+Start-Sleep -Milliseconds 500
 
 $userGeminiKey = [Environment]::GetEnvironmentVariable(
     "GEMINI_API_KEY",
