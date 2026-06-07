@@ -360,6 +360,7 @@ else
         // איפוס שגיאות ישנות בתחילת פעולה.
         ResetProfileValidation();
 
+        // #username-validation #profile-validation #validation
         // בודקים תקינות שם משתמש לפי כללי המערכת.
         var (usernameValid, usernameError) = ValidationHelper.ValidateUsername(Username);
         if (!usernameValid)
@@ -369,6 +370,7 @@ else
             return;
         }
 
+        // #fullname-validation #profile-validation #validation
         // בודקים תקינות שם מלא.
         var (fullNameValid, fullNameError) = ValidationHelper.ValidateFullName(FullName);
         if (!fullNameValid)
@@ -378,6 +380,7 @@ else
             return;
         }
 
+        // #email-validation #profile-validation #validation
         // אימייל חובה.
         if (string.IsNullOrWhiteSpace(Email))
         {
@@ -386,6 +389,7 @@ else
             return;
         }
 
+        // #email-validation #profile-validation #validation
         // אימייל חייב להיות בפורמט חוקי.
         if (!ValidationHelper.IsValidEmail(Email))
         {
@@ -394,6 +398,7 @@ else
             return;
         }
 
+        // #sanitize-validation #profile-validation #validation
         // ניקוי קלט כדי למנוע תווים/רווחים לא רצויים.
         Username = ValidationHelper.SanitizeInput(Username, 50);
         FullName = ValidationHelper.SanitizeInput(FullName, 100);
@@ -403,6 +408,7 @@ else
         if (Session.CurrentUserId is null)
             return;
 
+        // #username-unique-validation #profile-validation #validation
         // אם שם המשתמש השתנה, בודקים שאין משתמש אחר עם אותו שם.
         if (!Username.Equals(OriginalUsername, StringComparison.OrdinalIgnoreCase))
         {
@@ -415,6 +421,7 @@ else
             }
         }
 
+        // #email-unique-validation #profile-validation #validation
         // אם האימייל השתנה, בודקים שאין משתמש אחר עם אותו אימייל.
         if (!Email.Equals(OriginalEmail, StringComparison.OrdinalIgnoreCase))
         {
@@ -462,6 +469,7 @@ else
         // איפוס שגיאות ישנות בתחילת פעולה.
         ResetPasswordValidation();
 
+        // #password-validation #change-password-validation #validation
         // סיסמה נוכחית היא שדה חובה.
         if (string.IsNullOrWhiteSpace(CurrentPassword))
         {
@@ -470,6 +478,7 @@ else
             return;
         }
 
+        // #password-validation #change-password-validation #validation
         // בודקים שהסיסמה החדשה עומדת בכללי המורכבות.
         var (passwordValid, passwordError) = ValidationHelper.ValidatePassword(NewPassword);
         if (!passwordValid)
@@ -479,6 +488,7 @@ else
             return;
         }
 
+        // #confirm-password-validation #change-password-validation #validation
         // אימות סיסמה חדשה הוא שדה חובה.
         if (string.IsNullOrWhiteSpace(ConfirmPassword))
         {
@@ -487,6 +497,7 @@ else
             return;
         }
 
+        // #confirm-password-validation #change-password-validation #validation
         // שתי סיסמאות חדשות חייבות להיות זהות בדיוק.
         if (!NewPassword.Equals(ConfirmPassword, StringComparison.Ordinal))
         {

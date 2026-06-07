@@ -78,6 +78,7 @@
         PasswordInvalid = false;
         Status = "";
 
+        // #username-validation #register-validation #validation
         // שם משתמש חייב לעמוד בחוקים של המערכת.
         var (usernameValid, usernameError) = ValidationHelper.ValidateUsername(Username);
         if (!usernameValid)
@@ -87,6 +88,7 @@
             return;
         }
 
+        // #fullname-validation #register-validation #validation
         // שם מלא חייב להיות הגיוני ולא ריק.
         var (fullNameValid, fullNameError) = ValidationHelper.ValidateFullName(FullName);
         if (!fullNameValid)
@@ -96,6 +98,7 @@
             return;
         }
 
+        // #email-validation #register-validation #validation
         // אימייל חייב להיות קיים כדי שהמשתמש יוכל להתחבר ולהחזיר סיסמה.
         if (string.IsNullOrWhiteSpace(Email))
         {
@@ -104,6 +107,7 @@
             return;
         }
 
+        // #email-validation #register-validation #validation
         // בודקים גם שהפורמט של האימייל תקין.
         if (!ValidationHelper.IsValidEmail(Email))
         {
@@ -112,6 +116,7 @@
             return;
         }
 
+        // #password-validation #register-validation #validation
         // סיסמה חייבת לעמוד בחוקי האבטחה של הפרויקט.
         var (passwordValid, passwordError) = ValidationHelper.ValidatePassword(Password);
         if (!passwordValid)
@@ -139,12 +144,14 @@
             if (!string.IsNullOrEmpty(Status) && Status.StartsWith("❌"))
                 return;
 
+            // #sanitize-validation #register-validation #validation
             // מנקים את הערכים לפני שמירה כדי לצמצם קלט בעייתי.
             Username = ValidationHelper.SanitizeInput(Username, 50);
             FullName = ValidationHelper.SanitizeInput(FullName, 100);
             Email = ValidationHelper.SanitizeInput(Email, 100).ToLowerInvariant().Trim();
             Password = Password.Trim();
 
+            // #email-unique-validation #register-validation #validation
             // מונעים רישום כפול עם אותו אימייל.
             var existingEmail = await userDB.GetByEmailAsync(Email);
             if (existingEmail != null)
@@ -154,6 +161,7 @@
                 return;
             }
 
+            // #username-unique-validation #register-validation #validation
             // גם שם המשתמש חייב להיות ייחודי.
             var existingUsername = await userDB.GetByUsernameAsync(Username);
             if (existingUsername != null)

@@ -19,6 +19,7 @@ public sealed class RoomsDomainService
     // יוצר חדר חדש עבור המשתמש שמבצע את הבקשה.
     public async Task<(bool Ok, string Message, Room? Room)> CreateRoomAsync(int userId, CreateRoomRequest req)
     {
+        // #room-name-validation #room-validation #create-room-validation #validation
         // מוודאים שהשם תקין לפני שמגיעים למסד.
         var (validName, nameError) = ValidationHelper.ValidateRoomName(req.RoomName);
         if (!validName)
@@ -38,6 +39,7 @@ public sealed class RoomsDomainService
     {
         // מנרמלים קוד חדר לאותיות גדולות כי קודי חדר נשמרים כך במסד.
         var roomCode = (req.RoomCode ?? "").Trim().ToUpperInvariant();
+        // #room-code-validation #room-validation #join-room-validation #validation
         var (validCode, codeError) = ValidationHelper.ValidateRoomCode(roomCode);
         if (!validCode)
             return (false, codeError, null, null);
@@ -45,6 +47,7 @@ public sealed class RoomsDomainService
         // nickname הוא אופציונלי, אבל אם המשתמש כתב אותו הוא חייב להיות תקין.
         if (!string.IsNullOrWhiteSpace(req.Nickname))
         {
+            // #nickname-validation #room-validation #join-room-validation #validation
             var (validNick, nickError) = ValidationHelper.ValidateNickname(req.Nickname);
             if (!validNick)
                 return (false, nickError, null, null);

@@ -191,6 +191,7 @@ else
         if (Session.CurrentUserId is null || IsSending)
             return;
 
+        // #assistant-prompt-validation #assistant-validation #validation
         // ניקוי רווחים מיותרים ובדיקה שההודעה לא ריקה.
         var text = (DraftMessage ?? "").Trim();
         if (string.IsNullOrWhiteSpace(text))

@@ -16,34 +16,53 @@ public partial class MainPage : ContentPage
     private readonly ApiEndpointResolver endpointResolver;
 
     // מצב המשתמש המחובר כרגע.
+    // חשוב: ב-MAUI אין cookie של דפדפן כמו באתר.
+    // לכן אחרי Login אנחנו שומרים כאן את המשתמש בזיכרון של האפליקציה.
+    // כל פעולה שדורשת הרשאה משתמשת ב-currentUser.UserId או currentUser.Role.
     private CurrentUserResponse? currentUser;
 
     // מזהה השחקן של המשתמש בתוך החדר הפעיל.
+    // זה לא אותו דבר כמו UserId.
+    // UserId מזהה את החשבון הכללי, ו-RoomPlayerID מזהה את אותו משתמש כשחקן בחדר מסוים.
+    // Submit Answer חייב את RoomPlayerID כדי שה-DB ידע למי לשמור את התשובה בחדר.
     private int currentRoomPlayerId;
 
     // השאלה הפעילה כרגע.
+    // נטענת מה-API אחרי Start Game או אחרי Submit Answer.
+    // אם המשחק נגמר הערך חוזר ל-null כדי שלא נשלח תשובה לשאלה שכבר לא קיימת.
     private QuestionRow? currentQuestion;
 
     // האפשרות שנבחרה כרגע עבור התשובה.
+    // זו בחירה מקומית בלבד עד שלוחצים Submit Answer.
+    // רק בלחיצה על Submit Answer היא באמת נשלחת לשרת ונשמרת ב-DB.
     private QuestionOptionRow? selectedOption;
 
     // רשימות בזיכרון שמחוברות ל־UI.
+    // אלה לא טבלאות DB.
+    // אלה עותקים זמניים שהמסך מציג אחרי שה-API החזיר נתונים.
     private readonly List<QuestionTypeRow> questionTypes = new();
     private readonly List<RoomRow> publicRooms = new();
     private readonly List<RoomPlayerRow> currentPlayers = new();
 
     public MainPage()
     {
+        // InitializeComponent קורא את MainPage.xaml ומייצר את כל הפקדים:
+        // EmailEntry, Login button, RoomCodeEntry, labels, lists וכו'.
+        // בלי השורה הזאת הקוד לא יכיר את השמות שמוגדרים ב-XAML.
         InitializeComponent();
 
         // שולפים services מה־container של MAUI.
         // כאן TriviaApiClient ו־ApiEndpointResolver מוזרקים לעמוד.
+        // ה-container נבנה ב-MauiProgram.cs, לכן MainPage לא יוצר אותם לבד.
+        // זה אותו רעיון כמו dependency injection באתר וב-API.
         var services = Application.Current?.Handler?.MauiContext?.Services
             ?? throw new InvalidOperationException("Service provider is unavailable.");
         api = services.GetRequiredService<TriviaApiClient>();
         endpointResolver = services.GetRequiredService<ApiEndpointResolver>();
 
         // מחברים את האוספים לפקדי התצוגה.
+        // PublicRoomsView יציג את publicRooms.
+        // OptionsView יציג את אפשרויות התשובה של currentQuestion.
         PublicRoomsView.ItemsSource = publicRooms;
         OptionsView.ItemsSource = Array.Empty<QuestionOptionRow>();
 
@@ -55,6 +74,8 @@ public partial class MainPage : ContentPage
     // קורא את ההגדרות המקומיות ומחזיר אותן אל הפקדים.
     private void LoadApiSettingsToUi()
     {
+        // קוראים את הסביבה שנשמרה ב-Preferences של MAUI.
+        // Development/Staging/Production משפיע על ה-base URL שהאפליקציה תפנה אליו.
         var env = endpointResolver.GetCurrentEnvironment();
         EnvironmentPicker.SelectedIndex = env switch
         {
@@ -63,6 +84,8 @@ public partial class MainPage : ContentPage
             _ => 0
         };
 
+        // DeviceBaseUrl הוא הכתובת שהמכשיר/אפליקציית Windows משתמשים בה כדי להגיע ל-API.
+        // OverrideBaseUrl מאפשר לעקוף ידנית את הכתובת בלי לשנות קוד.
         DeviceBaseUrlEntry.Text = endpointResolver.GetDeviceBaseUrl();
         OverrideBaseUrlEntry.Text = endpointResolver.GetOverrideBaseUrl();
     }
@@ -74,19 +97,27 @@ public partial class MainPage : ContentPage
     // עזר מרכזי שמנהל מצב טעינה, סטטוס וטיפול בחריגות במקום אחד.
     private async Task RunUiActionAsync(string actionName, Func<Task> action)
     {
+        // לפני כל פעולה מול API מדליקים אינדיקציה של טעינה.
+        // ככה המשתמש רואה שהלחיצה כן התחילה גם אם השרת לוקח זמן.
         BusyIndicator.IsVisible = true;
         BusyIndicator.IsRunning = true;
         StatusLabel.Text = $"Status: {actionName}...";
         try
         {
+            // כאן רצה הפעולה האמיתית שנשלחה לפונקציה:
+            // Login, Register, Create Room, Start Game וכו'.
             await action();
         }
         catch (Exception ex)
         {
+            // אם קריאת HTTP נופלת, אם השרת לא פתוח, או אם יש שגיאת parsing,
+            // לא נותנים לאפליקציה לקרוס אלא מציגים הודעת סטטוס.
             StatusLabel.Text = $"Status: {actionName} failed - {ex.Message}";
         }
         finally
         {
+            // finally תמיד רץ, גם בהצלחה וגם בכישלון.
+            // לכן כאן מכבים את הטעינה כדי שהמסך לא יישאר תקוע.
             BusyIndicator.IsRunning = false;
             BusyIndicator.IsVisible = false;
         }
@@ -124,6 +155,8 @@ public partial class MainPage : ContentPage
 
             // ה־API מחזיר userId, username ו־role.
             // שומרים אותם בזיכרון כדי ששאר המסך יוכל להשתמש בהם אחרי ההתחברות.
+            // אין כאן שמירת cookie ואין כאן session מקומי כמו בדפדפן.
+            // אם סוגרים את האפליקציה, צריך להתחבר שוב כי currentUser חי רק בזיכרון.
             currentUser = new CurrentUserResponse
             {
                 Authenticated = true,
@@ -138,6 +171,8 @@ public partial class MainPage : ContentPage
             UsernameEntry.Text = currentUser.Username;
             EmailEntry.Text = currentUser.Email;
             StatusLabel.Text = "Status: login succeeded.";
+            // אחרי login יש לנו רק מידע בסיסי מהתגובה.
+            // לכן קוראים ל-GetMe כדי להביא פרופיל מלא: email, full name, role עדכני.
             await RefreshUserFromApiAsync();
         });
     }
@@ -148,6 +183,8 @@ public partial class MainPage : ContentPage
         await RunUiActionAsync("register", async () =>
         {
             // #register #auth #api-fetch - מכאן נשלחים שדות ההרשמה ל-API.
+            // Register לא מחבר אוטומטית את המשתמש.
+            // אחרי הרשמה עדיין צריך Login כדי למלא את currentUser.
             var result = await api.RegisterAsync(
                 UsernameEntry.Text ?? "",
                 FullNameEntry.Text ?? "",
@@ -169,7 +206,9 @@ public partial class MainPage : ContentPage
         {
             // קוראים קודם את האימייל מאזור שחזור הסיסמה.
             // אם המשתמש כבר מילא את האימייל באזור ה-login, משתמשים בו כ-fallback.
+            // זה נוח כי אותו מסך מכיל גם login וגם password recovery.
             var email = (ForgotEmailEntry.Text ?? "").Trim();
+            // #email-validation #forgot-password-validation #validation
             if (string.IsNullOrWhiteSpace(email))
                 email = (EmailEntry.Text ?? "").Trim();
 
@@ -182,6 +221,8 @@ public partial class MainPage : ContentPage
 
             // #forgot-password #api-fetch
             // מכאן הבקשה עוברת ל-TriviaApiClient ומשם אל POST /api/auth/forgot-password.
+            // השרת אמור ליצור token, לשמור אותו ב-DB, ולשלוח מייל עם קישור reset.
+            // בשלב הזה הסיסמה עדיין לא משתנה.
             var result = await api.ForgotPasswordAsync(email);
 
             // Success מתאר אם התקבלה תשובת HTTP תקינה;
@@ -209,10 +250,13 @@ public partial class MainPage : ContentPage
         {
             // המשתמש יכול להדביק token בלבד או את כל הקישור שקיבל במייל.
             // הפונקציה מחלצת את ערך token מה-query string כאשר הודבק קישור מלא.
+            // זה חוסך מהמשתמש להבין מה מתוך הקישור הוא הטוקן האמיתי.
             var token = ExtractResetToken(ResetTokenEntry.Text ?? "");
             // זו הסיסמה החדשה שתעבור validation ו-hash בצד השרת.
+            // לא שולחים את הסיסמה הישנה כי reset password מבוסס token, לא login.
             var newPassword = NewPasswordEntry.Text ?? "";
 
+            // #token-validation #password-validation #reset-password-validation #validation
             if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(newPassword))
             {
                 StatusLabel.Text = "Status: enter the reset token and a new password.";
@@ -222,6 +266,7 @@ public partial class MainPage : ContentPage
 
             // #reset-password #api-fetch
             // מכאן נשלחים הטוקן והסיסמה אל POST /api/auth/reset-password.
+            // ה-controller בודק שהטוקן קיים ולא פג תוקף, ואז מחליף hash סיסמה ב-DB.
             var result = await api.ResetPasswordAsync(token, newPassword);
             if (!result.Success || result.Data?.Ok != true)
             {
@@ -536,6 +581,7 @@ public partial class MainPage : ContentPage
             }
 
             var roomCode = (RoomCodeEntry.Text ?? "").Trim().ToUpperInvariant();
+            // #room-code-validation #start-game-validation #validation
             if (string.IsNullOrWhiteSpace(roomCode))
             {
                 GameStatusLabel.Text = "Game: create or join a room first.";
@@ -543,6 +589,7 @@ public partial class MainPage : ContentPage
                 return;
             }
 
+            // #question-count-validation #start-game-validation #validation
             var questionCount = int.TryParse(QuestionCountEntry.Text, out var parsed) ? parsed : 10;
             // #start-game #game #play #api-fetch - המארח מבקש מהשרת לפתוח משחק בחדר.
             var result = await api.StartGameAsync(currentUser.UserId, roomCode, questionCount);
@@ -573,6 +620,7 @@ public partial class MainPage : ContentPage
 
     private async Task LoadCurrentQuestionAsync(string roomCode)
     {
+        // #room-code-validation #question-validation #validation
         if (string.IsNullOrWhiteSpace(roomCode))
         {
             GameStatusLabel.Text = "Game: create or join a room first.";
@@ -745,6 +793,7 @@ public partial class MainPage : ContentPage
             }
 
             var prompt = AssistantPromptEntry.Text ?? "";
+            // #assistant-prompt-validation #assistant-validation #validation
             if (string.IsNullOrWhiteSpace(prompt))
             {
                 StatusLabel.Text = "Status: enter a prompt first.";

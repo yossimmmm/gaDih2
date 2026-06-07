@@ -63,12 +63,13 @@ app.Use(async (context, next) =>
         return;
     }
 
-    // הקוד המצופה מגיע מהקונפיגורציה, עם ברירת מחדל לפיתוח מקומי.
-    var expectedCode = builder.Configuration["Api:AppCode"] ?? "TRIVIA-DEV-123";
+    // הקוד המצופה מגיע מפיתוח מקומי.
+    var expectedCode = "TRIVIA-DEV-123";
 
     // הלקוח שולח את הקוד הזה בכל קריאה ל-API.
     var providedCode = context.Request.Headers["X-App-Code"].ToString();
 
+    // #app-code-validation #api-validation #validation
     // אם הקוד חסר או לא נכון, עוצרים כאן ומחזירים 401.
     if (string.IsNullOrWhiteSpace(providedCode) || !string.Equals(providedCode, expectedCode, StringComparison.Ordinal))
     {

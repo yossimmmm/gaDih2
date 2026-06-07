@@ -33,6 +33,7 @@ public sealed class AuthDomainService
     // ההתחברות בודקת פרטי התחברות ומחזירה את נתוני המשתמש שהלקוח צריך.
     public async Task<AuthResultResponse> LoginAsync(LoginRequest req)
     {
+        // #login-validation #email-validation #password-validation #validation
         // בקשת login חייבת להכיל גם אימייל וגם סיסמה.
         // אם אחד מהם חסר אין טעם לגשת למסד.
         if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
@@ -54,25 +55,30 @@ public sealed class AuthDomainService
     // ההרשמה מאמתת קלט, בודקת ייחודיות, עושה hash לסיסמה ומכניסה את החשבון.
     public async Task<(bool Ok, string Message)> RegisterAsync(RegisterRequest req)
     {
+        // #username-validation #register-validation #validation
         // שם משתמש עובר בדיקות אורך ותווים אסורים.
         var (usernameValid, usernameError) = ValidationHelper.ValidateUsername(req.Username);
         if (!usernameValid)
             return (false, usernameError);
 
+        // #fullname-validation #register-validation #validation
         // שם מלא הוא אופציונלי, אבל עדיין בודקים שהוא לא ארוך מדי.
         var (fullNameValid, fullNameError) = ValidationHelper.ValidateFullName(req.FullName);
         if (!fullNameValid)
             return (false, fullNameError);
 
+        // #email-validation #register-validation #validation
         // אימייל חייב להיות במבנה תקין לפני שמחפשים אותו במסד.
         if (!ValidationHelper.IsValidEmail(req.Email))
             return (false, "Please enter a valid email address.");
 
+        // #password-validation #register-validation #validation
         // סיסמה חייבת לעמוד בכללים של המערכת לפני יצירת hash.
         var (passwordValid, passwordError) = ValidationHelper.ValidatePassword(req.Password);
         if (!passwordValid)
             return (false, passwordError);
 
+        // #sanitize-validation #register-validation #validation
         // מנרמלים את כל הערכים לפני שמירה במסד.
         var username = ValidationHelper.SanitizeInput(req.Username, 50);
         var fullName = ValidationHelper.SanitizeInput(req.FullName, 100);
@@ -81,10 +87,12 @@ public sealed class AuthDomainService
 
         var userDb = new UserDB();
 
+        // #email-unique-validation #register-validation #validation
         // מונעים הרשמה כפולה עם אותו אימייל.
         if (await userDb.GetByEmailAsync(email) is not null)
             return (false, "Email already registered.");
 
+        // #username-unique-validation #register-validation #validation
         // מונעים מצב שבו שני משתמשים חולקים אותו username.
         if (await userDb.GetByUsernameAsync(username) is not null)
             return (false, "Username already taken.");
@@ -109,12 +117,14 @@ public sealed class AuthDomainService
     public async Task<(bool Ok, string Message)> ForgotPasswordAsync(ForgotPasswordRequest req, string requestBaseUrl)
     {
         // #forgot-password #email #reset-token #reset-link
+        // #email-validation #forgot-password-validation #validation
         // בלי אימייל אין למי לשלוח קישור איפוס.
         if (string.IsNullOrWhiteSpace(req.Email))
             return (false, "Email is required.");
 
         // מנרמלים לאותיות קטנות כדי שחיפוש האימייל יהיה עקבי.
         var normalizedEmail = req.Email.Trim().ToLowerInvariant();
+        // #email-validation #forgot-password-validation #validation
         if (!ValidationHelper.IsValidEmail(normalizedEmail))
             return (false, "Please enter a valid email address.");
 
@@ -151,10 +161,12 @@ public sealed class AuthDomainService
     public async Task<(bool Ok, string Message)> ResetPasswordAsync(ResetPasswordRequest req)
     {
         // #reset-password #token #password-hash #expiry
+        // #token-validation #password-validation #reset-password-validation #validation
         // צריך גם טוקן וגם סיסמה חדשה כדי להשלים איפוס.
         if (string.IsNullOrWhiteSpace(req.Token) || string.IsNullOrWhiteSpace(req.NewPassword))
             return (false, "Invalid reset request.");
 
+        // #password-validation #reset-password-validation #validation
         // גם סיסמה מאופסת חייבת לעבור את אותם חוקים כמו סיסמה בהרשמה.
         var (valid, passwordError) = ValidationHelper.ValidatePassword(req.NewPassword);
         if (!valid)

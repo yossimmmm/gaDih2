@@ -22,16 +22,19 @@ public sealed class UsersDomainService
     public async Task<(bool Ok, string Message)> UpdateProfileAsync(int userId, UpdateProfileRequest req)
     {
         // כל עדכון פרופיל מתחיל מבדיקות קלט כדי לא להכניס נתונים לא תקינים למסד.
+        // #username-validation #profile-validation #validation
         // בודקים שהשם תקין לפני שממשיכים.
         var (usernameValid, usernameError) = ValidationHelper.ValidateUsername(req.Username);
         if (!usernameValid)
             return (false, usernameError);
 
+        // #fullname-validation #profile-validation #validation
         // אחר כך בודקים גם את השם המלא.
         var (fullNameValid, fullNameError) = ValidationHelper.ValidateFullName(req.FullName);
         if (!fullNameValid)
             return (false, fullNameError);
 
+        // #email-validation #profile-validation #validation
         // אימייל חייב להיות תקין.
         if (!ValidationHelper.IsValidEmail(req.Email))
             return (false, "Please enter a valid email address.");
@@ -42,17 +45,20 @@ public sealed class UsersDomainService
         if (current is null)
             return (false, "User not found.");
 
+        // #sanitize-validation #profile-validation #validation
         // מנרמלים את הערכים לפני שמכניסים אותם למסד.
         // SanitizeInput גם מקצרת לפי אורך מקסימלי וגם מחליפה תווים בעייתיים לתצוגה.
         var normalizedUsername = ValidationHelper.SanitizeInput(req.Username, 50);
         var normalizedFullName = ValidationHelper.SanitizeInput(req.FullName, 100);
         var normalizedEmail = ValidationHelper.SanitizeInput(req.Email, 100).ToLowerInvariant().Trim();
 
+        // #username-unique-validation #profile-validation #validation
         // בודקים אם username כבר תפוס על ידי משתמש אחר.
         var existingUsername = await userDb.GetByUsernameAsync(normalizedUsername);
         if (existingUsername is not null && existingUsername.UserID != userId)
             return (false, "Username already taken.");
 
+        // #email-unique-validation #profile-validation #validation
         // בודקים אם האימייל כבר משויך למשתמש אחר.
         var existingEmail = await userDb.GetByEmailAsync(normalizedEmail);
         if (existingEmail is not null && existingEmail.UserID != userId)
@@ -78,6 +84,7 @@ public sealed class UsersDomainService
         if (!PasswordHelper.Verify(req.CurrentPassword ?? "", user.PasswordHash))
             return (false, "Current password is incorrect.");
 
+        // #password-validation #change-password-validation #validation
         // גם הסיסמה החדשה חייבת לעבור את הוולידציה.
         var (valid, error) = ValidationHelper.ValidatePassword(req.NewPassword);
         if (!valid)
@@ -102,6 +109,7 @@ public sealed class UsersDomainService
     // משנה role של משתמש.
     public async Task<(bool Ok, string Message)> UpdateRoleAsync(int userId, string role)
     {
+        // #role-validation #admin-validation #validation
         // ממירים את המחרוזת ל-enum.
         // כך מונעים שמירה של תפקידים שלא קיימים בקוד.
         if (!Enum.TryParse<UserRole>(role, true, out var parsedRole))
@@ -117,10 +125,12 @@ public sealed class UsersDomainService
     public async Task<(bool Ok, string Message)> UpdateUserByAdminAsync(int userId, AdminUserUpdateRequest req)
     {
         // עדכון אדמין עדיין חייב לעבור ולידציה, גם אם מי שמבצע אותו הוא אדמין.
+        // #email-validation #admin-validation #validation
         // גם האימייל חייב להיות תקין.
         if (!ValidationHelper.IsValidEmail(req.Email))
             return (false, "Invalid email.");
 
+        // #role-validation #admin-validation #validation
         // ממירים את ה-role ל-enum כדי למנוע ערכים לא חוקיים.
         if (!Enum.TryParse<UserRole>(req.Role, true, out var parsedRole))
             return (false, "Role must be User or Admin.");

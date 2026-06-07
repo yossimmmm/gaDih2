@@ -128,6 +128,7 @@ app.MapRazorComponents<App>()
 // זהו הצעד הראשון בזרימת auth: בדיקת אימייל/סיסמה, יצירת token, וכתיבת cookie.
 app.MapPost("/api/auth/login", async (HttpContext http, LoginRequest req, AuthAuditDispatcher audit) =>
 {
+    // #login-validation #email-validation #password-validation #validation
     // קלט חסר = בקשה לא תקינה.
     if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
         return Results.BadRequest(new { ok = false, message = "Email and password are required." });
@@ -197,6 +198,7 @@ app.MapGet("/api/auth/me", async (HttpContext http) =>
 // #forgot-password #email #reset-token #reset-link
 app.MapPost("/api/auth/forgot-password", async (HttpContext http, ForgotPasswordRequest req, EmailService emailService, AuthAuditDispatcher audit) =>
 {
+    // #email-validation #forgot-password-validation #validation
     // ולידציה בסיסית לקלט.
     // בלי אימייל אי אפשר לזהות את המשתמש או לשלוח קישור איפוס.
     if (string.IsNullOrWhiteSpace(req.Email))
@@ -204,6 +206,7 @@ app.MapPost("/api/auth/forgot-password", async (HttpContext http, ForgotPassword
 
     // מנרמלים את האימייל כדי שהחיפוש במסד יהיה עקבי.
     var normalizedEmail = req.Email.Trim().ToLowerInvariant();
+    // #email-validation #forgot-password-validation #validation
     if (!ValidationHelper.IsValidEmail(normalizedEmail))
         return Results.BadRequest(new { ok = false, message = "Please enter a valid email address." });
 
@@ -223,6 +226,7 @@ app.MapPost("/api/auth/forgot-password", async (HttpContext http, ForgotPassword
     var smtpUser = Environment.GetEnvironmentVariable("SMTP_USER") ?? builder.Configuration["Smtp:User"];
     var smtpPass = Environment.GetEnvironmentVariable("SMTP_PASS") ?? builder.Configuration["Smtp:Pass"];
 
+    // #smtp-validation #email-validation #forgot-password-validation #validation
     if (string.IsNullOrWhiteSpace(smtpFrom) ||
         string.IsNullOrWhiteSpace(smtpHost) ||
         string.IsNullOrWhiteSpace(smtpUser) ||
@@ -260,11 +264,13 @@ app.MapPost("/api/auth/forgot-password", async (HttpContext http, ForgotPassword
 // #reset-password #token #email
 app.MapPost("/api/auth/reset-password", async (ResetPasswordRequest req, AuthAuditDispatcher audit) =>
 {
+    // #token-validation #password-validation #reset-password-validation #validation
     // בדיקות בסיס לקלט.
     // אם אין token או סיסמה חדשה, אין בקשה תקינה.
     if (string.IsNullOrWhiteSpace(req.Token) || string.IsNullOrWhiteSpace(req.NewPassword))
         return Results.BadRequest(new { ok = false, message = "Invalid reset request." });
 
+    // #password-validation #reset-password-validation #validation
     // בדיקת מדיניות סיסמה קיימת במערכת.
     // אנחנו רוצים לוודא שהסיסמה החדשה עומדת באותו סטנדרט של הרשמה.
     var (valid, passwordError) = ValidationHelper.ValidatePassword(req.NewPassword);
@@ -318,6 +324,7 @@ app.MapPost("/api/admin/users/{userId:int}/role", async (HttpContext http, int u
     if (current is null || current.Role != UserRole.Admin)
         return Results.Unauthorized();
 
+    // #role-validation #admin-validation #validation
     if (!Enum.TryParse<UserRole>(req.Role, ignoreCase: true, out var parsedRole))
         return Results.BadRequest(new { ok = false, message = "Role must be User or Admin." });
 
@@ -337,12 +344,15 @@ app.MapPut("/api/admin/users/{userId:int}", async (HttpContext http, int userId,
     if (current is null || current.Role != UserRole.Admin)
         return Results.Unauthorized();
 
+    // #user-id-validation #admin-validation #validation
     if (userId <= 0)
         return Results.BadRequest(new { ok = false, message = "Invalid user id." });
 
+    // #email-validation #admin-validation #validation
     if (string.IsNullOrWhiteSpace(req.Email) || !ValidationHelper.IsValidEmail(req.Email.Trim()))
         return Results.BadRequest(new { ok = false, message = "Invalid email." });
 
+    // #role-validation #admin-validation #validation
     if (!Enum.TryParse<UserRole>(req.Role, ignoreCase: true, out var parsedRole))
         return Results.BadRequest(new { ok = false, message = "Role must be User or Admin." });
 

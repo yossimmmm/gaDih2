@@ -12,6 +12,7 @@ namespace Models
             @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
+        // #email-validation #validation
         // מחזיר true רק כשהאימייל נראה תקין ברמה בסיסית.
         public static bool IsValidEmail(string? email)
         {
@@ -21,6 +22,7 @@ namespace Models
             return EmailRegex.IsMatch(email.Trim());
         }
 
+        // #password-validation #validation
         // כללי הסיסמה של האפליקציה.
         public static (bool IsValid, string ErrorMessage) ValidatePassword(string? password)
         {
@@ -36,6 +38,7 @@ namespace Models
             return (true, string.Empty);
         }
 
+        // #username-validation #validation
         // כללי שם המשתמש.
         public static (bool IsValid, string ErrorMessage) ValidateUsername(string? username)
         {
@@ -51,6 +54,7 @@ namespace Models
             return (true, string.Empty);
         }
 
+        // #fullname-validation #validation
         // שם מלא הוא שדה אופציונלי, אבל אם ממלאים אותו הוא לא יכול להיות ארוך מדי.
         public static (bool IsValid, string ErrorMessage) ValidateFullName(string? fullName)
         {
@@ -63,6 +67,7 @@ namespace Models
             return (true, string.Empty);
         }
 
+        // #room-name-validation #room-validation #validation
         // כללי שם החדר.
         public static (bool IsValid, string ErrorMessage) ValidateRoomName(string? roomName)
         {
@@ -78,6 +83,7 @@ namespace Models
             return (true, string.Empty);
         }
 
+        // #room-code-validation #room-validation #validation
         // כללי קוד החדר.
         public static (bool IsValid, string ErrorMessage) ValidateRoomCode(string? roomCode)
         {
@@ -95,6 +101,7 @@ namespace Models
             return (true, string.Empty);
         }
 
+        // #nickname-validation #room-validation #validation
         // כללי הכינוי.
         public static (bool IsValid, string ErrorMessage) ValidateNickname(string? nickname)
         {
@@ -113,6 +120,7 @@ namespace Models
             return (true, string.Empty);
         }
 
+        // #sanitize-validation #input-cleanup #validation
         // ניקוי בסיסי של טקסט שהמשתמש הקליד כדי לצמצם סיכון ל-HTML מיותר.
         // זה לא מחליף SQL עם פרמטרים, אבל כן עוזר לשמור על תצוגה בטוחה ב-UI.
         public static string SanitizeInput(string? input, int maxLength = 500)

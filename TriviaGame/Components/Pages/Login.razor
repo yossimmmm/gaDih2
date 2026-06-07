@@ -309,6 +309,7 @@
         PasswordInvalid = false;
         Status = "";
 
+        // #email-validation #login-validation #validation
         // אימייל חובה.
         if (string.IsNullOrWhiteSpace(Email))
         {
@@ -317,6 +318,7 @@
             return;
         }
 
+        // #email-validation #login-validation #validation
         // אימייל חייב להיות בפורמט תקין.
         if (!ValidationHelper.IsValidEmail(Email))
         {
@@ -325,6 +327,7 @@
             return;
         }
 
+        // #password-validation #login-validation #validation
         // סיסמה חובה.
         if (string.IsNullOrWhiteSpace(Password))
         {
@@ -351,6 +354,7 @@
             if (!string.IsNullOrEmpty(Status))
                 return;
 
+            // #sanitize-validation #login-validation #validation
             // ניקוי קלט לפני שליחה.
             Email = ValidationHelper.SanitizeInput(Email, 100).ToLowerInvariant().Trim();
             Password = Password.Trim();
